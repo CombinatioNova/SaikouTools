@@ -89,7 +89,7 @@
                 border-spacing: 2px;
             }
             .schedule-grid th, .schedule-grid td {
-                padding: 4px;
+                padding: 2px;
                 text-align: center;
                 min-width: 80px;
             }
@@ -97,15 +97,16 @@
                 min-width: 100px;
                 font-size: 0.8rem;
                 color: #9ca3af;
+                padding: 0 4px;
             }
             .schedule-grid .time-slot {
                 background-color: #374151; /* Gray-600 */
                 cursor: pointer;
                 transition: background-color 0.1s ease;
-                height: 20px;
+                height: 10px;
             }
-            .schedule-grid .time-slot.selected {
-                background-color: #4ade80; /* Green-400 */
+            .schedule-grid .time-slot.user-selection {
+                background-color: #3b82f6 !important; /* Blue-500 */
             }
 		</style>
 	</head>
@@ -265,10 +266,16 @@
                         contentDates.classList.add('hidden');
                     });
                     
-                    for (let i = 0; i < 24; i++) {
-                        const displayTime = i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`;
-                        startTimeSelect.innerHTML += `<option value="${i}">${displayTime}</option>`;
-                        endTimeSelect.innerHTML += `<option value="${i}">${displayTime}</option>`;
+                    for (let h = 0; h < 24; h++) {
+                        for (let m = 0; m < 60; m += 15) {
+                            const value = h + (m / 60);
+                            const minute = m.toString().padStart(2, '0');
+                            const hour12 = h % 12 === 0 ? 12 : h % 12;
+                            const ampm = h < 12 ? 'AM' : 'PM';
+                            const displayTime = `${hour12}:${minute} ${ampm}`;
+                            startTimeSelect.innerHTML += `<option value="${value}">${displayTime}</option>`;
+                            endTimeSelect.innerHTML += `<option value="${value}">${displayTime}</option>`;
+                        }
                     }
                     startTimeSelect.value = "9";
                     endTimeSelect.value = "17";
@@ -368,8 +375,8 @@
 
                         const eventData = {
                             name,
-                            startTime: parseInt(startTimeSelect.value),
-                            endTime: parseInt(endTimeSelect.value),
+                            startTime: parseFloat(startTimeSelect.value),
+                            endTime: parseFloat(endTimeSelect.value),
                             participants: {}
                         };
 
@@ -448,25 +455,40 @@
                     gridHeader.innerHTML = headerHtml;
 
                     let bodyHtml = '';
-                    for (let hour = startTime; hour < endTime; hour++) {
-                        const displayTime = hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour-12} PM`;
-                        bodyHtml += `<tr><td class="time-label sticky left-0 bg-[#15171c] z-10">${displayTime}</td>`;
-                        columns.forEach(col => {
-                            const id = (type === 'dates') ? `${col.toISOString().split('T')[0]}-${hour}` : `${col}-${hour}`;
-                            bodyHtml += `<td class="time-slot" data-id="${id}"></td>`;
-                        });
-                        bodyHtml += '</tr>';
+                    for (let h = Math.floor(startTime); h < Math.ceil(endTime); h++) {
+                        for (let m = 0; m < 60; m += 15) {
+                            const currentTime = h + m / 60;
+                            if (currentTime < startTime || currentTime >= endTime) continue;
+
+                            const hour12 = h % 12 === 0 ? 12 : h % 12;
+                            const ampm = h < 12 ? 'AM' : 'PM';
+                            const displayTime = `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+                            
+                            bodyHtml += `<tr><td class="time-label sticky left-0 bg-[#15171c] z-10">${displayTime}</td>`;
+
+                            columns.forEach(col => {
+                                const datePart = (type === 'dates') ? col.toISOString().split('T')[0] : col;
+                                const id = `${datePart}-${h}-${m}`;
+                                bodyHtml += `<td class="time-slot" data-id="${id}"></td>`;
+                            });
+                            bodyHtml += `</tr>`;
+                        }
                     }
                     gridBody.innerHTML = bodyHtml;
                     
                     let isMouseDown = false, isSelecting = false;
                     const handleInteractionStart = (e) => {
                          if (e.target.classList.contains('time-slot')) {
-                            isMouseDown = true; isSelecting = !e.target.classList.contains('selected');
+                            isMouseDown = true; 
+                            isSelecting = !e.target.classList.contains('user-selection');
                             toggleSlot(e.target, isSelecting);
                          }
                     };
-                    const handleInteractionMove = (e) => { if (isMouseDown && e.target.classList.contains('time-slot')) toggleSlot(e.target, isSelecting) };
+                    const handleInteractionMove = (e) => { 
+                        if (isMouseDown && e.target.classList.contains('time-slot')) {
+                             toggleSlot(e.target, isSelecting);
+                        }
+                    };
                     const handleInteractionEnd = () => { isMouseDown = false; };
                     
                     gridBody.addEventListener('mousedown', handleInteractionStart);
@@ -477,12 +499,15 @@
                         e.preventDefault();
                         const touch = e.touches[0];
                         const element = document.elementFromPoint(touch.clientX, touch.clientY);
-                        if (isMouseDown && element && element.classList.contains('time-slot')) toggleSlot(element, isSelecting);
+                        if (isMouseDown && element && element.classList.contains('time-slot')) {
+                            toggleSlot(element, isSelecting);
+                        }
                     });
                     document.addEventListener('touchend', handleInteractionEnd);
 
                     function toggleSlot(slot, select) {
-                       if (select) slot.classList.add('selected'); else slot.classList.remove('selected');
+                       if (select) slot.classList.add('user-selection'); 
+                       else slot.classList.remove('user-selection');
                     }
 
                     function renderHeatmap() {
@@ -506,7 +531,7 @@
                         const name = participantNameInput.value.trim();
                         if (!name) return alert('Please enter your name.');
 
-                        const selectedSlots = Array.from(document.querySelectorAll('.time-slot.selected')).map(slot => slot.dataset.id);
+                        const selectedSlots = Array.from(document.querySelectorAll('.time-slot.user-selection')).map(slot => slot.dataset.id);
                         
                         const saveData = { action: 'save', eventId, participant: { name, slots: selectedSlots } };
                         const saveBtn = document.getElementById('save-btn');
@@ -522,9 +547,8 @@
                             const result = await response.json();
                             if(!result.success) throw new Error(result.error);
                             
-                            // Update local data and re-render
                             eventData.participants = result.participants;
-                            document.querySelectorAll('.time-slot.selected').forEach(s => s.classList.remove('selected'));
+                            document.querySelectorAll('.time-slot.user-selection').forEach(s => s.classList.remove('user-selection'));
                             renderHeatmap();
                             alert('Availability saved!');
                         } catch (error) {
