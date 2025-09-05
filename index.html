@@ -4,8 +4,8 @@
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
-		<title>Saikou | Discord Timestamp Generator</title>
-		<meta name="description" content="A simple, beautiful, and mobile-friendly tool to generate dynamic Discord timestamps." />
+		<title>Saikou | Tools</title>
+		<meta name="description" content="A collection of useful tools and utilities provided by Saikou." />
 		<link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png" onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
 
 		<!-- Tailwind CSS -->
@@ -20,70 +20,19 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 		<style>
-			/* Applying custom font and base styles */
 			body {
 				font-family: 'Montserrat', sans-serif;
 				background-color: #121315;
 				color: white;
 			}
-
-			/* Custom button style from Saikou repo */
-			.custom-button {
-				font-weight: bold;
-				border-radius: 0.5rem;
-				color: #121315;
-				background-color: #ffffff;
-				height: 3rem;
-				padding: 0 1.5rem;
-				opacity: 1;
-				transition: opacity 0.3s ease, background-color 0.3s ease;
-			}
-            .custom-button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-
-			.custom-button:hover:not(:disabled) {
-				opacity: 0.8;
-			}
-			
-			/* Styling for inputs to match the dark theme */
-			input[type="date"], input[type="time"], select, textarea, input[type="text"] {
+			.tool-card {
 				background-color: #1f222c;
 				border: 1px solid #353a4a;
-				color: white;
-				border-radius: 0.5rem;
-				padding: 0.5rem;
-				-webkit-appearance: none;
-				-moz-appearance: none;
-				appearance: none;
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
 			}
-
-            select {
-                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-                background-position: right 0.5rem center;
-                background-repeat: no-repeat;
-                background-size: 1.5em 1.5em;
-                padding-right: 2.5rem;
-            }
-            
-            textarea::placeholder, input[type="text"]::placeholder {
-                color: #6b7280;
-            }
-
-			/* Dark theme for date picker indicator */
-			input[type="date"]::-webkit-calendar-picker-indicator {
-				filter: invert(1);
-			}
-			
-			/* Navbar icon hover effects */
-			.discord-icon:hover {
-				color: #5865F2 !important;
-				transition: color 0.4s;
-			}
-			.twitter-icon:hover {
-				color: #1DA1F2 !important;
-				transition: color 0.4s;
+			.tool-card:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
 			}
 		</style>
 	</head>
@@ -94,55 +43,35 @@
 				<a class="flex items-center" href="/">
 					<span class="text-white font-bold text-xl">Saikou</span>
 				</a>
-				<div class="flex items-center space-x-6">
-					<a href="https://discord.gg/saikou" aria-label="Discord" target="_blank" class="text-white text-2xl discord-icon">
-						<i class="fa-brands fa-discord"></i>
-					</a>
-					<a href="https://twitter.com/SaikouDev" aria-label="Twitter" target="_blank" class="text-white text-2xl twitter-icon">
-						<i class="fa-brands fa-twitter"></i>
-					</a>
-				</div>
 			</nav>
 		</header>
 
 		<!-- Main Content -->
 		<main class="container mx-auto px-4 py-8">
 			<div class="max-w-4xl mx-auto text-center">
-				<h1 class="text-3xl md:text-5xl font-bold">Discord Timestamp Generator</h1>
-				<p class="mt-4 text-lg text-gray-300">Create dynamic timestamps for Discord.</p>
+				<h1 class="text-4xl md:text-6xl font-bold">Saikou Tools</h1>
+				<p class="mt-4 text-lg text-gray-300">A collection of utilities to enhance your experience.</p>
 			</div>
 
-			<div class="max-w-xl mx-auto mt-10 bg-[#15171c] p-6 md:p-8 rounded-lg shadow-lg">
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-					<div>
-						<label for="date-input" class="block text-sm font-medium text-gray-300 mb-1">Date</label>
-						<input type="date" id="date-input" class="w-full" />
+			<div class="max-w-4xl mx-auto mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
+				<!-- Timestamp Generator Card -->
+				<a href="timestamp.html" class="tool-card rounded-lg p-8 block group">
+					<div class="flex items-center mb-4">
+						<i class="fa-solid fa-clock text-3xl text-white"></i>
+						<h2 class="text-2xl font-bold ml-4">Timestamp Generator</h2>
 					</div>
-					<div>
-						<label for="time-input" class="block text-sm font-medium text-gray-300 mb-1">Time (Local)</label>
-						<input type="time" id="time-input" class="w-full" />
-					</div>
-				</div>
-                <div class="mt-4">
-                    <button id="now-btn" class="custom-button w-full sm:w-auto">Set to Now</button>
-                </div>
-			</div>
+					<p class="text-gray-400">Create dynamic, auto-updating timestamps for your Discord messages and announcements.</p>
+				</a>
 
-			<div id="result-display" class="max-w-xl mx-auto mt-8 bg-[#1f222c] p-6 md:p-8 rounded-lg shadow-lg">
-				<div>
-					<label for="format-select" class="block text-sm font-medium text-gray-300 mb-1">Timestamp Format</label>
-					<select id="format-select" class="w-full"></select>
-				</div>
-	
-				<div class="mt-4">
-					 <h3 class="font-bold text-lg">Preview</h3>
-					 <p id="preview-output" class="text-white font-bold text-lg mt-1 mb-3 min-h-[1.75rem]"></p>
-				</div>
-	
-				<div>
-					<div id="tag-output" class="bg-[#121315] p-2 rounded text-sm font-mono truncate my-2 min-h-[2.25rem] flex items-center"></div>
-					<button id="copy-btn" class="custom-button w-full">Copy</button>
-				</div>
+				<!-- Event Scheduler Card -->
+				<a href="#" class="tool-card rounded-lg p-8 block group relative cursor-not-allowed">
+					<div class="flex items-center mb-4">
+						<i class="fa-solid fa-calendar-days text-3xl text-white"></i>
+						<h2 class="text-2xl font-bold ml-4">Event Scheduler</h2>
+						<span class="ml-auto bg-yellow-500 text-yellow-900 text-xs font-semibold px-2.5 py-0.5 rounded-full">Coming Soon</span>
+					</div>
+					<p class="text-gray-400">Coordinate and find the best time for your group events, similar to When2meet.</p>
+				</a>
 			</div>
 		</main>
 
@@ -150,153 +79,7 @@
 		<footer class="text-center bg-[#0c0d0e] mt-20 py-12">
 			<div class="container mx-auto px-4">
 				<p class="text-sm text-gray-500">© 2025, Saikou. All rights reserved.</p>
-				<p class="text-xs text-gray-600 mt-2">This is a utility tool provided by Saikou. Not affiliated with Discord.</p>
 			</div>
 		</footer>
-
-		<!-- JavaScript Logic -->
-		<script>
-			document.addEventListener('DOMContentLoaded', () => {
-                // DOM Elements
-				const dateInput = document.getElementById('date-input');
-				const timeInput = document.getElementById('time-input');
-				const nowButton = document.getElementById('now-btn');
-				const formatSelect = document.getElementById('format-select');
-				const previewOutput = document.getElementById('preview-output');
-				const tagOutput = document.getElementById('tag-output');
-				const copyButton = document.getElementById('copy-btn');
-
-
-                // Timestamp formats
-				const formats = [
-					{ name: 'Short Time', code: 't' },
-					{ name: 'Long Time', code: 'T' },
-					{ name: 'Short Date', code: 'd' },
-					{ name: 'Long Date', code: 'D' },
-					{ name: 'Short Date/Time', code: 'f' },
-					{ name: 'Long Date/Time', code: 'F' },
-					{ name: 'Relative Time', code: 'R' },
-				];
-
-                // Populate dropdown
-                formats.forEach(format => {
-                    const option = document.createElement('option');
-                    option.value = format.code;
-                    option.textContent = format.name;
-                    formatSelect.appendChild(option);
-                });
-
-                // Function to set date and time inputs to now
-				const setToNow = () => {
-					const now = new Date();
-                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-					dateInput.value = now.toISOString().slice(0, 10);
-					timeInput.value = now.toISOString().slice(11, 16);
-					updateTimestamp();
-				};
-
-                // Function to generate and display the selected timestamp
-				const updateTimestamp = () => {
-					if (!dateInput.value || !timeInput.value) {
-						previewOutput.textContent = '';
-						tagOutput.textContent = '';
-						copyButton.dataset.clipboardText = '';
-                        return;
-                    }
-
-					const dateString = `${dateInput.value}T${timeInput.value}:00`;
-					const selectedDate = new Date(dateString);
-					const unixTimestamp = Math.floor(selectedDate.getTime() / 1000);
-                    const selectedFormat = formatSelect.value;
-					
-					const tag = `<t:${unixTimestamp}:${selectedFormat}>`;
-					const preview = generatePreview(selectedDate, selectedFormat);
-					
-                    previewOutput.textContent = preview;
-                    previewOutput.dataset.date = selectedDate.toISOString();
-					tagOutput.textContent = tag;
-					copyButton.dataset.clipboardText = tag;
-				};
-
-                // Function to generate a preview of the timestamp
-				const generatePreview = (date, formatCode) => {
-					try {
-						switch (formatCode) {
-							case 't': return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: 'numeric' }).format(date);
-							case 'T': return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: 'numeric', second: 'numeric' }).format(date);
-							case 'd': return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
-							case 'D': return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric' }).format(date);
-							case 'f': return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' }).format(date);
-							case 'F': return new Intl.DateTimeFormat(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' }).format(date);
-							case 'R': return getRelativeTime(date);
-							default: return '';
-						}
-					} catch (e) {
-						return 'Invalid Date';
-					}
-				};
-
-                // Function to calculate relative time string
-                const getRelativeTime = (date) => {
-                    const now = new Date();
-                    const diffInSeconds = Math.round((date.getTime() - now.getTime()) / 1000);
-                    const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-
-                    const units = {
-                        year: 31536000,
-                        month: 2592000,
-                        day: 86400,
-                        hour: 3600,
-                        minute: 60,
-                        second: 1
-                    };
-
-                    for (const unit in units) {
-                        const value = diffInSeconds / units[unit];
-                        if (Math.abs(value) >= 1) {
-                            return rtf.format(Math.round(value), unit);
-                        }
-                    }
-                    return 'just now';
-                };
-                
-                // Real-time update for relative timestamps
-                setInterval(() => {
-                    if (formatSelect.value === 'R' && previewOutput.dataset.date) {
-                       const date = new Date(previewOutput.dataset.date);
-                       previewOutput.textContent = getRelativeTime(date);
-                    }
-                }, 5000); // Updated every 5 seconds for efficiency
-
-				// Generic copy function
-				const copyToClipboard = (text, buttonElement, originalText) => {
-					if(!text) return;
-					const tempElem = document.createElement('textarea');
-					tempElem.value = text;
-					document.body.appendChild(tempElem);
-					tempElem.select();
-					try {
-						document.execCommand('copy');
-						buttonElement.textContent = 'Copied!';
-					} catch (err) {
-						console.error('Failed to copy text: ', err);
-						buttonElement.textContent = 'Error!';
-					}
-					document.body.removeChild(tempElem);
-					setTimeout(() => { buttonElement.textContent = originalText; }, 2000);
-				}
-
-                // Event Listeners
-				dateInput.addEventListener('input', updateTimestamp);
-				timeInput.addEventListener('input', updateTimestamp);
-                formatSelect.addEventListener('change', updateTimestamp);
-				nowButton.addEventListener('click', setToNow);
-				copyButton.addEventListener('click', (e) => copyToClipboard(e.target.dataset.clipboardText, e.target, 'Copy'));
-                
-                // Initial Load
-				setToNow();
-			});
-		</script>
 	</body>
 </html>
-
