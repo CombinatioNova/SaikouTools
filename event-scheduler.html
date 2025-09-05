@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+		<title>Saikou | Event Scheduler</title>
+		<meta name="description" content="Coordinate and schedule events with ease. A simple, intuitive tool for finding the best time for your group." />
+		<link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png" onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- Fonts -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+
+		<!-- Font Awesome -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+		<style>
+			body {
+				font-family: 'Montserrat', sans-serif;
+				background-color: #121315;
+				color: white;
+                overscroll-behavior: none;
+			}
+			input, select {
+				background-color: #1f222c;
+				border: 1px solid #353a4a;
+				color: white;
+				border-radius: 0.5rem;
+				padding: 0.75rem;
+                margin-top: 0.5rem;
+                transition: border-color 0.3s ease;
+			}
+            input:focus, select:focus {
+                outline: none;
+                border-color: #7f89ff;
+            }
+			.custom-button {
+				font-weight: bold;
+				border-radius: 0.5rem;
+				color: #121315;
+				background-color: #ffffff;
+                padding: 0.75rem 1.5rem;
+				opacity: 1;
+				transition: opacity 0.3s ease, background-color 0.3s ease;
+                cursor: pointer;
+			}
+			.custom-button:hover:not(:disabled) {
+				opacity: 0.8;
+			}
+            .custom-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .tab-button {
+                background-color: transparent;
+                border: 1px solid #353a4a;
+                color: #9ca3af;
+            }
+            .tab-button.active {
+                background-color: #353a4a;
+                color: white;
+            }
+            .calendar-day {
+                transition: background-color 0.2s;
+            }
+            .calendar-day:not(.disabled):hover {
+                background-color: #374151;
+            }
+            .day-of-week.selected {
+                background-color: #4ade80 !important;
+                border-color: #4ade80 !important;
+                color: #121315;
+            }
+
+            /* Scheduler Grid Styles */
+            .schedule-grid-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .schedule-grid {
+                user-select: none;
+                -webkit-user-select: none;
+                border-collapse: separate;
+                border-spacing: 2px;
+            }
+            .schedule-grid th, .schedule-grid td {
+                padding: 4px;
+                text-align: center;
+                min-width: 80px;
+            }
+            .schedule-grid td.time-label {
+                min-width: 100px;
+                font-size: 0.8rem;
+                color: #9ca3af;
+            }
+            .schedule-grid .time-slot {
+                background-color: #374151; /* Gray-600 */
+                cursor: pointer;
+                transition: background-color 0.1s ease;
+                height: 20px;
+            }
+            .schedule-grid .time-slot.selected {
+                background-color: #4ade80; /* Green-400 */
+            }
+		</style>
+	</head>
+	<body class="bg-[#121315]">
+		<!-- Header -->
+		<header class="container mx-auto px-4 md:px-0">
+			<nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+				<a class="flex items-center" href="/tools.html">
+					<span class="text-white font-bold text-xl">Saikou Tools</span>
+				</a>
+			</nav>
+		</header>
+
+		<!-- Main Content -->
+		<main class="container mx-auto px-4 py-8">
+            <!-- Event Creation View -->
+            <div id="create-view" class="max-w-2xl mx-auto">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">Create a New Event</h1>
+                    <p class="mt-4 text-lg text-gray-300">Find the best time for you and your group to meet.</p>
+                </div>
+                <div class="mt-10 bg-[#15171c] p-8 rounded-lg shadow-lg space-y-6">
+                    <div>
+                        <label for="event-name" class="block text-sm font-medium text-gray-300">Event Name</label>
+                        <input type="text" id="event-name" class="w-full" placeholder="e.g., Weekly Gaming Session">
+                    </div>
+
+                    <!-- Tabs for Date vs Day selection -->
+                    <div class="flex border-b border-gray-700">
+                        <button id="tab-dates" class="tab-button active py-2 px-4 font-semibold">Specific Dates</button>
+                        <button id="tab-days" class="tab-button py-2 px-4 font-semibold">Days of the Week</button>
+                    </div>
+
+                    <!-- Specific Dates Content -->
+                    <div id="content-dates">
+                        <div id="calendar-container" class="bg-[#1f222c] p-4 rounded-md">
+                            <div class="flex justify-between items-center mb-4">
+                                <button id="prev-month" class="px-3 py-1 rounded hover:bg-gray-700">&lt;</button>
+                                <h3 id="month-year" class="font-bold text-lg"></h3>
+                                <button id="next-month" class="px-3 py-1 rounded hover:bg-gray-700">&gt;</button>
+                            </div>
+                            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center"></div>
+                        </div>
+                    </div>
+
+                    <!-- Days of the Week Content -->
+                    <div id="content-days" class="hidden">
+                        <div id="days-of-week-container" class="flex flex-wrap gap-2 justify-center">
+                            <!-- Day buttons will be inserted here by JS -->
+                        </div>
+                    </div>
+                    
+                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                        <div>
+                            <label for="start-time" class="block text-sm font-medium text-gray-300">From</label>
+                            <select id="start-time" class="w-full"></select>
+                        </div>
+                        <div>
+                            <label for="end-time" class="block text-sm font-medium text-gray-300">To</label>
+                            <select id="end-time" class="w-full"></select>
+                        </div>
+                    </div>
+                    <button id="create-event-btn" class="custom-button w-full">Create Event</button>
+                </div>
+            </div>
+
+            <!-- Event Scheduling View -->
+            <div id="event-view" class="hidden">
+                 <div id="loading-view" class="text-center py-20">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                    <p class="text-lg text-gray-400 mt-4">Loading Event...</p>
+                 </div>
+                 <div id="event-content" class="hidden">
+                    <div class="text-center">
+                        <h1 id="display-event-name" class="text-4xl md:text-5xl font-bold break-words"></h1>
+                    </div>
+                    <div class="max-w-7xl mx-auto mt-10 bg-[#15171c] p-4 sm:p-8 rounded-lg shadow-lg">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <div class="flex-grow">
+                                <label for="participant-name" class="block text-sm font-medium text-gray-300">Your Name</label>
+                                <input type="text" id="participant-name" class="w-full md:max-w-xs" placeholder="Enter your name to mark availability">
+                            </div>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="save-btn" class="custom-button flex-grow md:flex-grow-0">Save Availability</button>
+                                <button id="copy-link-btn" class="custom-button bg-blue-500 hover:bg-blue-600 flex-grow md:flex-grow-0">Copy Link</button>
+                            </div>
+                        </div>
+                        <div class="schedule-grid-container">
+                            <table class="w-full schedule-grid">
+                                <thead id="grid-header"></thead>
+                                <tbody id="grid-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="font-bold text-lg">Who's Available?</h3>
+                            <div id="participant-list" class="mt-2 text-sm text-gray-400 space-y-1"></div>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+		</main>
+
+		<!-- Footer -->
+		<footer class="text-center bg-[#0c0d0e] mt-20 py-12">
+			<div class="container mx-auto px-4">
+				<p class="text-sm text-gray-500">© 2025, Saikou. All rights reserved.</p>
+			</div>
+		</footer>
+
+        <script>
+            // --- CONFIGURATION ---
+            // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+            const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyNvaxJhKO-PPIu6GCsCim69ERnc-mp9PLaQ8wQrn2pjqfeoMqiRfpUNkNn7XZCnw0/exec';
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const createView = document.getElementById('create-view');
+                const eventView = document.getElementById('event-view');
+                
+                const params = new URLSearchParams(window.location.search);
+                const eventId = params.get('event');
+
+                if (eventId) {
+                    createView.classList.add('hidden');
+                    eventView.classList.remove('hidden');
+                    initializeEventView(eventId);
+                } else {
+                    createView.classList.remove('hidden');
+                    eventView.classList.add('hidden');
+                    initializeCreateView();
+                }
+
+                function initializeCreateView() {
+                    const eventNameInput = document.getElementById('event-name');
+                    const startTimeSelect = document.getElementById('start-time');
+                    const endTimeSelect = document.getElementById('end-time');
+                    const createButton = document.getElementById('create-event-btn');
+
+                    const tabDates = document.getElementById('tab-dates');
+                    const tabDays = document.getElementById('tab-days');
+                    const contentDates = document.getElementById('content-dates');
+                    const contentDays = document.getElementById('content-days');
+                    let activeTab = 'dates';
+
+                    tabDates.addEventListener('click', () => {
+                        activeTab = 'dates';
+                        tabDates.classList.add('active');
+                        tabDays.classList.remove('active');
+                        contentDates.classList.remove('hidden');
+                        contentDays.classList.add('hidden');
+                    });
+
+                    tabDays.addEventListener('click', () => {
+                        activeTab = 'days';
+                        tabDays.classList.add('active');
+                        tabDates.classList.remove('active');
+                        contentDays.classList.remove('hidden');
+                        contentDates.classList.add('hidden');
+                    });
+                    
+                    for (let i = 0; i < 24; i++) {
+                        const displayTime = i === 0 ? '12 AM' : i < 12 ? `${i} AM` : i === 12 ? '12 PM' : `${i-12} PM`;
+                        startTimeSelect.innerHTML += `<option value="${i}">${displayTime}</option>`;
+                        endTimeSelect.innerHTML += `<option value="${i}">${displayTime}</option>`;
+                    }
+                    startTimeSelect.value = "9";
+                    endTimeSelect.value = "17";
+
+                    const daysOfWeekContainer = document.getElementById('days-of-week-container');
+                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    days.forEach(day => {
+                        const btn = document.createElement('button');
+                        btn.textContent = day;
+                        btn.dataset.day = day;
+                        btn.className = "day-of-week p-2 border border-gray-600 rounded-md w-16 text-center cursor-pointer hover:bg-gray-700 transition-colors";
+                        btn.addEventListener('click', () => btn.classList.toggle('selected'));
+                        daysOfWeekContainer.appendChild(btn);
+                    });
+
+                    const calendarGrid = document.getElementById('calendar-grid');
+                    const monthYearDisplay = document.getElementById('month-year');
+                    let currentMonth = new Date().getMonth();
+                    let currentYear = new Date().getFullYear();
+                    let selectedDates = new Set();
+                    let isDragging = false;
+
+                    function renderCalendar() {
+                        calendarGrid.innerHTML = '';
+                        const date = new Date(currentYear, currentMonth, 1);
+                        monthYearDisplay.textContent = date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+                        days.forEach(day => {
+                            const dayEl = document.createElement('div');
+                            dayEl.textContent = day;
+                            dayEl.className = 'font-bold text-gray-400 text-sm';
+                            calendarGrid.appendChild(dayEl);
+                        });
+                        
+                        const firstDayIndex = date.getDay();
+                        for (let i = 0; i < firstDayIndex; i++) {
+                            calendarGrid.appendChild(document.createElement('div'));
+                        }
+
+                        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            const dayEl = document.createElement('div');
+                            dayEl.textContent = i;
+                            const dateStr = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                            dayEl.dataset.date = dateStr;
+                            dayEl.className = 'calendar-day p-2 rounded-full cursor-pointer';
+
+                            const today = new Date();
+                            today.setHours(0,0,0,0);
+                            const dayDate = new Date(dateStr + "T00:00:00");
+
+                            if(dayDate < today){
+                                dayEl.classList.add("disabled", "text-gray-600", "cursor-not-allowed");
+                            }
+                            
+                            if (selectedDates.has(dateStr)) {
+                                dayEl.classList.add('bg-blue-500', 'text-white');
+                            }
+                            calendarGrid.appendChild(dayEl);
+                        }
+                    }
+
+                    calendarGrid.addEventListener('mousedown', (e) => {
+                        if (e.target.dataset.date && !e.target.classList.contains('disabled')) {
+                            isDragging = true;
+                            selectedDates.clear();
+                            selectedDates.add(e.target.dataset.date);
+                            renderCalendar();
+                        }
+                    });
+                    calendarGrid.addEventListener('mouseover', (e) => {
+                        if (isDragging && e.target.dataset.date && !e.target.classList.contains('disabled')) {
+                            selectedDates.add(e.target.dataset.date);
+                            renderCalendar();
+                        }
+                    });
+                    document.addEventListener('mouseup', () => { isDragging = false; });
+                    document.getElementById('prev-month').addEventListener('click', () => {
+                        currentMonth--;
+                        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+                        renderCalendar();
+                    });
+                    document.getElementById('next-month').addEventListener('click', () => {
+                        currentMonth++;
+                        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+                        renderCalendar();
+                    });
+
+                    renderCalendar();
+
+                    createButton.addEventListener('click', async () => {
+                        if (!APPS_SCRIPT_URL) {
+                            return alert('Configuration error: Google Apps Script URL is missing.');
+                        }
+                        const name = eventNameInput.value.trim();
+                        if (!name) { return alert('Please enter an event name.'); }
+
+                        const eventData = {
+                            name,
+                            startTime: parseInt(startTimeSelect.value),
+                            endTime: parseInt(endTimeSelect.value),
+                            participants: {}
+                        };
+
+                        if(activeTab === 'dates') {
+                            if(selectedDates.size === 0) return alert('Please select at least one date.');
+                            const datesArray = Array.from(selectedDates).sort();
+                            eventData.type = 'dates';
+                            eventData.specificDates = datesArray;
+                        } else {
+                            const selectedDays = Array.from(document.querySelectorAll('.day-of-week.selected')).map(el => el.dataset.day);
+                            if(selectedDays.length === 0) return alert('Please select at least one day of the week.');
+                            eventData.type = 'days';
+                            eventData.days = selectedDays;
+                        }
+                        
+                        createButton.disabled = true;
+                        createButton.textContent = 'Creating...';
+
+                        try {
+                            const response = await fetch(APPS_SCRIPT_URL, {
+                                method: 'POST',
+                                body: JSON.stringify({ action: 'create', eventData }),
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                            });
+                            const result = await response.json();
+                            if(result.success) {
+                                window.location.href = `${window.location.pathname}?event=${result.eventId}`;
+                            } else {
+                                throw new Error(result.error || 'Failed to create event.');
+                            }
+                        } catch (error) {
+                            alert(`Error: Could not create event. ${error.message}`);
+                            createButton.disabled = false;
+                            createButton.textContent = 'Create Event';
+                        }
+                    });
+                }
+
+                async function initializeEventView(eventId) {
+                    const loadingView = document.getElementById('loading-view');
+                    const eventContent = document.getElementById('event-content');
+
+                    if (!APPS_SCRIPT_URL) {
+                        loadingView.innerHTML = `<p class="text-red-500 text-center">Configuration error: Google Apps Script URL is missing. Please follow the integration guide.</p>`;
+                        return;
+                    }
+
+                    let eventData;
+                    try {
+                        const response = await fetch(`${APPS_SCRIPT_URL}?event=${eventId}`);
+                        const result = await response.json();
+                        if(!result.success) throw new Error(result.error);
+                        eventData = result.eventData;
+                    } catch (e) {
+                        loadingView.innerHTML = `<p class="text-red-500 text-center">Error: Could not load event data. The event might not exist or there was a server error. <a href="/event-scheduler.html" class="underline">Create new event</a>.</p>`;
+                        return;
+                    }
+                    
+                    loadingView.classList.add('hidden');
+                    eventContent.classList.remove('hidden');
+
+                    const { name, type, startTime, endTime, participants } = eventData;
+                    document.getElementById('display-event-name').textContent = name;
+                    
+                    const gridHeader = document.getElementById('grid-header');
+                    const gridBody = document.getElementById('grid-body');
+                    const participantNameInput = document.getElementById('participant-name');
+                    
+                    let columns = (type === 'dates') ? eventData.specificDates.map(d => new Date(d + 'T00:00:00')) : eventData.days;
+
+                    let headerHtml = '<tr><th class="sticky left-0 bg-[#15171c] z-10">Time</th>';
+                    columns.forEach(col => {
+                         headerHtml += `<th>${(type === 'dates') ? col.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric'}) : col}</th>`;
+                    });
+                    headerHtml += '</tr>';
+                    gridHeader.innerHTML = headerHtml;
+
+                    let bodyHtml = '';
+                    for (let hour = startTime; hour < endTime; hour++) {
+                        const displayTime = hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour-12} PM`;
+                        bodyHtml += `<tr><td class="time-label sticky left-0 bg-[#15171c] z-10">${displayTime}</td>`;
+                        columns.forEach(col => {
+                            const id = (type === 'dates') ? `${col.toISOString().split('T')[0]}-${hour}` : `${col}-${hour}`;
+                            bodyHtml += `<td class="time-slot" data-id="${id}"></td>`;
+                        });
+                        bodyHtml += '</tr>';
+                    }
+                    gridBody.innerHTML = bodyHtml;
+                    
+                    let isMouseDown = false, isSelecting = false;
+                    const handleInteractionStart = (e) => {
+                         if (e.target.classList.contains('time-slot')) {
+                            isMouseDown = true; isSelecting = !e.target.classList.contains('selected');
+                            toggleSlot(e.target, isSelecting);
+                         }
+                    };
+                    const handleInteractionMove = (e) => { if (isMouseDown && e.target.classList.contains('time-slot')) toggleSlot(e.target, isSelecting) };
+                    const handleInteractionEnd = () => { isMouseDown = false; };
+                    
+                    gridBody.addEventListener('mousedown', handleInteractionStart);
+                    gridBody.addEventListener('mouseover', handleInteractionMove);
+                    document.addEventListener('mouseup', handleInteractionEnd);
+                    gridBody.addEventListener('touchstart', e => { e.preventDefault(); handleInteractionStart({ target: e.touches[0].target }); });
+                    gridBody.addEventListener('touchmove', e => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (isMouseDown && element && element.classList.contains('time-slot')) toggleSlot(element, isSelecting);
+                    });
+                    document.addEventListener('touchend', handleInteractionEnd);
+
+                    function toggleSlot(slot, select) {
+                       if (select) slot.classList.add('selected'); else slot.classList.remove('selected');
+                    }
+
+                    function renderHeatmap() {
+                        const allSlots = {};
+                        Object.values(participants).forEach(userSlots => userSlots.forEach(slotId => { allSlots[slotId] = (allSlots[slotId] || 0) + 1; }));
+                        const maxCount = Math.max(1, ...Object.values(allSlots));
+                        document.querySelectorAll('.time-slot').forEach(slot => {
+                            const count = allSlots[slot.dataset.id] || 0;
+                            slot.style.backgroundColor = count > 0 ? `rgba(74, 222, 128, ${0.2 + (0.8 * (count / maxCount))})` : '';
+                        });
+                        renderParticipantList();
+                    }
+
+                    function renderParticipantList() {
+                        const listEl = document.getElementById('participant-list');
+                        const names = Object.keys(participants);
+                        listEl.innerHTML = (names.length === 0) ? 'No one has marked their availability yet.' : `<span class="font-semibold text-gray-200">Available (${names.length}):</span> ${names.join(', ')}`;
+                    }
+
+                    document.getElementById('save-btn').addEventListener('click', async () => {
+                        const name = participantNameInput.value.trim();
+                        if (!name) return alert('Please enter your name.');
+
+                        const selectedSlots = Array.from(document.querySelectorAll('.time-slot.selected')).map(slot => slot.dataset.id);
+                        
+                        const saveData = { action: 'save', eventId, participant: { name, slots: selectedSlots } };
+                        const saveBtn = document.getElementById('save-btn');
+                        saveBtn.disabled = true;
+                        saveBtn.textContent = 'Saving...';
+
+                         try {
+                            const response = await fetch(APPS_SCRIPT_URL, {
+                                method: 'POST',
+                                body: JSON.stringify(saveData),
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                            });
+                            const result = await response.json();
+                            if(!result.success) throw new Error(result.error);
+                            
+                            // Update local data and re-render
+                            eventData.participants = result.participants;
+                            document.querySelectorAll('.time-slot.selected').forEach(s => s.classList.remove('selected'));
+                            renderHeatmap();
+                            alert('Availability saved!');
+                        } catch (error) {
+                            alert(`Error: Could not save availability. ${error.message}`);
+                        } finally {
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = 'Save Availability';
+                        }
+                    });
+                    
+                    document.getElementById('copy-link-btn').addEventListener('click', () => {
+                         navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied to clipboard!'));
+                    });
+                    renderHeatmap();
+                }
+            });
+        </script>
+	</body>
+</html>
+
