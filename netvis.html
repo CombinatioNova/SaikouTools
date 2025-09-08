@@ -71,11 +71,72 @@
                 height: 100%;
             }
             .node, .link {
-                transition: opacity 0.3s ease, stroke-opacity 0.3s ease;
+                transition: opacity 0.3s ease, stroke-opacity 0.3s ease, display 0.3s;
             }
-            .node circle {
+            .node-background {
                 stroke-width: 3px;
+                transition: all 0.3s ease;
+                pointer-events: none;
+                z-index: 1;
+                fill: none; /* Makes it a ring */
+            }
+            .node image {
+                pointer-events: none;
+                z-index: 2;
+            }
+            .search-highlight {
+                fill: transparent;
+                transition: fill 0.3s ease, opacity 0.3s ease;
+                pointer-events: none;
+                z-index: 0;
+                opacity: 0;
+            }
+            .node.searched .search-highlight {
+                fill: #3b82f6;
+                opacity: 0.4;
+            }
+            .node:not(.searched) .search-highlight {
+                fill: #000000;
+                opacity: 0.3;
+            }
+            .node.hovered .search-highlight,
+            .node.seed-user .search-highlight {
+                opacity: 0.1 !important; /* Very subtle highlight for hovered/seed nodes */
+            }
+            .node-background {
                 transition: stroke 0.3s ease, stroke-width 0.3s ease;
+            }
+            .node.seed-user .node-background {
+                stroke: #f59e0b !important;
+                stroke-width: 3px !important;
+                fill: #f59e0b !important;
+                fill-opacity: 0.2 !important;
+                z-index: 1;
+            }
+            
+            /* Ensure seed user styles persist on hover */
+            .node.seed-user:hover .node-background,
+            .node.seed-user.hovered .node-background {
+                stroke: #f59e0b !important;
+                stroke-width: 3px !important;
+                fill: #f59e0b !important;
+                fill-opacity: 0.3 !important;
+            }
+            
+            /* Remove any hover effects that might override the seed user style */
+            .node.seed-user:hover circle:first-child,
+            .node.seed-user.hovered circle:first-child {
+                fill: transparent !important;
+                stroke: none !important;
+            }
+            
+            .node.searched .node-background {
+                filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8));
+                transform: scale(1.05);
+                transition: all 0.2s ease;
+            }
+            .node.banned .node-background {
+                stroke: #f87171; /* Lighter red for border */
             }
             .link {
                 stroke: #4b5563; /* Gray-600 */
@@ -89,6 +150,14 @@
             }
             #graph-svg.show-former-links .link.former-link {
                  stroke-opacity: 0.5; /* Visible when toggled */
+            }
+            #graph-svg .node:not(.searched) {
+                opacity: 0.5; /* Increased darkening */
+                transition: opacity 0.3s ease;
+            }
+            #graph-svg .node.searched {
+                opacity: 1;
+                filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.9)); /* Added glow effect */
             }
             .tooltip {
                 position: absolute;
@@ -137,15 +206,80 @@
                 border-radius: 9999px;
                 transition: width 0.5s ease-out;
             }
-            .graph-legend {
+            /* Graph Controls Container */
+            .graph-controls {
                 position: absolute;
                 top: 1rem;
                 right: 1rem;
-                background-color: rgba(12, 13, 14, 0.8);
-                padding: 0.5rem 0.75rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                z-index: 10;
+                pointer-events: none;
+            }
+            
+            .graph-controls > * {
+                pointer-events: auto;
+            }
+            
+            .graph-legend {
+                background-color: rgba(12, 13, 14, 0.95);
+                padding: 0.75rem;
                 border-radius: 0.5rem;
                 border: 1px solid #353a4a;
-                z-index: 5;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+                display: none; /* Hidden by default */
+                width: 180px;
+                backdrop-filter: blur(4px);
+                margin-left: auto; /* Push to the right within the flex container */
+            }
+            
+            .legend-title {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: #9ca3af;
+                margin-bottom: 0.5rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+            
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 0.25rem;
+            }
+            
+            .legend-color {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 0.5rem;
+                flex-shrink: 0;
+            }
+            
+            .search-container {
+                background-color: rgba(12, 13, 14, 0.95);
+                padding: 0.75rem;
+                border-radius: 0.5rem;
+                border: 1px solid #353a4a;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+                width: 250px;
+                display: none; /* Hidden by default */
+            }
+            .search-container input {
+                width: 100%;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.875rem;
+                background-color: #1f222c;
+                border: 1px solid #353a4a;
+                color: white;
+                border-radius: 0.25rem;
+            }
+            .search-container label {
+                display: block;
+                font-size: 0.75rem;
+                color: #9ca3af;
+                margin-bottom: 0.25rem;
             }
             /* FAB Styling */
             #fab-container.open #fab-actions {
@@ -156,6 +290,54 @@
             #fab-container.open #fab-main-btn {
                 transform: rotate(45deg);
                 background-color: #d1d5db; /* Lighter gray when open */
+            }
+
+            /* Toggle Switch Styles */
+            .toggle-label {
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                cursor: pointer;
+                font-size: 0.875rem;
+                color: #d1d5db;
+                padding: 0.25rem 0;
+            }
+
+            .toggle-label input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .toggle-switch {
+                position: relative;
+                display: inline-block;
+                width: 40px;
+                height: 22px;
+                background-color: #4b5563;
+                border-radius: 9999px;
+                transition: background-color 0.2s;
+            }
+
+            .toggle-switch::after {
+                content: '';
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background-color: white;
+                top: 3px;
+                left: 3px;
+                transition: transform 0.2s;
+            }
+
+            .toggle-label input:checked + .toggle-switch {
+                background-color: #3b82f6;
+            }
+
+            .toggle-label input:checked + .toggle-switch::after {
+                transform: translateX(18px);
             }
 		</style>
 	</head>
@@ -197,9 +379,19 @@
                 <div id="graph-container" class="graph-container mt-4">
                     <div id="graph-tooltip" class="tooltip"></div>
                     <svg id="graph-svg"></svg>
-                     <div id="graph-legend" class="graph-legend hidden"></div>
+                    
+                    <!-- Controls that stay on graph -->
+                    <div class="graph-controls">
+                        <div class="search-container">
+                            <label for="node-search" class="block text-xs font-medium text-gray-400 mb-1">Search Nodes</label>
+                            <input type="text" id="node-search" class="w-full px-2 py-1 text-sm bg-[#1a1c23] border border-[#2d3748] rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent" placeholder="Search by username, ID, or display name...">
+                        </div>
+                        <div id="graph-legend" class="graph-legend">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
                     <div id="graph-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500">
-                        <p>Add users above and click "Generate Graph" to begin.</p>
+                        <p></p>
                     </div>
                 </div>
             </div>
@@ -222,7 +414,32 @@
         <!-- Floating Action Button -->
         <div id="fab-container" class="fixed bottom-6 right-6 z-30 flex flex-col items-center gap-3">
             <div id="fab-actions" class="flex flex-col items-center gap-3 transition-all duration-300 ease-in-out transform scale-90 opacity-0 -translate-y-4 pointer-events-none">
-                <div class="flex items-center justify-center gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
+                <!-- MODIFIED: Filter Legend moved here -->
+                <div id="filter-legend" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44">
+                    <div class="legend-title mb-2">Filter by Type</div>
+                    <label class="toggle-label">
+                        <span>Staff</span>
+                        <input type="checkbox" class="filter-checkbox" data-filter="staff" checked>
+                        <span class="toggle-switch"></span>
+                    </label>
+                     <label class="toggle-label">
+                        <span>Banned/Terminated</span>
+                        <input type="checkbox" class="filter-checkbox" data-filter="banned" checked>
+                        <span class="toggle-switch"></span>
+                    </label>
+                    <label class="toggle-label">
+                        <span>New Account (&lt;90d)</span>
+                        <input type="checkbox" class="filter-checkbox" data-filter="new" checked>
+                        <span class="toggle-switch"></span>
+                    </label>
+                    <label class="toggle-label">
+                        <span>Normal User</span>
+                        <input type="checkbox" class="filter-checkbox" data-filter="normal" checked>
+                        <span class="toggle-switch"></span>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
                     <span class="text-xs font-semibold text-gray-300">Show Former Friends</span>
                     <label for="former-friends-toggle" class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" value="" id="former-friends-toggle" class="sr-only peer">
@@ -234,8 +451,9 @@
                     <span>Deep Search</span>
                 </button>
             </div>
+            <!-- MODIFIED: Icon Changed -->
             <button id="fab-main-btn" class="custom-button rounded-full w-16 h-16 flex items-center justify-center text-2xl bg-white shadow-lg transform transition-transform duration-300 ease-in-out">
-                <i class="fas fa-tools"></i>
+                <i class="fas fa-cog"></i>
             </button>
         </div>
 
@@ -243,7 +461,6 @@
             const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
 
             document.addEventListener('DOMContentLoaded', () => {
-                // Function to add a user to the lookup list
                 const addUserToLookup = (user) => {
                     const userId = user.name || user.id.toString();
                     if (!seedUsers.has(userId)) {
@@ -263,18 +480,32 @@
                 const tooltip = d3.select("#graph-tooltip");
                 const placeholder = document.getElementById('graph-placeholder');
                 const graphLegend = document.getElementById('graph-legend');
+                const filterLegend = document.getElementById('filter-legend');
                 const profileModal = document.getElementById('profile-modal');
                 const modalContent = document.getElementById('modal-content');
                 const loadingModal = document.getElementById('loading-modal');
                 const progressBar = document.getElementById('progress-bar');
                 const progressText = document.getElementById('progress-text');
-                
-                // FAB Elements
+                const nodeSearch = document.getElementById('node-search');
                 const fabContainer = document.getElementById('fab-container');
                 const fabMainBtn = document.getElementById('fab-main-btn');
                 const deepSearchBtn = document.getElementById('deep-search-btn');
                 const formerFriendsToggle = document.getElementById('former-friends-toggle');
-
+                
+                nodeSearch.disabled = false;
+                
+                // MODIFIED: Simplified show/hide controls
+                const showControls = () => {
+                    document.querySelector('.search-container').style.display = 'block';
+                    document.getElementById('graph-legend').style.display = 'block';
+                    nodeSearch.focus();
+                };
+                
+                const hideControls = () => {
+                    document.querySelector('.search-container').style.display = 'none';
+                    document.getElementById('graph-legend').style.display = 'none';
+                };
+                
                 let seedUsers = new Set();
                 let simulation = d3.forceSimulation();
 
@@ -299,8 +530,45 @@
                         hideProfileModal();
                     }
                 });
+                
+                filterLegend.addEventListener('change', filterNodes);
 
-                // --- UI Functions ---
+                // Store the current search term
+                let currentSearchTerm = '';
+
+                // Function to apply search highlighting
+                const applySearchHighlight = () => {
+                    const allNodes = d3.selectAll('.node');
+                    
+                    if (!currentSearchTerm) {
+                        allNodes.classed('searched', false);
+                        allNodes.select('.search-highlight').style('opacity', 0);
+                        return;
+                    }
+                    
+                    allNodes.each(function(d) {
+                        const node = d3.select(this);
+                        const nodeName = (d.name || '').toLowerCase();
+                        const nodeId = d.id ? d.id.toString() : '';
+                        const displayName = (d.displayName || '').toLowerCase();
+                        
+                        const matches = nodeName.includes(currentSearchTerm) || 
+                                     nodeId.includes(currentSearchTerm) ||
+                                     displayName.includes(currentSearchTerm);
+                        
+                        node.classed('searched', matches);
+                        node.select('.search-highlight')
+                            .style('opacity', matches ? 0.3 : 0)
+                            .style('fill', '#3b82f6');
+                    });
+                };
+
+                // Update the search event listener
+                nodeSearch.addEventListener('input', (e) => {
+                    currentSearchTerm = e.target.value.trim().toLowerCase();
+                    applySearchHighlight();
+                });
+
                 function addSeedUser() {
                     const query = userInput.value.trim();
                     if (!query || seedUsers.has(query)) {
@@ -334,26 +602,96 @@
                         setTimeout(() => loadingModal.classList.add('hidden'), 300);
                     }
                 };
-
+                
+                // MODIFIED: Legends are now left-justified
                 const renderLegend = (showFormer) => {
                      graphLegend.innerHTML = `
-                        <div class="flex items-center mb-1"><div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #10b981;"></div><span class="text-xs">Staff</span></div>
-                        <div class="flex items-center mb-1"><div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #ef4444;"></div><span class="text-xs">Banned/Terminated</span></div>
-                        <div class="flex items-center mb-1"><div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #f59e0b;"></div><span class="text-xs">New Account (&lt;90d)</span></div>
-                        <div class="flex items-center mb-1"><div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #6b7280;"></div><span class="text-xs">Normal User</span></div>
-                        ${showFormer ? `<div class="flex items-center"><div class="w-3 h-0 border-t-2 border-dashed mr-2" style="border-color: #f87171;"></div><span class="text-xs">Former Friend</span></div>` : ''}
+                        <div class="legend-title">Node Outline</div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #10b981;"></div>
+                            <span class="text-xs text-gray-300">Staff</span>
+                        </div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #ef4444;"></div>
+                            <span class="text-xs text-gray-300">Banned/Terminated</span>
+                        </div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #f59e0b;"></div>
+                            <span class="text-xs text-gray-300">New Account (&lt;90d)</span>
+                        </div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm border-2 mr-2" style="border-color: #6b7280;"></div>
+                            <span class="text-xs text-gray-300">Normal User</span>
+                        </div>
+
+                        <div class="legend-title mt-3">Node Highlight</div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm mr-2" style="background-color: #f59e0b;"></div>
+                            <span class="text-xs text-gray-300">Seed User</span>
+                        </div>
+                        <div class="flex items-center justify-start w-full mb-1">
+                            <div class="w-3 h-3 rounded-sm mr-2" style="background-color: #3b82f6;"></div>
+                            <span class="text-xs text-gray-300">Searched User</span>
+                        </div>
+
+                        ${showFormer ? `
+                        <div class="legend-title mt-3">Links</div>
+                        <div class="flex items-center justify-start w-full">
+                            <div class="w-4 h-0 border-t-2 border-dashed mr-2" style="border-color: #f87171;"></div>
+                            <span class="text-xs text-gray-300">Former Friend</span>
+                        </div>` : ''}
                      `;
                 }
+                
+                const getNodeType = (d) => {
+                    if (d.groupRole) {
+                        const lowerRole = d.groupRole.toLowerCase();
+                        if (lowerRole.includes('developer') || lowerRole.includes('manager') || lowerRole.includes('moderator') || lowerRole.includes('contractor')) {
+                            return 'staff';
+                        }
+                    }
+                    if (d.isBanned || d.isTerminated) return 'banned';
+                    if (d.created !== null) {
+                         const ageMs = Date.now() - new Date(d.created).getTime();
+                         if (ageMs / (1000 * 60 * 60 * 24) < 90) return 'new';
+                    }
+                    return 'normal';
+                };
 
-                // --- Graph Generation ---
-                const generateGraph = async (isDeepSearch = false) => {
+                function filterNodes() {
+                    const activeFilters = new Set();
+                    document.querySelectorAll('.filter-checkbox:checked').forEach(cb => {
+                        activeFilters.add(cb.dataset.filter);
+                    });
+
+                    const visibleNodeIds = new Set();
+
+                    svg.selectAll('.node').each(function(d) {
+                        const nodeElement = d3.select(this);
+                        const type = getNodeType(d);
+                        const isSeedUser = seedUsers.has(d.id?.toString()) || seedUsers.has(d.name);
+                        const isVisible = isSeedUser || activeFilters.has(type);
+                        nodeElement.style('display', isVisible ? null : 'none');
+                        if (isVisible) {
+                            visibleNodeIds.add(d.id);
+                        }
+                    });
+
+                    svg.selectAll('.link').style('display', d => {
+                        const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                        const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                        return (visibleNodeIds.has(sourceId) && visibleNodeIds.has(targetId)) ? null : 'none';
+                    });
+                }
+
+                async function generateGraph(isDeepSearch = false) {
                     if (seedUsers.size === 0) {
                         alert("Please add at least one user to generate the graph.");
                         return;
                     }
 
-                    placeholder.classList.add('hidden');
-                    graphLegend.classList.add('hidden');
+                    placeholder.style.display = 'none';
+                    showControls();
                     fabContainer.classList.remove('open');
                     svg.selectAll("*").remove();
                     showLoadingModal(true, 'Finding initial users & checking cache...', 10);
@@ -375,7 +713,6 @@
                         showLoadingModal(true, 'Building visualization...', 90);
                         renderGraph(data);
                         renderLegend(formerFriendsToggle.checked);
-                        graphLegend.classList.remove('hidden');
                         showLoadingModal(false);
 
                     } catch (error) {
@@ -385,23 +722,20 @@
                             errorMessage = "The request was too large and hit a server limit. Please try a smaller number of initial users or use the regular search instead of Deep Search.";
                         }
                         placeholder.textContent = `Error: ${errorMessage}`;
-                        placeholder.classList.remove('hidden');
+                        placeholder.style.display = 'flex';
+                        hideControls();
                         showLoadingModal(false);
                     }
                 };
                 
                 const getNodeColor = (node) => {
-                    if (node.groupRole) {
-                        const lowerRole = node.groupRole.toLowerCase();
-                        if (lowerRole.includes('developer') || lowerRole.includes('manager') || lowerRole.includes('moderator') || lowerRole.includes('contractor')) {
-                            return '#10b981';
-                        }
+                    const type = getNodeType(node);
+                    switch(type) {
+                        case 'staff': return '#10b981';
+                        case 'banned': return '#ef4444';
+                        case 'new': return '#f59e0b';
+                        default: return '#6b7280';
                     }
-                    if (node.isBanned || node.isTerminated) return '#ef4444';
-                    if (node.created === null) return '#6b7280';
-                    const ageMs = Date.now() - new Date(node.created).getTime();
-                    if (ageMs / (1000 * 60 * 60 * 24) < 90) return '#f59e0b';
-                    return '#6b7280';
                 };
 
                 function renderGraph({ nodes, links }) {
@@ -415,7 +749,7 @@
                         .force("link", d3.forceLink(links).id(d => d.id).distance(80).strength(0.8))
                         .force("charge", d3.forceManyBody().strength(-350))
                         .force("center", d3.forceCenter(width / 2, height / 2))
-                        .force("collide", d3.forceCollide().radius(16)); // Add collision to prevent overlap
+                        .force("collide", d3.forceCollide().radius(16));
 
                     const link = g.append("g")
                         .selectAll("line")
@@ -428,7 +762,16 @@
                         .selectAll("g")
                         .data(nodes)
                         .join("g")
-                        .attr("class", "node");
+                        .attr("class", d => {
+                            let classes = "node";
+                            const isSeedUser = seedUsers.has(d.name) || seedUsers.has(d.id?.toString());
+                            if (isSeedUser) {
+                                classes += " seed-user";
+                            }
+                            return classes;
+                        })
+                        .attr("id", d => `node-${d.id}`)
+                        .style("opacity", 1); // All nodes fully visible by default
                     
                     const defs = svg.append('defs');
                     nodeGroup.each(function(d) {
@@ -437,9 +780,19 @@
                             .append('image').attr('href', d.avatarUrl).attr('height', 1).attr('width', 1).attr('preserveAspectRatio', 'xMidYMid slice');
                     });
 
-                    nodeGroup.append("circle").attr("r", 15).attr("fill", d => `url(#avatar-${d.id})`).attr("stroke", d => getNodeColor(d));
+                    nodeGroup.append("circle")
+                        .attr("r", 15)
+                        .attr("class", "search-highlight");
+
+                    nodeGroup.append("circle")
+                        .attr("r", 15)
+                        .attr("class", "node-background")
+                        .attr("stroke", d => getNodeColor(d));
+
+                    nodeGroup.append("circle")
+                        .attr("r", 13)
+                        .attr("fill", d => `url(#avatar-${d.id})`);
                     
-                    // --- Event Handlers for Highlighting and Interaction ---
                     nodeGroup
                         .call(drag(simulation))
                         .on("click", (event, d) => { 
@@ -456,37 +809,55 @@
                                 if (l.target.id === d.id) connectedNodes.add(l.source.id);
                             });
 
-                            nodeGroup.style('opacity', n => connectedNodes.has(n.id) ? 1.0 : 0.15);
+                            nodeGroup.classed('hovered', n => connectedNodes.has(n.id));
+                            
+                            // Only dim non-connected, non-seed users
+                            nodeGroup.style('opacity', n => {
+                                const isConnected = connectedNodes.has(n.id);
+                                const isSeed = seedUsers.has(n.name) || seedUsers.has(n.id?.toString());
+                                return (isConnected || isSeed) ? 1 : 0.3;
+                            });
+                            
                             link.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.05);
 
-                            d3.select(this).select('circle').style('stroke', '#a5b4fc').style('stroke-width', 4);
+                            // Only update stroke for non-seed users
+                            const isSeed = seedUsers.has(d.name) || seedUsers.has(d.id?.toString());
+                            if (!isSeed) {
+                                d3.select(this).select('.node-background')
+                                    .style('stroke', '#a5b4fc')
+                                    .style('stroke-width', 4);
+                            }
                         })
                         .on("mousemove", (event) => {
                             const rect = graphContainer.getBoundingClientRect();
                             tooltip.style("left", (event.clientX - rect.left + 15) + "px").style("top", (event.clientY - rect.top) + "px");
                         })
-                        .on('mouseout', function(event, d) {
+                        .on('mouseout', function() {
                             tooltip.style("opacity", 0);
-
+                            nodeGroup.classed('hovered', false);
+                            // Reset all nodes to full opacity on mouseout
                             nodeGroup.style('opacity', 1);
-                            link.style('stroke-opacity', l => {
-                                if (l.isFormer) {
-                                    return formerFriendsToggle.checked ? 0.5 : 0;
-                                }
-                                return 0.6;
-                            });
-
-                            d3.select(this).select('circle')
-                                .style('stroke', getNodeColor(d))
-                                .style('stroke-width', 3);
+                            link.style('stroke-opacity', 0.6);
                         });
 
 
                     simulation.on("tick", () => {
                         link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                         nodeGroup.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                        
+                        // Ensure seed users are always fully visible
+                        nodeGroup.each(function(d) {
+                            const isSeed = seedUsers.has(d.name) || seedUsers.has(d.id?.toString());
+                            if (isSeed) {
+                                d3.select(this).style("opacity", 1);
+                            }
+                        });
                     });
                     
+                    filterNodes();
+
+                    applySearchHighlight();
+
                     svg.call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', (event) => g.attr('transform', event.transform))).on("dblclick.zoom", null);
                 }
 
@@ -521,7 +892,6 @@
                     `;
                     profileModal.classList.remove('hidden');
                     
-                    // Add event listener for the Add to Map button
                     const addToMapBtn = document.getElementById('add-to-map-btn');
                     if (addToMapBtn) {
                         if (seedUsers.has(d.name || d.id.toString())) {
@@ -548,5 +918,3 @@
         </script>
 	</body>
 </html>
-
-
