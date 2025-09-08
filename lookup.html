@@ -123,10 +123,11 @@
                 const searchBtn = document.getElementById('search-btn');
                 const resultContainer = document.getElementById('result-container');
 
-                // --- State for pagination ---
+                // --- State for pagination and current user data ---
                 let fullFriendsList = [];
                 let currentFriendsPage = 1;
-                const friendsPerPage = 50; // Show 10 rows (5 per row)
+                const friendsPerPage = 50;
+                let currentLookupData = {}; // This will hold the complete API response
 
                 const handleSearch = async (queryOverride) => {
                     const query = queryOverride || searchInput.value.trim();
@@ -145,6 +146,7 @@
                             throw new Error(data.error || 'An unknown error occurred.');
                         }
                         
+                        currentLookupData = data; // Store the data globally
                         fullFriendsList = data.friends || [];
                         currentFriendsPage = 1;
                         renderProfile(data);
@@ -231,18 +233,29 @@
                     return `${seconds} second(s)`;
                 };
                 
-                const renderFriendCard = (friend) => `
-                    <a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors" data-username="${friend.name}">
-                        <img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 border-gray-600">
-                        <p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p>
-                        <p class="text-xs text-gray-400 truncate">@${friend.name}</p>
-                    </a>
-                `;
+                const renderFriendCard = (friend, bannedFriends = []) => {
+                    const isBanned = bannedFriends.some(bf => bf.id === friend.id);
+                    return `
+                        <div class="relative">
+                            ${isBanned ? `
+                                <div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" 
+                                     title="Banned Friend">
+                                    <i class="fas fa-ban"></i>
+                                </div>
+                            ` : ''}
+                            <a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors block" data-username="${friend.name}">
+                                <img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 ${isBanned ? 'border-red-500' : 'border-gray-600'}">
+                                <p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p>
+                                <p class="text-xs text-gray-400 truncate">@${friend.name}</p>
+                            </a>
+                        </div>
+                    `;
+                };
 
                 const renderFriendsPreview = () => {
                     const grid = document.getElementById('friends-grid');
                     if (!grid) return;
-                    grid.innerHTML = fullFriendsList.slice(0, 10).map(renderFriendCard).join('');
+                    grid.innerHTML = fullFriendsList.slice(0, 10).map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
                 };
 
                 const renderFriendsPage = () => {
@@ -258,7 +271,7 @@
                     const end = start + friendsPerPage;
                     const paginatedFriends = fullFriendsList.slice(start, end);
 
-                    grid.innerHTML = paginatedFriends.map(renderFriendCard).join('');
+                    grid.innerHTML = paginatedFriends.map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
 
                     pageInfo.textContent = `Page ${currentFriendsPage} of ${totalPages}`;
                     prevBtn.disabled = currentFriendsPage === 1;
@@ -424,6 +437,41 @@
                                 <h3 class="font-bold text-lg mb-2">Ban History</h3>
                                 ${banHistoryHtml}
                             </div>
+                            
+                            ${data.bannedFriends && data.bannedFriends.length > 0 ? `
+                                <div class="mt-6 border-t border-red-900 bg-red-900/10 p-6">
+                                    <h3 class="text-lg font-semibold text-red-400 mb-4">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Banned Friends (${data.bannedFriends.length})
+                                    </h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        ${data.bannedFriends.map(friend => `
+                                            <div class="bg-red-900/30 border border-red-800 rounded-lg p-4">
+                                                <div class="flex items-center">
+                                                    <img src="${friend.avatarUrl}" 
+                                                         alt="${friend.displayName}"
+                                                         class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"
+                                                         onerror="this.src='https://placehold.co/50x50/1f222c/FFFFFF?text=?'"
+                                                    >
+                                                    <div>
+                                                        <a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${friend.name}">
+                                                            ${friend.displayName} (@${friend.name})
+                                                        </a>
+                                                        <div class="text-xs text-red-400">
+                                                            Banned: ${friend.banInfo && friend.banInfo.Date ? new Date(friend.banInfo.Date).toLocaleDateString() : 'N/A'}
+                                                        </div>
+                                                        ${friend.banInfo && friend.banInfo.Reason ? `
+                                                            <div class="text-xs text-red-300 mt-1">
+                                                                <span class="font-semibold">Reason:</span> ${friend.banInfo.Reason}
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
                             <div class="mt-6 border-t border-gray-700 pt-6">
                                 ${friendsHtml}
                             </div>
@@ -446,4 +494,5 @@
         </script>
 	</body>
 </html>
+
 
