@@ -496,9 +496,9 @@
                     
                     // Update meta tags for sharing
                     updateMetaTags({
-                        displayName: data.displayName,
-                        id: data.userId,
-                        avatarUrl: data.avatarUrl || `https://www.roblox.com/headshot-thumbnail/image?userId=${data.userId}&width=420&height=420&format=png`
+                        displayName: profile.displayName || profile.name || 'User',
+                        id: profile.id || profile.userId,
+                        avatarUrl: profile.avatarUrl || `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.id || profile.userId}&width=420&height=420&format=png`
                     });
                 };
 
