@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+		<title>Saikou | Friend Connection Graph</title>
+		<meta name="description" content="Visualize the network of friends between Roblox users for moderation and investigation." />
+		<link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png" onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- D3.js for Graph Visualization -->
+		<script src="https://d3js.org/d3.v7.min.js"></script>
+
+		<!-- Fonts & Icons -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+		<style>
+			body {
+				font-family: 'Montserrat', sans-serif;
+				background-color: #121315;
+				color: white;
+                overflow: hidden; /* Prevent scrolling of the page itself */
+			}
+			input {
+				background-color: #1f222c;
+				border: 1px solid #353a4a;
+				color: white;
+				border-radius: 0.5rem;
+				padding: 0.75rem;
+                transition: border-color 0.3s ease;
+			}
+            input:focus {
+                outline: none;
+                border-color: #7f89ff;
+            }
+			.custom-button {
+				font-weight: bold;
+				border-radius: 0.5rem;
+				color: #121315;
+				background-color: #ffffff;
+                padding: 0.75rem 1.5rem;
+				opacity: 1;
+				transition: opacity 0.3s ease;
+                cursor: pointer;
+			}
+			.custom-button:hover:not(:disabled) {
+				opacity: 0.8;
+			}
+            .custom-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .graph-container {
+                width: 100%;
+                height: calc(100vh - 220px); /* Adjust based on header/footer */
+                position: relative;
+                background-color: #15171c;
+                border-radius: 0.5rem;
+                overflow: hidden;
+            }
+            #graph-svg {
+                width: 100%;
+                height: 100%;
+            }
+            .node {
+                cursor: pointer;
+            }
+            .node circle {
+                stroke-width: 3px;
+            }
+            .link {
+                stroke: #4b5563; /* Gray-600 */
+                stroke-opacity: 0.6;
+            }
+            .tooltip {
+                position: absolute;
+                background-color: rgba(12, 13, 14, 0.95);
+                border: 1px solid #4b5563;
+                border-radius: 0.5rem;
+                padding: 0.5rem 0.75rem;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.1s;
+                z-index: 10;
+                transform: translate(15px, -50%);
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                white-space: nowrap;
+                max-width: none;
+            }
+            .tooltip:after {
+                content: '';
+                position: absolute;
+                left: -6px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0;
+                height: 0;
+                border-top: 6px solid transparent;
+                border-bottom: 6px solid transparent;
+                border-right: 6px solid rgba(12, 13, 14, 0.95);
+            }
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 50;
+                transition: opacity 0.3s ease;
+            }
+            .modal-content {
+                background-color: #1f222c;
+                padding: 1.5rem;
+                border-radius: 0.5rem;
+                width: 90%;
+                max-width: 350px;
+                border: 1px solid #353a4a;
+            }
+            .progress-bar-container {
+                width: 100%;
+                background-color: #374151;
+                border-radius: 9999px;
+                height: 0.75rem;
+            }
+            .progress-bar {
+                background-color: #4ade80;
+                height: 0.75rem;
+                border-radius: 9999px;
+                transition: width 0.5s ease-out;
+            }
+            .graph-legend {
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                background-color: rgba(12, 13, 14, 0.8);
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.5rem;
+                border: 1px solid #353a4a;
+                z-index: 5;
+            }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 0.25rem;
+            }
+            .legend-color-box {
+                width: 12px;
+                height: 12px;
+                border-radius: 2px;
+                margin-right: 0.5rem;
+                border: 2px solid;
+            }
+		</style>
+	</head>
+	<body class="bg-[#121315]">
+		<!-- Header -->
+		<header class="container mx-auto px-4 md:px-0">
+			<nav class="max-w-7xl mx-auto my-4 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+				<a class="flex items-center" href="/tools.html">
+					<span class="text-white font-bold text-xl">[SDIS] Department of Institutional Security</span>
+				</a>
+			</nav>
+		</header>
+
+		<!-- Main Content -->
+		<main class="container mx-auto px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">Personal Network Visualizer</h1>
+                    <p class="mt-4 text-lg text-gray-300">Visualize the friend network between multiple Roblox users.</p>
+                </div>
+
+                <div class="mt-8 bg-[#1f222c] p-4 rounded-lg shadow-lg">
+                    <div class="flex flex-col sm:flex-row gap-4 items-end">
+                        <div class="flex-grow">
+                            <label for="user-input" class="block text-sm font-medium text-gray-400 mb-1">Add Users by Username or ID</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="user-input" class="w-full" placeholder="Enter username or ID...">
+                                <button id="add-user-btn" class="custom-button">Add</button>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                             <button id="generate-graph-btn" class="custom-button bg-green-500 hover:bg-green-600 w-full sm:w-auto">Generate Graph</button>
+                        </div>
+                    </div>
+                     <div id="seed-users-container" class="mt-3 flex flex-wrap gap-2">
+                        <!-- Seed users will be added here -->
+                    </div>
+                </div>
+
+                <!-- Graph Display -->
+                <div id="graph-container" class="graph-container mt-4">
+                    <div id="graph-tooltip" class="tooltip"></div>
+                    <svg id="graph-svg"></svg>
+                     <div id="graph-legend" class="graph-legend hidden">
+                        <div class="legend-item">
+                            <div class="legend-color-box" style="border-color: #10b981;"></div>
+                            <span class="text-xs">Staff</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color-box" style="border-color: #ef4444;"></div>
+                            <span class="text-xs">Banned/Terminated</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color-box" style="border-color: #f59e0b;"></div>
+                            <span class="text-xs">New Account (&lt;90d)</span>
+                        </div>
+                         <div class="legend-item" style="margin-bottom: 0;">
+                            <div class="legend-color-box" style="border-color: #6b7280;"></div>
+                            <span class="text-xs">Normal User</span>
+                        </div>
+                    </div>
+                    <div id="graph-placeholder" class="absolute inset-0 flex items-center justify-center text-gray-500">
+                        <p>Add users above and click "Generate Graph" to begin.</p>
+                    </div>
+                </div>
+            </div>
+		</main>
+
+        <!-- Modals -->
+        <div id="profile-modal" class="modal-overlay hidden">
+            <div id="modal-content" class="modal-content"></div>
+        </div>
+        <div id="loading-modal" class="modal-overlay hidden opacity-0">
+             <div class="modal-content text-center">
+                <h3 class="text-lg font-bold">Building Graph</h3>
+                <div class="progress-bar-container mt-4">
+                    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+                </div>
+                <p id="progress-text" class="text-sm text-gray-400 mt-2">Initializing...</p>
+             </div>
+        </div>
+
+        <script>
+            const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const userInput = document.getElementById('user-input');
+                const addUserBtn = document.getElementById('add-user-btn');
+                const seedUsersContainer = document.getElementById('seed-users-container');
+                const generateGraphBtn = document.getElementById('generate-graph-btn');
+                const graphContainer = document.getElementById('graph-container');
+                const svg = d3.select("#graph-svg");
+                const tooltip = d3.select("#graph-tooltip");
+                const placeholder = document.getElementById('graph-placeholder');
+                const graphLegend = document.getElementById('graph-legend');
+                const profileModal = document.getElementById('profile-modal');
+                const modalContent = document.getElementById('modal-content');
+                // Loading Modal elements
+                const loadingModal = document.getElementById('loading-modal');
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
+
+                let seedUsers = new Set();
+                let simulation = d3.forceSimulation();
+
+                const addSeedUser = () => {
+                    const query = userInput.value.trim();
+                    if (!query || seedUsers.has(query)) {
+                        userInput.value = '';
+                        return;
+                    }
+                    seedUsers.add(query);
+                    renderSeedUsers();
+                    userInput.value = '';
+                    userInput.focus();
+                };
+
+                const renderSeedUsers = () => {
+                    seedUsersContainer.innerHTML = '';
+                    seedUsers.forEach(user => {
+                        const userEl = document.createElement('div');
+                        userEl.className = 'bg-gray-700 text-white text-sm font-semibold px-3 py-1 rounded-full flex items-center gap-2';
+                        userEl.innerHTML = `<span>${user}</span><button data-user="${user}" class="remove-user-btn text-gray-400 hover:text-white">&times;</button>`;
+                        seedUsersContainer.appendChild(userEl);
+                    });
+                };
+
+                seedUsersContainer.addEventListener('click', e => {
+                    if (e.target.classList.contains('remove-user-btn')) {
+                        seedUsers.delete(e.target.dataset.user);
+                        renderSeedUsers();
+                    }
+                });
+                
+                addUserBtn.addEventListener('click', addSeedUser);
+                userInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSeedUser();
+                    }
+                });
+
+                const showLoadingModal = (show, text = 'Initializing...', progress = 0) => {
+                    if (show) {
+                        progressText.textContent = text;
+                        progressBar.style.width = `${progress}%`;
+                        loadingModal.classList.remove('hidden');
+                        setTimeout(() => loadingModal.style.opacity = '1', 10);
+                    } else {
+                        loadingModal.style.opacity = '0';
+                        setTimeout(() => loadingModal.classList.add('hidden'), 300);
+                    }
+                };
+
+                const generateGraph = async () => {
+                    if (seedUsers.size === 0) {
+                        alert("Please add at least one user to generate the graph.");
+                        return;
+                    }
+
+                    placeholder.classList.add('hidden');
+                    graphLegend.classList.add('hidden');
+                    svg.selectAll("*").remove();
+                    showLoadingModal(true, 'Finding initial users & checking cache...', 10);
+                    
+                    try {
+                        const usersParam = Array.from(seedUsers).join(',');
+                        
+                        // Use a POST request to send the user list
+                        const response = await fetch(`${SERVERLESS_URL}/graph`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ users: usersParam })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok || data.success === false) {
+                            throw new Error(data.error || 'Failed to fetch graph data.');
+                        }
+                        
+                        if (data.nodes.length === 0) {
+                            throw new Error("No users found or no connections could be established.");
+                        }
+
+                        showLoadingModal(true, 'Building visualization...', 90);
+                        renderGraph(data);
+                        graphLegend.classList.remove('hidden');
+                        showLoadingModal(false);
+
+                    } catch (error) {
+                        console.error('Graph Generation Error:', error);
+                        placeholder.textContent = `Error: ${error.message}`;
+                        placeholder.classList.remove('hidden');
+                        showLoadingModal(false);
+                    }
+                };
+
+                generateGraphBtn.addEventListener('click', generateGraph);
+                
+                const getNodeColor = (node) => {
+                    // Check if user is staff (has a group role)
+                    if (node.groupRole) {
+                        const lowerRole = node.groupRole.toLowerCase();
+                        // Highlight staff roles with green border
+                        if (lowerRole.includes('developer') || 
+                            lowerRole.includes('manager') || 
+                            lowerRole.includes('moderator') || 
+                            lowerRole.includes('contractor')) {
+                            return '#10b981'; // Green-500
+                        }
+                    }
+                    if (node.isBanned || node.isTerminated) return '#ef4444'; // Red-500
+                    if (node.created === null) return '#6b7280'; // Gray for private join date
+                    const ageMs = Date.now() - new Date(node.created).getTime();
+                    const ageDays = ageMs / (1000 * 60 * 60 * 24);
+                    if (ageDays < 90) return '#f59e0b'; // Amber-500
+                    return '#6b7280'; // Gray-500
+                };
+
+                function renderGraph({ nodes, links }) {
+                    const width = graphContainer.clientWidth;
+                    const height = graphContainer.clientHeight;
+                    const g = svg.append("g"); 
+
+                    simulation.stop();
+                    
+                    simulation = d3.forceSimulation(nodes)
+                        .force("link", d3.forceLink(links).id(d => d.id).distance(70))
+                        .force("charge", d3.forceManyBody().strength(-200))
+                        .force("center", d3.forceCenter(width / 2, height / 2));
+
+                    const link = g.append("g")
+                        .attr("class", "links")
+                        .selectAll("line")
+                        .data(links)
+                        .join("line")
+                        .attr("class", "link");
+
+                    const nodeGroup = g.append("g")
+                        .attr("class", "nodes")
+                        .selectAll("g")
+                        .data(nodes)
+                        .join("g")
+                        .attr("class", "node");
+                    
+                    const nodeRadius = 15;
+                    const defs = svg.append('defs');
+
+                    nodeGroup.each(function(d) {
+                        defs.append('pattern')
+                            .attr('id', `avatar-${d.id}`)
+                            .attr('height', '100%')
+                            .attr('width', '100%')
+                            .attr('patternContentUnits', 'objectBoundingBox')
+                            .append('image')
+                            .attr('href', d.avatarUrl)
+                            .attr('height', 1)
+                            .attr('width', 1)
+                            .attr('preserveAspectRatio', 'xMidYMid slice');
+                    });
+
+                    nodeGroup.append("circle")
+                        .attr("r", nodeRadius)
+                        .attr("fill", d => `url(#avatar-${d.id})`)
+                        .attr("stroke", d => getNodeColor(d));
+
+                    nodeGroup.call(drag(simulation));
+                    
+                    nodeGroup.on("mouseover", (event, d) => {
+                        tooltip.style("opacity", 1);
+                        const displayName = d.displayName || d.name || 'Unknown';
+                        const name = d.name ? `@${d.name}` : `(ID: ${d.id})`;
+                        tooltip.html(`<p class="font-bold text-sm">${displayName}</p><p class="text-xs text-gray-400">${name}</p>`);
+                    })
+                    .on("mousemove", (event) => {
+                        const rect = graphContainer.getBoundingClientRect();
+                        tooltip.style("left", (event.clientX - rect.left + 5) + "px")
+                               .style("top", (event.clientY - rect.top) + "px");
+                    })
+                    .on("mouseout", () => {
+                        tooltip.style("opacity", 0);
+                    })
+                    .on("click", (event, d) => {
+                        event.stopPropagation(); 
+                        showProfileModal(d);
+                    });
+
+                    simulation.on("tick", () => {
+                        link
+                            .attr("x1", d => d.source.x)
+                            .attr("y1", d => d.source.y)
+                            .attr("x2", d => d.target.x)
+                            .attr("y2", d => d.target.y);
+
+                        nodeGroup.attr("transform", d => `translate(${d.x}, ${d.y})`);
+                    });
+                    
+                    const zoom = d3.zoom()
+                        .scaleExtent([0.1, 4])
+                        .on('zoom', (event) => {
+                            if (event.sourceEvent && event.sourceEvent.type === "mousedown" && !event.sourceEvent.target.closest(".node")) {
+                                g.attr('transform', event.transform);
+                            } else if (!event.sourceEvent || event.sourceEvent.type !== "mousedown") {
+                                 g.attr('transform', event.transform);
+                            }
+                        });
+                
+                    svg.call(zoom)
+                       .on("dblclick.zoom", null);
+                }
+
+                function drag(simulation) {
+                    function dragstarted(event, d) {
+                        if (event.sourceEvent) event.sourceEvent.stopPropagation();
+                        if (!event.active) simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    }
+                    function dragged(event, d) {
+                        d.fx = event.x;
+                        d.fy = event.y;
+                    }
+                    function dragended(event, d) {
+                        if (!event.active) simulation.alphaTarget(0);
+                        d.fx = null;
+                        d.fy = null;
+                    }
+                    return d3.drag()
+                        .on("start", dragstarted)
+                        .on("drag", dragged)
+                        .on("end", dragended);
+                }
+
+                async function showProfileModal(d) {
+                    const displayName = d.displayName || d.name || 'Unknown User';
+                    const name = d.name ? `@${d.name}` : `(ID: ${d.id})`;
+                    
+                    let createdText = 'Join Date Private';
+                     if (d.isTerminated) {
+                        createdText = '[Terminated Account]';
+                    } else if (d.created) {
+                        createdText = new Date(d.created).toLocaleDateString();
+                    }
+
+
+                    const banReasonHtml = d.isBanned ? `<div class="mt-3 bg-red-900/50 p-2 rounded-md text-center"><p class="text-sm font-semibold text-red-300">BANNED</p><p class="text-xs text-red-400 mt-1">${d.banReason || 'No reason provided.'}</p></div>` : '';
+
+
+                    modalContent.innerHTML = `
+                        <div class="flex items-center">
+                            <img src="${d.avatarUrl}" class="w-16 h-16 rounded-full mr-4 border-2" style="border-color: ${getNodeColor(d)}">
+                            <div>
+                                <p class="font-bold text-lg">${displayName}</p>
+                                <p class="text-sm text-gray-400">${name}</p>
+                            </div>
+                        </div>
+                        ${banReasonHtml}
+                        <div class="mt-2 text-xs text-gray-500 flex justify-between">
+                            <span>Joined: ${createdText}</span>
+                            <span id="modal-friend-count">Friends: ...</span>
+                        </div>
+                        <a href="./lookup.html?lookup=${d.id}" target="_blank" class="block w-full text-center custom-button mt-4">View Full Profile</a>
+                        <button id="close-modal-btn" class="block w-full text-center custom-button bg-gray-600 hover:bg-gray-700 mt-2">Close</button>
+                    `;
+                    profileModal.classList.remove('hidden');
+
+                    try {
+                        // The main user lookup tool now handles this, no need for a separate endpoint
+                        const response = await fetch(`${SERVERLESS_URL}?lookup=${d.id}`);
+                        const data = await response.json();
+                        const friendCountSpan = document.getElementById('modal-friend-count');
+                        if (friendCountSpan) {
+                             if (data.success && data.profile.friendCount !== null) {
+                                friendCountSpan.textContent = `Friends: ${data.profile.friendCount.toLocaleString()}`;
+                            } else {
+                                friendCountSpan.textContent = 'Friends: N/A';
+                            }
+                        }
+                    } catch (e) {
+                        const friendCountSpan = document.getElementById('modal-friend-count');
+                        if(friendCountSpan) friendCountSpan.textContent = 'Friends: Error';
+                    }
+                }
+                
+                function hideProfileModal() {
+                    profileModal.classList.add('hidden');
+                }
+
+                profileModal.addEventListener('click', (e) => {
+                    if (e.target.id === 'profile-modal' || e.target.id === 'close-modal-btn') {
+                        hideProfileModal();
+                    }
+                });
+
+            });
+        </script>
+	</body>
+</html>

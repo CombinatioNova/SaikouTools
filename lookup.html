@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+		<title>Saikou | User Lookup</title>
+		<meta name="description" content="A tool for moderators to look up Roblox user information and Saikou ban status." />
+		<link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png" onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- Fonts & Icons -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+		<style>
+			body {
+				font-family: 'Montserrat', sans-serif;
+				background-color: #121315;
+				color: white;
+			}
+			input {
+				background-color: #1f222c;
+				border: 1px solid #353a4a;
+				color: white;
+				border-radius: 0.5rem;
+				padding: 0.75rem;
+                transition: border-color 0.3s ease;
+			}
+            input:focus {
+                outline: none;
+                border-color: #7f89ff;
+            }
+			.custom-button {
+				font-weight: bold;
+				border-radius: 0.5rem;
+				color: #121315;
+				background-color: #ffffff;
+                padding: 0.75rem 1.5rem;
+				opacity: 1;
+				transition: opacity 0.3s ease;
+                cursor: pointer;
+			}
+			.custom-button:hover:not(:disabled) {
+				opacity: 0.8;
+			}
+            .custom-button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            .stat-card {
+                background-color: #1f222c;
+                border-radius: 0.5rem;
+                padding: 1rem;
+            }
+            .ban-history-table th, .ban-history-table td {
+                padding: 0.75rem 1rem;
+                text-align: left;
+            }
+            .ban-history-table thead {
+                background-color: #1f222c;
+            }
+            .ban-history-table tbody tr:nth-child(odd) {
+                background-color: #1A1C24;
+            }
+            .friends-grid-container {
+                transition: max-height 0.5s ease-in-out;
+            }
+            .friends-grid-container.collapsed {
+                max-height: 220px; /* Adjust to fit ~2 rows of friend cards */
+                overflow: hidden;
+            }
+		</style>
+	</head>
+	<body class="bg-[#121315]">
+		<!-- Header -->
+		<header class="container mx-auto px-4 md:px-0">
+			<nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+				<a class="flex items-center" href="/tools.html">
+					<span class="text-white font-bold text-xl">Saikou Tools</span>
+				</a>
+			</nav>
+		</header>
+
+		<!-- Main Content -->
+		<main class="container mx-auto px-4 py-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">Moderator User Lookup</h1>
+                    <p class="mt-4 text-lg text-gray-300">Enter a Roblox username or ID to view their profile and ban status.</p>
+                </div>
+
+                <div class="mt-10 bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="search-input" class="w-full flex-grow" placeholder="Enter Roblox username or ID...">
+                        <button id="search-btn" class="custom-button">Search</button>
+                    </div>
+                </div>
+
+                <!-- Result Display -->
+                <div id="result-container" class="mt-8">
+                    <!-- This will be populated with the user profile or a message -->
+                </div>
+            </div>
+		</main>
+
+		<!-- Footer -->
+		<footer class="text-center bg-[#0c0d0e] mt-20 py-12">
+			<div class="container mx-auto px-4">
+				<p class="text-sm text-gray-500">© 2025, Saikou. All rights reserved.</p>
+			</div>
+		</footer>
+
+        <script>
+            const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const searchInput = document.getElementById('search-input');
+                const searchBtn = document.getElementById('search-btn');
+                const resultContainer = document.getElementById('result-container');
+
+                // --- State for pagination ---
+                let fullFriendsList = [];
+                let currentFriendsPage = 1;
+                const friendsPerPage = 50; // Show 10 rows (5 per row)
+
+                const handleSearch = async (queryOverride) => {
+                    const query = queryOverride || searchInput.value.trim();
+                    if (!query) return;
+
+                    if(queryOverride) {
+                        searchInput.value = query;
+                    }
+
+                    setLoadingState();
+                    try {
+                        const response = await fetch(`${SERVERLESS_URL}?lookup=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+
+                        if (!response.ok || data.success === false) {
+                            throw new Error(data.error || 'An unknown error occurred.');
+                        }
+                        
+                        fullFriendsList = data.friends || [];
+                        currentFriendsPage = 1;
+                        renderProfile(data);
+
+                    } catch (error) {
+                        console.error('Lookup Error:', error);
+                        setErrorState(error.message);
+                    }
+                };
+                
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleSearch();
+                });
+                searchBtn.addEventListener('click', () => handleSearch());
+
+                // --- Event Delegation for dynamically added content ---
+                resultContainer.addEventListener('click', (e) => {
+                    // Friend links
+                    if (e.target.matches('.friend-link, .friend-link *')) {
+                        e.preventDefault();
+                        const friendName = e.target.closest('.friend-link').dataset.username;
+                        if(friendName) handleSearch(friendName);
+                    }
+                    // Toggle friends list
+                    if (e.target.id === 'toggle-friends-btn') {
+                        const grid = document.getElementById('friends-grid-container');
+                        const pagination = document.getElementById('friends-pagination');
+                        const isCollapsed = grid.classList.toggle('collapsed');
+                        
+                        e.target.textContent = isCollapsed ? 'Show More' : 'Show Less';
+                        pagination.classList.toggle('hidden', isCollapsed);
+                        
+                        if (!isCollapsed) {
+                           // When expanding, render the first full page
+                           currentFriendsPage = 1;
+                           renderFriendsPage();
+                        } else {
+                           // When collapsing, render only the small preview
+                           renderFriendsPreview();
+                        }
+                    }
+                    // Pagination controls
+                    if (e.target.id === 'prev-friend-page' && !e.target.disabled) {
+                        currentFriendsPage--;
+                        renderFriendsPage();
+                    }
+                     if (e.target.id === 'next-friend-page' && !e.target.disabled) {
+                        currentFriendsPage++;
+                        renderFriendsPage();
+                    }
+                });
+
+
+                const setLoadingState = () => {
+                    resultContainer.innerHTML = `
+                        <div class="text-center p-8">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                            <p class="mt-4 text-gray-400">Fetching user data...</p>
+                        </div>
+                    `;
+                };
+
+                const setErrorState = (message) => {
+                    resultContainer.innerHTML = `
+                        <div class="text-center p-8 bg-[#1f222c] rounded-lg">
+                            <p class="font-bold text-red-400">Error</p>
+                            <p class="text-sm mt-1 text-gray-300">${message}</p>
+                        </div>
+                    `;
+                };
+                
+                const formatDuration = (ms) => {
+                    if (!ms) return 'N/A';
+                    let seconds = Math.floor(ms / 1000);
+                    let minutes = Math.floor(seconds / 60);
+                    let hours = Math.floor(minutes / 60);
+                    let days = Math.floor(hours / 24);
+
+                    hours %= 24; minutes %= 60; seconds %= 60;
+
+                    if (days > 0) return `${days} day(s)`;
+                    if (hours > 0) return `${hours} hour(s)`;
+                    if (minutes > 0) return `${minutes} minute(s)`;
+                    return `${seconds} second(s)`;
+                };
+                
+                const renderFriendCard = (friend) => `
+                    <a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors" data-username="${friend.name}">
+                        <img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 border-gray-600">
+                        <p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p>
+                        <p class="text-xs text-gray-400 truncate">@${friend.name}</p>
+                    </a>
+                `;
+
+                const renderFriendsPreview = () => {
+                    const grid = document.getElementById('friends-grid');
+                    if (!grid) return;
+                    grid.innerHTML = fullFriendsList.slice(0, 10).map(renderFriendCard).join('');
+                };
+
+                const renderFriendsPage = () => {
+                    const grid = document.getElementById('friends-grid');
+                    const pageInfo = document.getElementById('friend-page-info');
+                    const prevBtn = document.getElementById('prev-friend-page');
+                    const nextBtn = document.getElementById('next-friend-page');
+                    
+                    if (!grid || !pageInfo || !prevBtn || !nextBtn) return;
+
+                    const totalPages = Math.ceil(fullFriendsList.length / friendsPerPage);
+                    const start = (currentFriendsPage - 1) * friendsPerPage;
+                    const end = start + friendsPerPage;
+                    const paginatedFriends = fullFriendsList.slice(start, end);
+
+                    grid.innerHTML = paginatedFriends.map(renderFriendCard).join('');
+
+                    pageInfo.textContent = `Page ${currentFriendsPage} of ${totalPages}`;
+                    prevBtn.disabled = currentFriendsPage === 1;
+                    nextBtn.disabled = currentFriendsPage === totalPages;
+                };
+
+                const renderProfile = (data) => {
+                     if (!data.profile || !data.profile.id) {
+                        setErrorState("User not found. Please check the username or ID and try again.");
+                        return;
+                    }
+                    
+                    const { profile, banHistory } = data; // friends list is now global
+                    const hasBanHistory = banHistory && banHistory.length > 0;
+                    
+                    const now = new Date().getTime();
+                    const activeBan = hasBanHistory ? banHistory.find(ban => {
+                        if (ban.type === 'permban') return true;
+                        if (ban.type === 'timeban' && ban.Duration) {
+                            return (new Date(ban.Date).getTime() + ban.Duration) > now;
+                        }
+                        return false;
+                    }) : null;
+
+                    const createdDate = new Date(profile.created).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+                    
+                    let banInfoHtml = `
+                        <div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-400 text-2xl mr-3"></i>
+                                <div>
+                                    <h4 class="font-bold text-green-300">No Active Ban</h4>
+                                    <p class="text-sm text-gray-400">This user does not have an active ban in the Saikou network.</p>
+                                </div>
+                            </div>
+                        </div>`;
+
+                    if (activeBan) {
+                        const banDate = new Date(activeBan.Date).toLocaleString();
+                        const banType = activeBan.type === 'permban' ? 'Permanent' : 'Temporary';
+                        banInfoHtml = `
+                            <div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                                <div class="flex items-center mb-4">
+                                    <i class="fas fa-times-circle text-red-400 text-2xl mr-3"></i>
+                                    <div>
+                                        <h4 class="font-bold text-red-300">User is Banned</h4>
+                                        <p class="text-sm text-gray-400">This user has an active ban in the Saikou network.</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-sm">
+                                    <p><strong class="text-gray-300">Reason:</strong> ${activeBan.Reason || 'N/A'}</p>
+                                    <p><strong class="text-gray-300">Moderator:</strong> ${activeBan.Moderator || 'N/A'}</p>
+                                    <p><strong class="text-gray-300">Ban Type:</strong> ${banType}</p>
+                                    <p><strong class="text-gray-300">Date:</strong> ${banDate}</p>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    let banHistoryHtml = '';
+                    if (hasBanHistory) {
+                        banHistoryHtml = `
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm ban-history-table rounded-lg overflow-hidden">
+                                    <thead><tr><th>Reason</th><th>Moderator</th><th>Date</th><th>Type</th><th>Duration</th></tr></thead>
+                                    <tbody>
+                                        ${banHistory.map(ban => `
+                                            <tr>
+                                                <td>${ban.Reason || 'N/A'}</td>
+                                                <td>${ban.Moderator || 'N/A'}</td>
+                                                <td>${new Date(ban.Date).toLocaleString()}</td>
+                                                <td>${ban.type === 'permban' ? 'Permanent' : 'Temporary'}</td>
+                                                <td>${ban.type === 'timeban' ? formatDuration(ban.Duration) : 'Permanent'}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>`;
+                    } else {
+                        banHistoryHtml = `<p class="text-sm text-gray-400">No ban history found for this user.</p>`;
+                    }
+                    
+                    let friendsHtml = '';
+                    if (fullFriendsList && fullFriendsList.length > 0) {
+                        friendsHtml = `
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-lg">Friends (${fullFriendsList.length})</h3>
+                                <div id="friends-pagination" class="hidden items-center gap-2">
+                                    <button id="prev-friend-page" class="custom-button px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+                                    <span id="friend-page-info" class="text-sm text-gray-400"></span>
+                                    <button id="next-friend-page" class="custom-button px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
+                                </div>
+                            </div>
+                            <div id="friends-grid-container" class="collapsed">
+                                <div id="friends-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <!-- Friends will be rendered here -->
+                                </div>
+                            </div>
+                            ${fullFriendsList.length > 10 ? `
+                                <div class="text-center mt-4">
+                                    <button id="toggle-friends-btn" class="text-blue-400 hover:underline">Show More</button>
+                                </div>
+                            ` : ''}
+                        `;
+                    } else {
+                         friendsHtml = `
+                            <h3 class="font-bold text-lg mb-2">Friends</h3>
+                            <p class="text-sm text-gray-400">${fullFriendsList ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
+                    }
+
+                    resultContainer.innerHTML = `
+                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative">
+                            <!-- Risk Flag -->
+                            ${profile.isPotentialRisk ? `
+                                <div class="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 mb-6">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mr-3"></i>
+                                        <div>
+                                            <h4 class="font-bold text-yellow-300">Potential Risk Flagged</h4>
+                                            <p class="text-sm text-gray-400">Account is new and has a low friend count. Further investigation may be warranted.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <!-- Group Rank Card -->
+                            ${profile.groupRole ? `
+                                <div class="absolute top-6 right-6 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg"
+                                     style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};">
+                                    <i class="fas fa-shield-alt mr-2"></i>
+                                    <span>${profile.groupRole}</span>
+                                </div>
+                            ` : ''}
+
+                            <!-- Profile Header -->
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                                <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
+                                <div class="sm:ml-6 mt-4 sm:mt-0">
+                                    <h2 class="text-3xl font-bold">${profile.displayName}</h2>
+                                    <p class="text-gray-400">@${profile.name}</p>
+                                    <a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">
+                                        View on Roblox <i class="fas fa-external-link-alt ml-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Bio, Stats, Bans etc. -->
+                            <div class="mt-6 border-t border-gray-700 pt-6">
+                                <h3 class="font-bold text-lg mb-2">About</h3>
+                                <p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p>
+                            </div>
+                            <div class="mt-6 border-t border-gray-700 pt-6">
+                                <h3 class="font-bold text-lg mb-2">Stats</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div>
+                                    <div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div>
+                                    <div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount !== null ? profile.friendCount : 'N/A'}</p></div>
+                                </div>
+                            </div>
+                            <div class="mt-6 border-t border-gray-700 pt-6">
+                                <h3 class="font-bold text-lg mb-2">Current Ban Status</h3>
+                                ${banInfoHtml}
+                            </div>
+                            <div class="mt-6 border-t border-gray-700 pt-6">
+                                <h3 class="font-bold text-lg mb-2">Ban History</h3>
+                                ${banHistoryHtml}
+                            </div>
+                            <div class="mt-6 border-t border-gray-700 pt-6">
+                                ${friendsHtml}
+                            </div>
+                        </div>`;
+
+                    // Initial render of friends preview
+                    if (fullFriendsList && fullFriendsList.length > 0) {
+                        renderFriendsPreview();
+                    }
+                };
+                // Check for lookup parameter in URL after DOM is loaded
+                const urlParams = new URLSearchParams(window.location.search);
+                const lookupParam = urlParams.get('lookup');
+                if (lookupParam) {
+                    // Set the input value and trigger search
+                    searchInput.value = lookupParam;
+                    handleSearch(lookupParam);
+                }
+            });
+        </script>
+	</body>
+</html>
+
