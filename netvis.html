@@ -243,6 +243,17 @@
             const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
 
             document.addEventListener('DOMContentLoaded', () => {
+                // Function to add a user to the lookup list
+                const addUserToLookup = (user) => {
+                    const userId = user.name || user.id.toString();
+                    if (!seedUsers.has(userId)) {
+                        seedUsers.add(userId);
+                        renderSeedUsers();
+                        userInput.focus();
+                        return true;
+                    }
+                    return false;
+                };
                 const userInput = document.getElementById('user-input');
                 const addUserBtn = document.getElementById('add-user-btn');
                 const seedUsersContainer = document.getElementById('seed-users-container');
@@ -401,8 +412,8 @@
                     simulation.stop();
                     
                     simulation = d3.forceSimulation(nodes)
-                        .force("link", d3.forceLink(links).id(d => d.id).distance(70).strength(0.6))
-                        .force("charge", d3.forceManyBody().strength(-250))
+                        .force("link", d3.forceLink(links).id(d => d.id).distance(80).strength(0.8))
+                        .force("charge", d3.forceManyBody().strength(-350))
                         .force("center", d3.forceCenter(width / 2, height / 2))
                         .force("collide", d3.forceCollide().radius(16)); // Add collision to prevent overlap
 
@@ -502,10 +513,32 @@
                         ${banReasonHtml}
                         <div class="mt-2 text-xs text-gray-500 text-center">Joined: ${createdText}</div>
                         <a href="./lookup.html?lookup=${d.id}" target="_blank" class="block w-full text-center custom-button mt-4">View Full Profile</a>
+                        <button id="add-to-map-btn" class="block w-full text-center custom-button bg-blue-600 hover:bg-blue-700 mt-2" data-user-id="${d.id}">
+                            ${seedUsers.has(d.name || d.id.toString()) ? 'Already in map' : 'Add to map'}
+                        </button>
                         ${cacheDateHtml}
                         <button id="close-modal-btn" class="block w-full text-center custom-button bg-gray-600 hover:bg-gray-700 mt-2">Close</button>
                     `;
                     profileModal.classList.remove('hidden');
+                    
+                    // Add event listener for the Add to Map button
+                    const addToMapBtn = document.getElementById('add-to-map-btn');
+                    if (addToMapBtn) {
+                        if (seedUsers.has(d.name || d.id.toString())) {
+                            addToMapBtn.disabled = true;
+                            addToMapBtn.classList.add('bg-gray-500', 'cursor-default');
+                        } else {
+                            addToMapBtn.addEventListener('click', () => {
+                                const added = addUserToLookup(d);
+                                if (added) {
+                                    addToMapBtn.textContent = 'Added to map!';
+                                    addToMapBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                                    addToMapBtn.classList.add('bg-green-600', 'cursor-default');
+                                    addToMapBtn.disabled = true;
+                                }
+                            });
+                        }
+                    }
                 }
                 
                 function hideProfileModal() {
