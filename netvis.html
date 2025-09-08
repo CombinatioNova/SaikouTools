@@ -73,16 +73,66 @@
             .node, .link {
                 transition: opacity 0.3s ease, stroke-opacity 0.3s ease, display 0.3s;
             }
-            .node-background {
-                stroke-width: 3px;
+            .node-bg {
                 transition: all 0.3s ease;
-                pointer-events: none;
-                z-index: 1;
-                fill: none; /* Makes it a ring */
+                pointer-events: all;
+                fill: none;
+                cursor: move;
             }
-            .node image {
+            .node-avatar {
                 pointer-events: none;
-                z-index: 2;
+            }
+            .node-outline {
+                transition: stroke 0.3s ease, stroke-width 0.2s ease;
+                pointer-events: none;
+                stroke-width: 2px;
+            }
+            
+            /* Staff nodes */
+            .node[data-type="staff"] .node-outline {
+                stroke: #10b981 !important;
+            }
+            
+            /* Banned nodes */
+            .node[data-type="banned"] .node-outline {
+                stroke: #ef4444 !important;
+            }
+            
+            /* New account nodes */
+            .node[data-type="new"] .node-outline {
+                stroke: #f59e0b !important;
+            }
+            
+            /* Normal nodes */
+            .node:not([data-type]) .node-outline,
+            .node[data-type="normal"] .node-outline {
+                stroke: #6b7280 !important;
+            }
+            
+            /* Hover state */
+            .node-bg:hover ~ .node-outline {
+                stroke-width: 3px;
+            }
+            
+            /* Ensure seed user outline overrides */
+            .node.seed-user .node-outline {
+                stroke: #f59e0b !important;
+                stroke-width: 3px !important;
+            }
+            
+            .node-bg:not(:hover) ~ .node-outline {
+                stroke-width: 2px !important;
+            }
+            .node-hit-area {
+                fill: transparent;
+                stroke: none;
+                cursor: move;
+                r: 16;
+                pointer-events: all;
+            }
+            .node-hit-area:hover ~ .node-outline {
+                stroke-width: 3px;
+                opacity: 0.8;
             }
             .search-highlight {
                 fill: transparent;
@@ -103,39 +153,34 @@
             .node.seed-user .search-highlight {
                 opacity: 0.1 !important; /* Very subtle highlight for hovered/seed nodes */
             }
-            .node-background {
+            .node-outline {
                 transition: stroke 0.3s ease, stroke-width 0.3s ease;
             }
-            .node.seed-user .node-background {
+            .node.seed-user .node-outline {
                 stroke: #f59e0b !important;
                 stroke-width: 3px !important;
-                fill: #f59e0b !important;
-                fill-opacity: 0.2 !important;
-                z-index: 1;
             }
             
             /* Ensure seed user styles persist on hover */
-            .node.seed-user:hover .node-background,
-            .node.seed-user.hovered .node-background {
+            .node.seed-user:hover .node-outline,
+            .node.seed-user.hovered .node-outline {
                 stroke: #f59e0b !important;
                 stroke-width: 3px !important;
-                fill: #f59e0b !important;
-                fill-opacity: 0.3 !important;
             }
             
             /* Remove any hover effects that might override the seed user style */
-            .node.seed-user:hover circle:first-child,
-            .node.seed-user.hovered circle:first-child {
+            .node.seed-user:hover circle.node-bg,
+            .node.seed-user.hovered circle.node-bg {
                 fill: transparent !important;
                 stroke: none !important;
             }
             
-            .node.searched .node-background {
+            .node.searched .node-outline {
                 filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.8));
                 transform: scale(1.05);
                 transition: all 0.2s ease;
             }
-            .node.banned .node-background {
+            .node.banned .node-outline {
                 stroke: #f87171; /* Lighter red for border */
             }
             .link {
@@ -770,6 +815,7 @@
                             }
                             return classes;
                         })
+                        .attr("data-type", d => getNodeType(d))
                         .attr("id", d => `node-${d.id}`)
                         .style("opacity", 1); // All nodes fully visible by default
                     
@@ -780,18 +826,30 @@
                             .append('image').attr('href', d.avatarUrl).attr('height', 1).attr('width', 1).attr('preserveAspectRatio', 'xMidYMid slice');
                     });
 
+                    // Add the search highlight (lowest z-index)
                     nodeGroup.append("circle")
                         .attr("r", 15)
                         .attr("class", "search-highlight");
 
+                    // Add the colored background (middle z-index, clickable)
                     nodeGroup.append("circle")
                         .attr("r", 15)
-                        .attr("class", "node-background")
-                        .attr("stroke", d => getNodeColor(d));
+                        .attr("fill", d => getNodeColor(d))
+                        .attr("opacity", 0.2)
+                        .attr("class", "node-bg");
+                    
+                    // Add the outline with consistent stroke width (middle z-index, above background)
+                    nodeGroup.append("circle")
+                        .attr("r", 15)
+                        .attr("class", "node-outline")
+                        .attr("stroke-width", 2)
+                        .attr("fill", "none");
 
+                    // Add the avatar (highest z-index)
                     nodeGroup.append("circle")
                         .attr("r", 13)
-                        .attr("fill", d => `url(#avatar-${d.id})`);
+                        .attr("fill", d => `url(#avatar-${d.id})`)
+                        .attr("class", "node-avatar");
                     
                     nodeGroup
                         .call(drag(simulation))
@@ -823,7 +881,7 @@
                             // Only update stroke for non-seed users
                             const isSeed = seedUsers.has(d.name) || seedUsers.has(d.id?.toString());
                             if (!isSeed) {
-                                d3.select(this).select('.node-background')
+                                d3.select(this).select('.node-outline')
                                     .style('stroke', '#a5b4fc')
                                     .style('stroke-width', 4);
                             }
