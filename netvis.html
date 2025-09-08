@@ -25,7 +25,7 @@
 				font-family: 'Montserrat', sans-serif;
 				background-color: #121315;
 				color: white;
-                overflow: hidden; /* Prevent scrolling of the page itself */
+                overflow-y: auto; /* Allow vertical scrolling when needed */
 			}
 			input {
 				background-color: #1f222c;
@@ -61,8 +61,10 @@
                 height: calc(100vh - 220px); /* Adjust based on header/footer */
                 position: relative;
                 background-color: #15171c;
-                border-radius: 0.5rem;
+                border-radius: 0.5rem 0.5rem 0.5rem 0.5rem; /* All corners rounded */
                 overflow: hidden;
+                margin: 1rem 0; /* Add vertical margin */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
             }
             #graph-svg {
                 width: 100%;
