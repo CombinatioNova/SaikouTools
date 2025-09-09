@@ -38,7 +38,7 @@
             color: white;
             border-radius: 0.5rem;
             padding: 0.75rem;
-            transition: border-color 0.3s ease;
+            transition: border-color: 0.3s ease;
         }
 
         input:focus {
@@ -587,6 +587,17 @@
             background: rgba(107, 114, 128, 0.3);
             border-color: rgba(107, 114, 128, 0.5);
         }
+        
+        .card-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .card-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
 
         .close-btn {
             position: absolute;
@@ -676,22 +687,30 @@
             stroke-width: 3px !important;
         }
 
-        /* Person of Interest Indicator */
-        .poi-indicator {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 16px;
-            height: 16px;
-            background: #ef4444;
-            border: 2px solid #121315;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            color: white;
-            z-index: 10;
+        /* POI Modal Styling */
+        .modal-overlay {
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        #poi-details-modal .detail-label {
+            @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
+        }
+
+        #poi-details-modal .detail-value {
+            @apply text-sm text-white bg-gray-700/50 p-2 rounded;
+        }
+
+        #poi-details-modal .detail-reason {
+             @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words;
         }
 
         .link {
@@ -952,10 +971,27 @@
                             <i class="fas fa-user"></i>
                             <span>View Full Profile</span>
                         </button>
-                        <button class="card-btn secondary" id="mark-poi-btn">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Mark as POI</span>
-                        </button>
+                        
+                        <div id="mark-poi-container">
+                            <button class="card-btn secondary w-full" id="mark-poi-btn">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Mark as POI</span>
+                            </button>
+                        </div>
+
+                        <div id="unmark-poi-container" class="hidden">
+                             <div class="flex gap-2">
+                                <button class="card-btn secondary w-1/2" id="view-poi-details-btn">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Details</span>
+                                </button>
+                                <button class="card-btn danger w-1/2" id="unmark-poi-btn">
+                                    <i class="fas fa-times"></i>
+                                    <span>Unmark</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <button class="card-btn primary" id="add-to-network-btn">
                             <i class="fas fa-plus"></i>
                             <span>Add to Network</span>
@@ -972,7 +1008,7 @@
     </main>
 
     <!-- POI Modal -->
-    <div id="poi-modal" class="modal-overlay" style="display: none;">
+    <div id="poi-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
             <div class="mb-4">
@@ -981,19 +1017,49 @@
             </div>
             <div class="mb-4">
                 <label for="poi-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
-                <textarea id="poi-reason" class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2 resize-none" 
-                          rows="3" placeholder="Why are you marking this user as a person of interest?"></textarea>
+                <textarea id="poi-reason"
+                    class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2 resize-none" rows="3"
+                    placeholder="Why are you marking this user as a person of interest?"></textarea>
             </div>
             <div class="flex gap-3">
-                <button id="poi-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">
+                <button id="poi-cancel-btn"
+                    class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">
                     Cancel
                 </button>
-                <button id="poi-submit-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">
+                <button id="poi-submit-btn"
+                    class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">
                     Mark as POI
                 </button>
             </div>
         </div>
     </div>
+    
+    <!-- POI Details Modal -->
+    <div id="poi-details-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
+            <div class="space-y-3">
+                <div>
+                    <p class="detail-label">Marked By</p>
+                    <p id="poi-details-marked-by" class="detail-value">Loading...</p>
+                </div>
+                 <div>
+                    <p class="detail-label">Reason</p>
+                    <p id="poi-details-reason" class="detail-reason">Loading...</p>
+                </div>
+                 <div>
+                    <p class="detail-label">Date</p>
+                    <p id="poi-details-date" class="detail-value">Loading...</p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button id="poi-details-close-btn" class="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Floating Action Button -->
     <div id="fab-container" class="fixed bottom-6 right-6 z-30 flex flex-col items-center gap-3">
@@ -1011,22 +1077,22 @@
                 <div class="legend-title mb-2">Filter by Type</div>
                 <label class="toggle-label">
                     <span>Staff</span>
-                    <input type="checkbox" class="filter-checkbox" data-filter="staff" checked>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="staff" checked>
                     <span class="toggle-switch"></span>
                 </label>
                 <label class="toggle-label">
                     <span>Banned/Terminated</span>
-                    <input type="checkbox" class="filter-checkbox" data-filter="banned" checked>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="banned" checked>
                     <span class="toggle-switch"></span>
                 </label>
                 <label class="toggle-label">
                     <span>New Account (&lt;90d)</span>
-                    <input type="checkbox" class="filter-checkbox" data-filter="new" checked>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="new" checked>
                     <span class="toggle-switch"></span>
                 </label>
                 <label class="toggle-label">
                     <span>Normal User</span>
-                    <input type="checkbox" class="filter-checkbox" data-filter="normal" checked>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="normal" checked>
                     <span class="toggle-switch"></span>
                 </label>
             </div>
@@ -1101,12 +1167,32 @@
             const closeCardBtn = document.getElementById('close-card-btn');
             const addToNetworkBtn = document.getElementById('add-to-network-btn');
             const viewProfileBtn = document.getElementById('view-profile-btn');
+            
+            const markPoiContainer = document.getElementById('mark-poi-container');
+            const unmarkPoiContainer = document.getElementById('unmark-poi-container');
+            const markPoiBtn = document.getElementById('mark-poi-btn');
+            const viewPoiDetailsBtn = document.getElementById('view-poi-details-btn');
+            const unmarkPoiBtn = document.getElementById('unmark-poi-btn');
+
+            const poiModal = document.getElementById('poi-modal');
+            const poiNameInput = document.getElementById('poi-name');
+            const poiReasonInput = document.getElementById('poi-reason');
+            const poiCancelBtn = document.getElementById('poi-cancel-btn');
+            const poiSubmitBtn = document.getElementById('poi-submit-btn');
+
+            const poiDetailsModal = document.getElementById('poi-details-modal');
+            const poiDetailsMarkedBy = document.getElementById('poi-details-marked-by');
+            const poiDetailsReason = document.getElementById('poi-details-reason');
+            const poiDetailsDate = document.getElementById('poi-details-date');
+            const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
+
             const tooltip = d3.select("#graph-tooltip");
 
             let seedUsers = new Set();
             let simulation = d3.forceSimulation();
             let currentSearchTerm = '';
             let selectedNode = null;
+            let poiTargetNode = null;
             let currentLinks = []; // Store current links for hover highlighting
             const MAX_USERS = 5;
 
@@ -1160,6 +1246,67 @@
                     window.open(`lookup.html?lookup=${encodeURIComponent(identifier)}`, '_blank');
                 }
             });
+            
+            // POI functionality
+            markPoiBtn.addEventListener('click', () => {
+                if (selectedNode && !selectedNode.isPOI) {
+                    poiTargetNode = selectedNode;
+                    poiModal.classList.remove('hidden');
+                    poiNameInput.focus();
+                }
+            });
+            
+            unmarkPoiBtn.addEventListener('click', () => {
+                if(selectedNode && selectedNode.isPOI) {
+                    unmarkPOI(selectedNode);
+                }
+            });
+            
+            viewPoiDetailsBtn.addEventListener('click', () => {
+                 if(selectedNode && selectedNode.isPOI) {
+                    fetchAndShowPOIDetails(selectedNode.id);
+                }
+            });
+
+            poiCancelBtn.addEventListener('click', () => {
+                poiModal.classList.add('hidden');
+                poiNameInput.value = '';
+                poiReasonInput.value = '';
+                poiTargetNode = null; // Clear the target node
+            });
+            
+            poiSubmitBtn.addEventListener('click', async () => {
+                const name = poiNameInput.value.trim();
+                const reason = poiReasonInput.value.trim();
+
+                if (!name || !reason) {
+                    showNotification('Please fill in your name and a reason.', 'error');
+                    return;
+                }
+
+                if (poiTargetNode) { // Use the stored target node
+                    await submitPOI(poiTargetNode, name, reason);
+                    poiModal.classList.add('hidden');
+                    poiNameInput.value = '';
+                    poiReasonInput.value = '';
+                    poiTargetNode = null; // Clear after submission
+                }
+            });
+
+            poiModal.addEventListener('click', (e) => {
+                if (e.target === poiModal) {
+                    poiModal.classList.add('hidden');
+                    poiTargetNode = null; // Also clear if clicked outside
+                }
+            });
+            
+            poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.classList.add('hidden'));
+            poiDetailsModal.addEventListener('click', (e) => {
+                if (e.target === poiDetailsModal) {
+                    poiDetailsModal.classList.add('hidden');
+                }
+            });
+
 
             // Close card when clicking outside
             document.addEventListener('click', (e) => {
@@ -1306,6 +1453,7 @@
                 if (!currentSearchTerm) {
                     allNodes.classed('searched', false);
                     searchResultsCount.textContent = '0';
+                    allNodes.style('opacity', 1);
                     return;
                 }
 
@@ -1322,6 +1470,7 @@
                     if (matches) matchCount++;
 
                     node.classed('searched', matches);
+                    node.style('opacity', matches ? 1 : 0.3);
                 });
 
                 searchResultsCount.textContent = matchCount.toString();
@@ -1384,6 +1533,9 @@
                 addToNetworkBtn.innerHTML = isAlreadyAdded ?
                     '<i class="fas fa-check"></i><span>Already Added</span>' :
                     '<i class="fas fa-plus"></i><span>Add to Network</span>';
+
+                // Update POI button state
+                updatePOIButton();
 
                 // Show card
                 nodeDetailCard.classList.add('show');
@@ -1510,7 +1662,7 @@
             async function generateGraphClientSide(userArray, isDeepSearch = false) {
                 try {
                     // Initialize graph generator
-                    const graphGenerator = new FriendGraphGenerator(robloxAPI, SERVERLESS_URL);
+                    const graphGenerator = new RobloxAPIClient(SERVERLESS_URL);
                     await graphGenerator.initialize();
 
                     // Generate graph with progress updates
@@ -1614,6 +1766,7 @@
                     .selectAll("g")
                     .data(nodes)
                     .join("g")
+                    .attr("id", d => `node-${d.id}`)
                     .attr("class", d => `node ${getNodeType(d)} ${seedUsers.has(d.name) || seedUsers.has(d.id.toString()) ? 'seed-user' : ''}`)
                     .call(d3.drag()
                         .on("start", dragstarted)
@@ -1646,8 +1799,7 @@
                     })
                     .on('mouseout', function () {
                         tooltip.style("opacity", 0);
-                        nodeGroup.style('opacity', 1);
-                        link.style('stroke-opacity', 0.6);
+                        applySearchHighlight(); // Re-apply search dimming
                     })
                     .on('click', function (event, d) {
                         event.stopPropagation();
@@ -1662,6 +1814,13 @@
                     .attr("x", -12).attr("y", -12)
                     .attr("width", 24).attr("height", 24)
                     .attr("clip-path", "circle(12px)");
+
+                // Add POI indicators
+                nodeGroup.each(function (d) {
+                    if (d.isPOI) {
+                       addPOIVisual(d3.select(this));
+                    }
+                });
 
                 // Simulation tick function
                 simulation.on("tick", () => {
@@ -1699,8 +1858,128 @@
                     filterNodes();
                 }, 100);
             }
+            
+            function addPOIVisual(nodeElement) {
+                nodeElement.append("circle")
+                    .attr("class", "poi-indicator")
+                    .attr("cx", 10)
+                    .attr("cy", -10)
+                    .attr("r", 8)
+                    .attr("fill", "#ef4444")
+                    .attr("stroke", "#121315")
+                    .attr("stroke-width", 2);
+
+                const icon = nodeElement.append("g")
+                    .attr("class", "poi-icon")
+                    .attr("transform", "translate(10, -10) scale(0.4)");
+                
+                icon.append("path")
+                    .attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z")
+                    .attr("fill", "white")
+                    .attr("transform", "translate(0, 10)");
+            }
+
+            async function submitPOI(nodeData, markerName, reason) {
+                const poiData = {
+                    userId: nodeData.id,
+                    username: nodeData.name,
+                    displayName: nodeData.displayName || nodeData.name,
+                    markedBy: markerName,
+                    reason: reason,
+                    timestamp: new Date().toISOString(),
+                    avatarUrl: nodeData.avatarUrl
+                };
+
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}/poi`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(poiData)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification(`${nodeData.displayName || nodeData.name} marked as POI`, 'success');
+                        // Manually update client state after success
+                        if (selectedNode && selectedNode.id === nodeData.id) {
+                            selectedNode.isPOI = true;
+                        }
+                        nodeData.isPOI = true;
+                        updateNodePOIStatus(nodeData);
+                        updatePOIButton();
+                    } else {
+                        throw new Error(result.error || 'Failed to mark POI');
+                    }
+                } catch (error) {
+                    console.error('Error submitting POI:', error);
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            async function unmarkPOI(nodeData) {
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}/poi/${nodeData.id}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification(`${nodeData.displayName || nodeData.name} unmarked as POI`, 'success');
+                        // Manually update client state after success
+                        if (selectedNode && selectedNode.id === nodeData.id) {
+                            selectedNode.isPOI = false;
+                        }
+                        nodeData.isPOI = false;
+                        updateNodePOIStatus(nodeData);
+                        updatePOIButton();
+                    } else {
+                        throw new Error(result.error || 'Failed to unmark POI');
+                    }
+                } catch (error) {
+                    console.error('Error unmarking POI:', error);
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+            
+            function updatePOIButton() {
+                if (!selectedNode) return;
+                const isPOI = selectedNode.isPOI;
+                
+                markPoiContainer.classList.toggle('hidden', isPOI);
+                unmarkPoiContainer.classList.toggle('hidden', !isPOI);
+            }
+
+            async function fetchAndShowPOIDetails(userId) {
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        const data = result.data;
+                        poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
+                        poiDetailsReason.textContent = data.reason || 'No reason provided.';
+                        poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+                        poiDetailsModal.classList.remove('hidden');
+                    } else {
+                        throw new Error(result.error || 'POI details not found');
+                    }
+                } catch(error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            function updateNodePOIStatus(nodeData) {
+                const nodeElement = svg.select(`#node-${nodeData.id}`);
+                if (!nodeElement.empty()) {
+                    // Clear existing indicator first
+                    nodeElement.selectAll('.poi-indicator, .poi-icon').remove();
+                    
+                    if (nodeData.isPOI) {
+                       addPOIVisual(nodeElement);
+                    }
+                }
+            }
         });
     </script>
 </body>
 
 </html>
+
