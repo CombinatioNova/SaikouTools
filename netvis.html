@@ -117,14 +117,14 @@
         }
 
         .user-tag.seed-user {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            border-color: #2563eb;
-            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
         }
 
         .user-tag.seed-user:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
         }
 
         .user-tag .remove-btn {
@@ -403,11 +403,11 @@
         }
 
         .node.seed-user .node-background {
-            fill: rgba(251, 191, 36, 0.2);
+            fill: rgba(139, 92, 246, 0.2);
         }
 
         .node.seed-user .node-outline {
-            stroke: #fbbf24;
+            stroke: #8b5cf6;
             stroke-width: 3px;
         }
 
@@ -499,7 +499,7 @@
         }
 
         .card-avatar.seed {
-            border-color: #fbbf24;
+            border-color: #8b5cf6;
         }
 
         .card-info h3 {
@@ -957,6 +957,15 @@
                                 </div>
                                 <span class="legend-label">New Accounts</span>
                                 <span class="legend-count" id="new-count">0</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-indicator">
+                                    <div class="legend-dot"
+                                        style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);"></div>
+                                    <div class="legend-glow" style="background-color: #8b5cf6;"></div>
+                                </div>
+                                <span class="legend-label">Seed Users</span>
+                                <span class="legend-count" id="seed-count">0</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-indicator">
@@ -1460,13 +1469,20 @@
 
             function updateLegendCounts(nodes) {
                 const counts = nodes.reduce((acc, node) => {
-                    acc[getNodeType(node)]++;
+                    const type = getNodeType(node);
+                    const isSeed = seedUsers.has(node.name) || seedUsers.has(node.id.toString());
+                    if (isSeed) {
+                        acc.seed++;
+                    } else {
+                        acc[type]++;
+                    }
                     return acc;
-                }, { staff: 0, banned: 0, new: 0, normal: 0 });
+                }, { staff: 0, banned: 0, new: 0, normal: 0, seed: 0 });
                 document.getElementById('staff-count').textContent = counts.staff;
                 document.getElementById('banned-count').textContent = counts.banned;
                 document.getElementById('new-count').textContent = counts.new;
                 document.getElementById('normal-count').textContent = counts.normal;
+                document.getElementById('seed-count').textContent = counts.seed;
             }
 
             async function showNodeCard(nodeData) {
