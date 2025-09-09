@@ -683,7 +683,7 @@
         }
 
         .node.seed-user .node-outline {
-            stroke: #f59e0b !important;
+            stroke: #fbbf24 !important;
             stroke-width: 3px !important;
         }
 
@@ -717,6 +717,12 @@
             stroke: #4b5563;
             stroke-opacity: 0.6;
             transition: stroke-opacity 0.3s ease;
+        }
+        
+        .link.former {
+            stroke: #ef4444;
+            stroke-dasharray: 4, 4;
+            stroke-opacity: 0.8;
         }
 
         .progress-bar-container {
@@ -755,6 +761,27 @@
             max-width: 350px;
             border: 1px solid #353a4a;
         }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #4b5563;
+            border-radius: 2px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 
@@ -789,12 +816,12 @@
                             </div>
                             <div>
                                 <label for="user-input" class="block text-sm font-semibold text-white">Add Users</label>
-                                <p class="text-xs text-gray-400">Username or ID • Max 5 users</p>
+                                <p class="text-xs text-gray-400">Username or ID • Max 10 users</p>
                             </div>
                             <div class="ml-auto flex items-center gap-2">
                                 <span class="text-xs text-gray-500">Users:</span>
                                 <span id="user-count"
-                                    class="text-xs font-mono bg-gray-700 px-2 py-1 rounded text-white">0/5</span>
+                                    class="text-xs font-mono bg-gray-700 px-2 py-1 rounded text-white">0/10</span>
                             </div>
                         </div>
 
@@ -1071,6 +1098,24 @@
                 <i class="fas fa-search-plus"></i>
                 <span>Deep Search</span>
             </button>
+            
+            <!-- NEW: Physics Controls -->
+            <div id="physics-controls" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44 space-y-2">
+                <div class="legend-title mb-1">Physics Controls</div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Charge</span><span id="charge-value">-350</span></label>
+                    <input type="range" id="charge-slider" min="-1000" max="0" value="-350" class="w-full">
+                </div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Link Distance</span><span id="distance-value">80</span></label>
+                    <input type="range" id="distance-slider" min="10" max="300" value="80" class="w-full">
+                </div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Gravity</span><span id="gravity-value">0.1</span></label>
+                    <input type="range" id="gravity-slider" min="0" max="1" step="0.05" value="0.1" class="w-full">
+                </div>
+            </div>
+
 
             <!-- Filter Legend -->
             <div id="filter-legend" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44">
@@ -1101,7 +1146,7 @@
             <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
                 <span class="text-xs font-semibold text-gray-300">Show Former Friends</span>
                 <label for="former-friends-toggle" class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" id="former-friends-toggle" class="sr-only peer">
+                    <input type="checkbox" value="" id="former-friends-toggle" class="sr-only peer" checked>
                     <div
                         class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
                     </div>
@@ -1140,8 +1185,7 @@
                 'https://saikou.banlist.workers.dev'
             ];
             let SERVERLESS_URL = WORKER_URLS[0]; // Default to first URL
-            const robloxAPI = new RobloxAPIClient();
-
+            
             // DOM elements
             const userInput = document.getElementById('user-input');
             const addUserBtn = document.getElementById('add-user-btn');
@@ -1187,6 +1231,14 @@
             const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
 
             const tooltip = d3.select("#graph-tooltip");
+            
+            // Physics Controls
+            const chargeSlider = document.getElementById('charge-slider');
+            const distanceSlider = document.getElementById('distance-slider');
+            const gravitySlider = document.getElementById('gravity-slider');
+            const chargeValue = document.getElementById('charge-value');
+            const distanceValue = document.getElementById('distance-value');
+            const gravityValue = document.getElementById('gravity-value');
 
             let seedUsers = new Set();
             let simulation = d3.forceSimulation();
@@ -1194,7 +1246,7 @@
             let selectedNode = null;
             let poiTargetNode = null;
             let currentLinks = []; // Store current links for hover highlighting
-            const MAX_USERS = 5;
+            const MAX_USERS = 10;
 
             // Event listeners
             addUserBtn.addEventListener('click', addSeedUser);
@@ -1216,6 +1268,11 @@
                 fabContainer.classList.remove('open'); // Close FAB
                 generateGraph(true);
             });
+            
+            // Physics controls
+            chargeSlider.addEventListener('input', updatePhysics);
+            distanceSlider.addEventListener('input', updatePhysics);
+            gravitySlider.addEventListener('input', updatePhysics);
 
             // Filter functionality
             document.addEventListener('change', (e) => {
@@ -1225,11 +1282,7 @@
             });
 
             // Former friends toggle
-            formerFriendsToggle.addEventListener('change', (e) => {
-                // This would show/hide former friend connections
-                // For now, just log - would need additional data from API
-                console.log('Former friends toggle:', e.target.checked);
-            });
+            formerFriendsToggle.addEventListener('change', toggleFormerFriends);
 
             // Search functionality
             nodeSearch.addEventListener('input', (e) => {
@@ -1329,7 +1382,7 @@
                 if (!query) return;
 
                 if (seedUsers.size >= MAX_USERS) {
-                    showNotification('Maximum 5 users allowed', 'warning');
+                    showNotification('Maximum 10 users allowed', 'warning');
                     return;
                 }
 
@@ -1441,6 +1494,30 @@
                     }, 300);
                 }, 3000);
             }
+            
+            function updatePhysics() {
+                const charge = chargeSlider.value;
+                const distance = distanceSlider.value;
+                const gravity = gravitySlider.value;
+
+                chargeValue.textContent = charge;
+                distanceValue.textContent = distance;
+                gravityValue.textContent = gravity;
+
+                if (simulation.nodes().length > 0) {
+                    simulation.force("charge").strength(+charge);
+                    simulation.force("link").distance(+distance);
+                    simulation.force("x").strength(+gravity);
+                    simulation.force("y").strength(+gravity);
+                    simulation.alpha(0.3).restart();
+                }
+            }
+
+            function toggleFormerFriends() {
+                const checked = formerFriendsToggle.checked;
+                svg.selectAll(".link.former").style("display", checked ? "inline" : "none");
+            }
+
 
             function applySearchHighlight() {
                 const allNodes = svg.selectAll('.node');
@@ -1504,7 +1581,7 @@
                 avatar.src = nodeData.avatarUrl || 'https://placehold.co/60x60/1f222c/FFFFFF?text=?';
                 avatar.className = `card-avatar ${getNodeType(nodeData)}`;
 
-                // Update stats - show N/A if friend count is not available or potentially inaccurate
+                // Update stats
                 const friendCount = nodeData.friendCount;
                 document.getElementById('card-friends').textContent =
                     (friendCount !== null && friendCount !== undefined) ? friendCount : 'N/A';
@@ -1653,30 +1730,7 @@
                         continue;
                     }
                 }
-
-                // All workers failed, try client-side approach
-                updateProgress(50, 'All workers failed, trying client-side approach...');
-                return await generateGraphClientSide(userArray, isDeepSearch);
-            }
-
-            async function generateGraphClientSide(userArray, isDeepSearch = false) {
-                try {
-                    // Initialize graph generator
-                    const graphGenerator = new RobloxAPIClient(SERVERLESS_URL);
-                    await graphGenerator.initialize();
-
-                    // Generate graph with progress updates
-                    const data = await graphGenerator.generateGraph(
-                        userArray,
-                        (progress, message) => {
-                            updateProgress(50 + progress * 0.5, message);
-                        }
-                    );
-
-                    return data;
-                } catch (error) {
-                    throw new Error(`Client-side generation failed: ${error.message}`);
-                }
+                throw new Error('All worker endpoints failed. Please try again later.');
             }
 
             async function generateGraph(isDeepSearch = false) {
@@ -1696,19 +1750,20 @@
                 try {
                     const data = await generateGraphWithFallback(userArray, isDeepSearch);
 
-                    // Show progress steps if available
                     if (data.progressSteps && data.progressSteps.length > 0) {
                         for (let i = 0; i < data.progressSteps.length; i++) {
                             const step = data.progressSteps[i];
                             updateProgress(step.progress, step.message);
-                            // Small delay to show progress
                             await new Promise(resolve => setTimeout(resolve, 50));
                         }
                     }
 
-                    // Render the graph
-                    renderGraph(data);
-                    showNotification('Graph generated successfully!', 'success');
+                    if (data.nodes && data.links) {
+                        renderGraph(data); // Pass full data object
+                        showNotification('Graph generated successfully!', 'success');
+                    } else {
+                        throw new Error(data.error || 'No graph data returned.');
+                    }
 
                 } catch (error) {
                     console.error('Graph generation error:', error);
@@ -1729,17 +1784,14 @@
                 return 'normal';
             }
 
-            function renderGraph({ nodes, links }) {
+            function renderGraph({ nodes, links, formerLinks }) {
                 const width = graphContainer.clientWidth;
                 const height = graphContainer.clientHeight;
-
-                currentLinks = links; // Store for hover effects
-
+                
                 svg.attr("width", width).attr("height", height);
 
                 const g = svg.append("g");
 
-                // Set up zoom
                 const zoom = d3.zoom()
                     .scaleExtent([0.1, 4])
                     .on("zoom", (event) => {
@@ -1749,12 +1801,23 @@
 
                 // Simulation setup
                 simulation = d3.forceSimulation(nodes)
-                    .force("link", d3.forceLink(links).id(d => d.id).distance(80).strength(0.8))
-                    .force("charge", d3.forceManyBody().strength(-350))
+                    .force("link", d3.forceLink(links).id(d => d.id).distance(+distanceSlider.value))
+                    .force("charge", d3.forceManyBody().strength(+chargeSlider.value))
                     .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("x", d3.forceX(width / 2).strength(+gravitySlider.value))
+                    .force("y", d3.forceY(height / 2).strength(+gravitySlider.value))
                     .force("collide", d3.forceCollide().radius(20));
 
-                // Links
+                // Render Former Friend Links first
+                const formerLink = g.append("g")
+                    .selectAll("line")
+                    .data(formerLinks || [])
+                    .join("line")
+                    .attr("class", "link former");
+                
+                toggleFormerFriends(); // Set initial visibility
+
+                // Current Friend Links
                 const link = g.append("g")
                     .selectAll("line")
                     .data(links)
@@ -1773,23 +1836,22 @@
                         .on("drag", dragged)
                         .on("end", dragended))
                     .on('mouseover', function (event, d) {
-                        // Show tooltip
                         tooltip.style("opacity", 1)
-                            .html(`<p class="font-bold text-sm">${d.displayName || d.name || 'Unknown'}</p><p class="text-xs text-gray-400">${d.name ? `@${d.name}` : `(ID: ${d.id})`}</p>`);
-
-                        const connected = {};
-                        connected[d.id] = true;
-
-                        link.each(function (l) {
-                            if (l.source === d || l.source.id === d.id) {
-                                connected[l.target.id] = true;
-                            } else if (l.target === d || l.target.id === d.id) {
-                                connected[l.source.id] = true;
-                            }
+                            .html(`<p class="font-bold text-sm">${d.displayName || d.name}</p><p class="text-xs text-gray-400">@${d.name || d.id}</p>`);
+                        
+                        const connected = new Set([d.id]);
+                        link.each(function(l) {
+                             if (l.source.id === d.id) connected.add(l.target.id);
+                             if (l.target.id === d.id) connected.add(l.source.id);
+                        });
+                        formerLink.each(function(l) {
+                            if (l.source.id === d.id) connected.add(l.target.id);
+                             if (l.target.id === d.id) connected.add(l.source.id);
                         });
 
-                        nodeGroup.style('opacity', n => connected[n.id] ? 1.0 : 0.2);
-                        link.style('stroke-opacity', l => (l.source === d || l.target === d || l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
+                        nodeGroup.style('opacity', n => connected.has(n.id) ? 1.0 : 0.2);
+                        link.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
+                        formerLink.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
 
                         d3.select(this).raise();
                     })
@@ -1799,7 +1861,10 @@
                     })
                     .on('mouseout', function () {
                         tooltip.style("opacity", 0);
-                        applySearchHighlight(); // Re-apply search dimming
+                        nodeGroup.style('opacity', 1);
+                        link.style('stroke-opacity', 0.6);
+                        formerLink.style('stroke-opacity', 0.8);
+                        applySearchHighlight();
                     })
                     .on('click', function (event, d) {
                         event.stopPropagation();
@@ -1824,13 +1889,11 @@
 
                 // Simulation tick function
                 simulation.on("tick", () => {
-                    link
-                        .attr("x1", d => d.source.x)
-                        .attr("y1", d => d.source.y)
-                        .attr("x2", d => d.target.x)
-                        .attr("y2", d => d.target.y);
-                    nodeGroup
-                        .attr("transform", d => `translate(${d.x},${d.y})`);
+                    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                    formerLink.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                    nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
                 });
 
                 // Drag functions
@@ -1899,7 +1962,6 @@
                     const result = await response.json();
                     if (result.success) {
                         showNotification(`${nodeData.displayName || nodeData.name} marked as POI`, 'success');
-                        // Manually update client state after success
                         if (selectedNode && selectedNode.id === nodeData.id) {
                             selectedNode.isPOI = true;
                         }
@@ -1923,7 +1985,6 @@
                     const result = await response.json();
                     if (result.success) {
                         showNotification(`${nodeData.displayName || nodeData.name} unmarked as POI`, 'success');
-                        // Manually update client state after success
                         if (selectedNode && selectedNode.id === nodeData.id) {
                             selectedNode.isPOI = false;
                         }
