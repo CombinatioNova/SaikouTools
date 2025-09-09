@@ -87,26 +87,27 @@
                 max-height: 220px; /* Adjust to fit ~2 rows of friend cards */
                 overflow: hidden;
             }
-             .modal-overlay {
+            .modal-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+                display: none;
+                align-items: center; justify-content: center; z-index: 50;
                 backdrop-filter: blur(5px);
+                transition: opacity 0.3s ease;
             }
-
+            .modal-overlay.flex { display: flex; }
             .modal-content {
+                background-color: #1f222c; padding: 1.5rem; border-radius: 0.5rem;
+                width: 90%; max-width: 500px; border: 1px solid #353a4a;
                 box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             }
             .modal-content textarea {
                 resize: vertical;
                 min-height: 80px;
             }
-            #poi-details-modal .detail-label {
-                @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
-            }
-            #poi-details-modal .detail-value {
-                @apply text-sm text-white bg-gray-700/50 p-2 rounded;
-            }
-            #poi-details-modal .detail-reason {
-                @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words;
-            }
+            .detail-label { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider; }
+            .detail-value { @apply text-sm text-white bg-gray-700/50 p-2 rounded; }
+            .detail-reason { @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words; }
             .actions-menu {
                 position: absolute;
                 top: 100%;
@@ -115,38 +116,10 @@
             }
             
             /* --- Person of Interest Theming --- */
-            @keyframes pulse-danger {
-                0%, 100% {
-                    box-shadow: 0 0 25px rgba(220, 38, 38, 0.2);
-                    border-color: rgba(220, 38, 38, 0.4);
-                }
-                50% {
-                    box-shadow: 0 0 35px rgba(220, 38, 38, 0.4);
-                    border-color: rgba(220, 38, 38, 0.6);
-                }
-            }
-            .poi-background {
-                background-color: #121315; /* Fallback */
-                background-image: repeating-linear-gradient(
-                    45deg,
-                    rgba(140, 26, 26, 0.15),
-                    rgba(140, 26, 26, 0.15) 15px,
-                    transparent 15px,
-                    transparent 30px
-                );
-                background-attachment: fixed;
-            }
-            .poi-alert-card {
-                background-color: rgba(153, 27, 27, 0.2);
-                border: 1px solid rgba(220, 38, 38, 0.4);
-                border-radius: 0.5rem;
-                padding: 1.5rem;
-                animation: pulse-danger 2.5s infinite;
-            }
-            .poi-profile-container {
-                border: 1px solid rgba(220, 38, 38, 0.3);
-                box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
-            }
+            @keyframes pulse-danger { 0%, 100% { box-shadow: 0 0 25px rgba(220, 38, 38, 0.2); border-color: rgba(220, 38, 38, 0.4); } 50% { box-shadow: 0 0 35px rgba(220, 38, 38, 0.4); border-color: rgba(220, 38, 38, 0.6); } }
+            .poi-background { background-image: repeating-linear-gradient(45deg, rgba(140, 26, 26, 0.15), rgba(140, 26, 26, 0.15) 15px, transparent 15px, transparent 30px); background-attachment: fixed; }
+            .poi-alert-card { background-color: rgba(153, 27, 27, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 0.5rem; padding: 1.5rem; animation: pulse-danger 2.5s infinite; }
+            .poi-profile-container { border: 1px solid rgba(220, 38, 38, 0.3); box-shadow: 0 0 30px rgba(220, 38, 38, 0.15); }
 		</style>
 	</head>
 	<body class="bg-[#121315]">
@@ -156,6 +129,28 @@
 				<a class="flex items-center" href="/index.html">
 					<span id="header-title" class="text-white font-bold text-xl transition-colors duration-300">Saikou Tools</span>
 				</a>
+                <!-- Auth UI Container -->
+                <div>
+                    <!-- Logged Out View -->
+                    <div id="login-container">
+                        <button id="login-btn" class="custom-button !bg-blue-600 !text-white !px-4 !py-2 text-sm">
+                            <i class="fas fa-sign-in-alt mr-2"></i>SDIS Login
+                        </button>
+                    </div>
+                    <!-- Logged In View -->
+                    <div id="user-status-container" class="hidden">
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <p id="user-status-name" class="font-bold text-sm text-white">User Name</p>
+                                <p id="user-status-role" class="text-xs text-gray-400">SDIS Operative</p>
+                            </div>
+                            <img id="user-status-avatar" src="" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-blue-500">
+                            <button id="logout-btn" class="custom-button !bg-red-600 !text-white !px-3 !py-1.5 text-xs">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 			</nav>
 		</header>
 
@@ -189,12 +184,12 @@
 		</footer>
 
         <!-- POI Modal -->
-        <div id="poi-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
-            <div class="modal-content bg-[#15171c] p-6 rounded-lg shadow-lg w-full max-w-md">
+        <div id="poi-modal" class="modal-overlay">
+            <div class="modal-content">
                 <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
                 <div class="mb-4">
                     <label for="poi-name" class="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
-                    <input type="text" id="poi-name" class="w-full" placeholder="Enter your name">
+                    <input type="text" id="poi-name" class="w-full" placeholder="Enter your name" readonly>
                 </div>
                 <div class="mb-4">
                     <label for="poi-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
@@ -208,8 +203,8 @@
         </div>
 
         <!-- POI Details Modal -->
-        <div id="poi-details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
-            <div class="modal-content bg-[#15171c] p-6 rounded-lg shadow-lg w-full max-w-md">
+        <div id="poi-details-modal" class="modal-overlay">
+            <div class="modal-content">
                 <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
                 <div class="space-y-3">
                     <div>
@@ -231,16 +226,33 @@
             </div>
         </div>
 
+        <!-- Login Modal -->
+        <div id="sdis-login-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 class="text-lg font-bold mb-4 text-white">SDIS Authentication</h3>
+                <p class="text-sm text-gray-400 mb-4">Please enter your assigned code phrase to access protected actions.</p>
+                <div class="mb-4">
+                    <label for="sdis-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
+                    <input type="password" id="sdis-code-phrase" class="w-full" placeholder="Enter your code phrase...">
+                </div>
+                <div class="flex gap-3">
+                    <button id="sdis-login-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                    <button id="sdis-login-submit-btn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Authenticate</button>
+                </div>
+            </div>
+        </div>
 
         <script>
-            const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
-
             document.addEventListener('DOMContentLoaded', () => {
+                const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
+                const DATA_WORKER_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
+
+                // --- DOM Elements ---
                 const searchInput = document.getElementById('search-input');
                 const searchBtn = document.getElementById('search-btn');
                 const resultContainer = document.getElementById('result-container');
 
-                // --- POI Modal Elements ---
+                // POI Modals
                 const poiModal = document.getElementById('poi-modal');
                 const poiNameInput = document.getElementById('poi-name');
                 const poiReasonInput = document.getElementById('poi-reason');
@@ -252,30 +264,43 @@
                 const poiDetailsDate = document.getElementById('poi-details-date');
                 const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
 
+                // Auth Elements
+                const loginContainer = document.getElementById('login-container');
+                const loginBtn = document.getElementById('login-btn');
+                const userStatusContainer = document.getElementById('user-status-container');
+                const userStatusName = document.getElementById('user-status-name');
+                const userStatusRole = document.getElementById('user-status-role');
+                const userStatusAvatar = document.getElementById('user-status-avatar');
+                const logoutBtn = document.getElementById('logout-btn');
+                const sdisLoginModal = document.getElementById('sdis-login-modal');
+                const sdisCodePhraseInput = document.getElementById('sdis-code-phrase');
+                const sdisLoginSubmitBtn = document.getElementById('sdis-login-submit-btn');
+                const sdisLoginCancelBtn = document.getElementById('sdis-login-cancel-btn');
 
-                // --- State for pagination and current user data ---
+                // --- State ---
                 let fullFriendsList = [];
                 let currentFriendsPage = 1;
                 const friendsPerPage = 50;
                 let currentLookupData = {}; 
 
+                // --- Auth State ---
+                let authToken = localStorage.getItem('sdis_token');
+                let currentUser = null; // Will be populated from localStorage
+                let afterLoginCallback = null;
+
                 const handleSearch = async (queryOverride) => {
                     const query = queryOverride || searchInput.value.trim();
                     if (!query) return;
 
-                    if(queryOverride) {
-                        searchInput.value = query;
-                    }
-
-                    // Reset theme on new search
-                    document.querySelector('body').classList.remove('poi-background');
-
+                    if(queryOverride) searchInput.value = query;
+                    
+                    document.body.classList.remove('poi-background');
                     setLoadingState();
                     try {
-                        const response = await fetch(`${SERVERLESS_URL}?lookup=${encodeURIComponent(query)}`);
+                        const response = await fetch(`${DATA_WORKER_URL}?lookup=${encodeURIComponent(query)}`);
                         const data = await response.json();
 
-                        if (!response.ok || data.success === false) {
+                        if (!response.ok || !data.success) {
                             throw new Error(data.error || 'An unknown error occurred.');
                         }
                         
@@ -290,168 +315,86 @@
                     }
                 };
                 
-                searchInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') handleSearch();
-                });
+                searchInput.addEventListener('keydown', e => e.key === 'Enter' && handleSearch());
                 searchBtn.addEventListener('click', () => handleSearch());
 
-                // --- Event Delegation for dynamically added content ---
+                // --- Event Delegation ---
                 resultContainer.addEventListener('click', (e) => {
-                    // Friend links
                     if (e.target.matches('.friend-link, .friend-link *')) {
                         e.preventDefault();
                         const friendName = e.target.closest('.friend-link').dataset.username;
                         if(friendName) handleSearch(friendName);
                     }
-                    // Toggle friends list
                     if (e.target.id === 'toggle-friends-btn') {
                         const grid = document.getElementById('friends-grid-container');
                         const pagination = document.getElementById('friends-pagination');
                         const isCollapsed = grid.classList.toggle('collapsed');
-                        
                         e.target.textContent = isCollapsed ? 'Show More' : 'Show Less';
                         pagination.classList.toggle('hidden', isCollapsed);
-                        
-                        if (!isCollapsed) {
-                           currentFriendsPage = 1;
-                           renderFriendsPage();
-                        } else {
-                           renderFriendsPreview();
-                        }
+                        if (!isCollapsed) renderFriendsPage(1); else renderFriendsPreview();
                     }
-                    // Pagination controls
-                    if (e.target.id === 'prev-friend-page' && !e.target.disabled) {
-                        currentFriendsPage--;
-                        renderFriendsPage();
-                    }
-                     if (e.target.id === 'next-friend-page' && !e.target.disabled) {
-                        currentFriendsPage++;
-                        renderFriendsPage();
-                    }
-                    // Actions Menu Toggle
+                    if (e.target.id === 'prev-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage - 1);
+                    if (e.target.id === 'next-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage + 1);
+                    
                     const actionsMenuBtn = e.target.closest('#actions-menu-btn');
                     if (actionsMenuBtn) {
-                        const dropdown = document.getElementById('actions-menu-dropdown');
-                        dropdown.classList.toggle('hidden');
+                        document.getElementById('actions-menu-dropdown').classList.toggle('hidden');
                     } else if (!e.target.closest('#actions-menu-dropdown')) {
                         const dropdown = document.getElementById('actions-menu-dropdown');
-                        if (dropdown) {
-                            dropdown.classList.add('hidden');
-                        }
+                        if (dropdown) dropdown.classList.add('hidden');
                     }
 
-                    // POI Actions from Menu
-                    if (e.target.closest('#action-mark-poi')) {
-                        poiModal.style.display = 'flex';
-                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
-                    }
-                     if (e.target.closest('#action-unmark-poi')) {
-                        unmarkPOI(currentLookupData.profile);
-                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
-                    }
-                    if (e.target.closest('#action-view-poi')) {
-                        fetchAndShowPOIDetails(currentLookupData.profile.id);
-                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
-                    }
-                     // --- Share Profile Action ---
+                    if (e.target.closest('#action-mark-poi')) handleMarkPOI();
+                    if (e.target.closest('#action-unmark-poi')) handleUnmarkPOI();
+                    if (e.target.closest('#action-view-poi')) handleViewPOI();
+
                     if (e.target.closest('#action-share-profile')) {
                         e.preventDefault();
                         const shareButton = e.target.closest('#action-share-profile');
                         const profileUrl = `${window.location.origin}${window.location.pathname}?lookup=${currentLookupData.profile.id}`;
-                        
-                        const textArea = document.createElement("textarea");
-                        textArea.value = profileUrl;
-                        textArea.style.position = 'fixed';
-                        textArea.style.top = '-9999px';
-                        textArea.style.left = '-9999px';
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {
-                            document.execCommand('copy');
+                        navigator.clipboard.writeText(profileUrl).then(() => {
                             shareButton.innerHTML = `<i class="fas fa-check w-4 text-green-400"></i><span>Copied!</span>`;
-                        } catch (err) {
-                            console.error('Failed to copy: ', err);
+                        }).catch(err => {
                             shareButton.innerHTML = `<i class="fas fa-times w-4 text-red-400"></i><span>Failed</span>`;
-                        }
-                        document.body.removeChild(textArea);
-
+                        });
                         setTimeout(() => {
                             shareButton.innerHTML = `<i class="fas fa-share-alt w-4"></i><span>Share Profile</span>`;
-                            document.getElementById('actions-menu-dropdown').classList.add('hidden');
+                            document.getElementById('actions-menu-dropdown')?.classList.add('hidden');
                         }, 2000);
                     }
                 });
 
-                // --- POI Modal Logic ---
-                poiCancelBtn.addEventListener('click', () => poiModal.style.display = 'none');
-                poiSubmitBtn.addEventListener('click', () => {
-                    const name = poiNameInput.value.trim();
-                    const reason = poiReasonInput.value.trim();
-                    if (name && reason && currentLookupData.profile) {
-                        submitPOI(currentLookupData.profile, name, reason);
-                        poiModal.style.display = 'none';
-                        poiNameInput.value = '';
-                        poiReasonInput.value = '';
-                    } else {
-                        // Replace alert with a more modern notification if possible
-                        console.warn('POI submission requires name and reason.');
-                    }
+                // --- POI & Login Modal Logic ---
+                poiCancelBtn.addEventListener('click', () => poiModal.classList.remove('flex'));
+                poiSubmitBtn.addEventListener('click', handleSubmitPOI);
+                poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.classList.remove('flex'));
+                sdisLoginCancelBtn.addEventListener('click', () => {
+                    sdisLoginModal.classList.remove('flex');
+                    afterLoginCallback = null;
                 });
-                poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.style.display = 'none');
-
+                sdisLoginSubmitBtn.addEventListener('click', handleLogin);
+                sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
+                loginBtn.addEventListener('click', () => showLoginModal());
+                logoutBtn.addEventListener('click', handleLogout);
 
                 const setLoadingState = () => {
-                    resultContainer.innerHTML = `
-                        <div class="text-center p-8">
-                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
-                            <p class="mt-4 text-gray-400">Fetching user data...</p>
-                        </div>
-                    `;
+                    resultContainer.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Fetching user data...</p></div>`;
                 };
-
                 const setErrorState = (message) => {
-                    // Clear POI theme on error
-                    document.querySelector('body').classList.remove('poi-background');
-                    resultContainer.innerHTML = `
-                        <div class="text-center p-8 bg-[#1f222c] rounded-lg">
-                            <p class="font-bold text-red-400">Error</p>
-                            <p class="text-sm mt-1 text-gray-300">${message}</p>
-                        </div>
-                    `;
+                    document.body.classList.remove('poi-background');
+                    resultContainer.innerHTML = `<div class="text-center p-8 bg-[#1f222c] rounded-lg"><p class="font-bold text-red-400">Error</p><p class="text-sm mt-1 text-gray-300">${message}</p></div>`;
                 };
                 
                 const formatDuration = (ms) => {
                     if (!ms) return 'N/A';
-                    let seconds = Math.floor(ms / 1000);
-                    let minutes = Math.floor(seconds / 60);
-                    let hours = Math.floor(minutes / 60);
-                    let days = Math.floor(hours / 24);
-
+                    let seconds = Math.floor(ms / 1000); let minutes = Math.floor(seconds / 60); let hours = Math.floor(minutes / 60); let days = Math.floor(hours / 24);
                     hours %= 24; minutes %= 60; seconds %= 60;
-
-                    if (days > 0) return `${days} day(s)`;
-                    if (hours > 0) return `${hours} hour(s)`;
-                    if (minutes > 0) return `${minutes} minute(s)`;
-                    return `${seconds} second(s)`;
+                    if (days > 0) return `${days} day(s)`; if (hours > 0) return `${hours} hour(s)`; if (minutes > 0) return `${minutes} minute(s)`; return `${seconds} second(s)`;
                 };
                 
                 const renderFriendCard = (friend, bannedFriends = []) => {
                     const isBanned = bannedFriends.some(bf => bf.id === friend.id);
-                    return `
-                        <div class="relative">
-                            ${isBanned ? `
-                                <div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" 
-                                     title="Banned Friend">
-                                    <i class="fas fa-ban"></i>
-                                </div>
-                            ` : ''}
-                            <a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors block" data-username="${friend.name}">
-                                <img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 ${isBanned ? 'border-red-500' : 'border-gray-600'}">
-                                <p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p>
-                                <p class="text-xs text-gray-400 truncate">@${friend.name}</p>
-                            </a>
-                        </div>
-                    `;
+                    return `<div class="relative">${isBanned ? `<div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Banned Friend"><i class="fas fa-ban"></i></div>` : ''}<a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors block" data-username="${friend.name}"><img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 ${isBanned ? 'border-red-500' : 'border-gray-600'}"><p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p><p class="text-xs text-gray-400 truncate">@${friend.name}</p></a></div>`;
                 };
 
                 const renderFriendsPreview = () => {
@@ -460,12 +403,12 @@
                     grid.innerHTML = fullFriendsList.slice(0, 10).map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
                 };
 
-                const renderFriendsPage = () => {
+                const renderFriendsPage = (page) => {
+                    currentFriendsPage = page;
                     const grid = document.getElementById('friends-grid');
                     const pageInfo = document.getElementById('friend-page-info');
                     const prevBtn = document.getElementById('prev-friend-page');
                     const nextBtn = document.getElementById('next-friend-page');
-                    
                     if (!grid || !pageInfo || !prevBtn || !nextBtn) return;
 
                     const totalPages = Math.ceil(fullFriendsList.length / friendsPerPage);
@@ -474,390 +417,285 @@
                     const paginatedFriends = fullFriendsList.slice(start, end);
 
                     grid.innerHTML = paginatedFriends.map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
-
                     pageInfo.textContent = `Page ${currentFriendsPage} of ${totalPages}`;
                     prevBtn.disabled = currentFriendsPage === 1;
                     nextBtn.disabled = currentFriendsPage === totalPages;
                 };
 
-                // New function to fetch POI details and inject them into the main card
+                const renderProfile = (data) => {
+                     if (!data.profile || !data.profile.id) {
+                        return setErrorState("User not found. Please check the username or ID and try again.");
+                    }
+                    
+                    const { profile, banHistory, bannedFriends, friends } = data; 
+                    const hasBanHistory = banHistory && banHistory.length > 0;
+                    
+                    document.body.classList.toggle('poi-background', profile.isPOI);
+
+                    const now = new Date().getTime();
+                    const activeBan = hasBanHistory ? banHistory.find(ban => ban.type === 'permban' || (ban.type === 'timeban' && (new Date(ban.Date).getTime() + ban.Duration) > now)) : null;
+
+                    const createdDate = profile.created ? new Date(profile.created).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
+                    
+                    let banInfoHtml = `<div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-2xl"></i><div><h4 class="font-bold text-green-300">No Active Ban</h4><p class="text-sm text-gray-400">This user does not have an active ban.</p></div></div>`;
+                    if (activeBan) {
+                        banInfoHtml = `<div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30"><div class="flex items-center gap-3 mb-4"><i class="fas fa-times-circle text-red-400 text-2xl"></i><div><h4 class="font-bold text-red-300">User is Banned</h4><p class="text-sm text-gray-400">This user has an active ban.</p></div></div><div class="space-y-2 text-sm"><p><strong class="text-gray-300">Reason:</strong> ${activeBan.Reason || 'N/A'}</p><p><strong class="text-gray-300">Moderator:</strong> ${activeBan.Moderator || 'N/A'}</p><p><strong class="text-gray-300">Date:</strong> ${new Date(activeBan.Date).toLocaleString()}</p></div></div>`;
+                    }
+                    
+                    const banHistoryHtml = hasBanHistory ? `
+                        <div class="overflow-x-auto"><table class="w-full text-sm ban-history-table rounded-lg overflow-hidden"><thead><tr><th>Reason</th><th>Moderator</th><th>Date</th><th>Type</th><th>Duration</th></tr></thead><tbody>
+                            ${banHistory.map(ban => `<tr><td>${ban.Reason || 'N/A'}</td><td>${ban.Moderator || 'N/A'}</td><td>${new Date(ban.Date).toLocaleString()}</td><td>${ban.type === 'permban' ? 'Permanent' : 'Temporary'}</td><td>${ban.type === 'timeban' ? formatDuration(ban.Duration) : 'Permanent'}</td></tr>`).join('')}
+                        </tbody></table></div>` : `<p class="text-sm text-gray-400">No ban history found for this user.</p>`;
+                    
+                    const friendsHtml = friends?.length > 0 ? `
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg">Friends (${friends.length})</h3><div id="friends-pagination" class="hidden items-center gap-2"><button id="prev-friend-page" class="custom-button !px-3 !py-1 text-xs">&lt;</button><span id="friend-page-info" class="text-sm text-gray-400"></span><button id="next-friend-page" class="custom-button !px-3 !py-1 text-xs">&gt;</button></div></div>
+                        <div id="friends-grid-container" class="collapsed"><div id="friends-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div></div>
+                        ${friends.length > 10 ? `<div class="text-center mt-4"><button id="toggle-friends-btn" class="text-blue-400 hover:underline">Show More</button></div>` : ''}` 
+                        : `<h3 class="font-bold text-lg mb-2">Friends</h3><p class="text-sm text-gray-400">${friends ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
+
+                    const actionsMenuHtml = `
+                        <div class="relative">
+                            <button id="actions-menu-btn" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"><i class="fas fa-ellipsis-v"></i></button>
+                            <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
+                                <a href="#" id="action-share-profile" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-share-alt w-4"></i><span>Share Profile</span></a><hr class="border-gray-700 my-1">
+                                <a href="#" id="action-mark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-exclamation-triangle w-4"></i><span>Mark as POI</span></a>
+                                <a href="#" id="action-unmark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400"><i class="fas fa-times w-4"></i><span>Unmark POI</span></a>
+                                <a href="#" id="action-view-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-info-circle w-4"></i><span>View POI Details</span></a>
+                            </div>
+                        </div>`;
+
+                    resultContainer.innerHTML = `
+                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
+                            <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
+                            ${profile.groupRole ? `<div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg" style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};"><i class="fas fa-shield-alt mr-2"></i><span>${profile.groupRole}</span></div>` : ''}
+                            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                                <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
+                                <div class="sm:ml-6 mt-4 sm:mt-0"><h2 class="text-3xl font-bold">${profile.displayName}</h2><p class="text-gray-400">@${profile.name}</p><a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">View on Roblox <i class="fas fa-external-link-alt ml-1"></i></a></div>
+                            </div>
+                            ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm"><div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span id="poi-card-marked-by" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span id="poi-card-date" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Reason:</strong><p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p></div></div></div></div></div>` : ''}
+                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">About</h3><p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p></div>
+                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Stats</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div><div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div></div></div>
+                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Current Ban Status</h3>${banInfoHtml}</div>
+                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Ban History</h3>${banHistoryHtml}</div>
+                            ${bannedFriends?.length > 0 ? `<div class="mt-6 border-t border-red-900 bg-red-900/10 p-6"><h3 class="text-lg font-semibold text-red-400 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Banned Friends (${bannedFriends.length})</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${bannedFriends.map(f => `<div class="bg-red-900/30 border border-red-800 rounded-lg p-4 flex items-center gap-3"><img src="${f.avatarUrl}" class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"><div class="text-sm"><a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${f.name}">${f.displayName} (@${f.name})</a><div class="text-xs text-red-400">Banned: ${f.banInfo?.Date ? new Date(f.banInfo.Date).toLocaleDateString() : 'N/A'}</div>${f.banInfo?.Reason ? `<div class="text-xs text-red-300 mt-1"><span class="font-semibold">Reason:</span> ${f.banInfo.Reason}</div>` : ''}</div></div>`).join('')}</div></div>` : ''}
+                            <div class="mt-6 border-t border-gray-700 pt-6">${friendsHtml}</div>
+                        </div>`;
+                    
+                    if (profile.isPOI) fetchAndRenderPOIDetails(profile.id);
+                    if (friends?.length > 0) renderFriendsPreview();
+                    updateAuthUI();
+                    updateMetaTags(profile);
+                };
+                <!-- --- Auth Functions --- -->
+                function updateAuthUI() {
+                    const isAuth = !!currentUser;
+                    loginContainer.classList.toggle('hidden', isAuth);
+                    userStatusContainer.classList.toggle('hidden', !isAuth);
+                    
+                    const markPoi = document.getElementById('action-mark-poi');
+                    const unmarkPoi = document.getElementById('action-unmark-poi');
+                    const viewPoi = document.getElementById('action-view-poi');
+
+                    if (markPoi && unmarkPoi && viewPoi) {
+                        const isPOI = currentLookupData?.profile?.isPOI;
+                        markPoi.style.display = isAuth && !isPOI ? 'flex' : 'none';
+                        unmarkPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
+                        viewPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
+                    }
+
+                    if (isAuth) {
+                        userStatusName.textContent = currentUser.displayName || currentUser.username;
+                        userStatusAvatar.src = currentUser.avatarUrl || 'https://placehold.co/40x40/1f222c/FFFFFF?text=?';
+                        userStatusRole.textContent = currentUser.sdisRole || 'SDIS Operative';
+                        poiNameInput.value = currentUser.displayName || currentUser.username;
+                    }
+                }
+
+                function showLoginModal(callback) { 
+                    afterLoginCallback = callback; 
+                    sdisLoginModal.classList.add('flex'); 
+                    sdisCodePhraseInput.focus(); 
+                }
+
+                function checkAuth() {
+                    authToken = localStorage.getItem('sdis_token');
+                    const storedUser = localStorage.getItem('sdis_user');
+                    if (authToken && storedUser) {
+                        currentUser = JSON.parse(storedUser);
+                    } else {
+                        currentUser = null;
+                        authToken = null;
+                        localStorage.removeItem('sdis_token');
+                        localStorage.removeItem('sdis_user');
+                    }
+                    updateAuthUI();
+                }
+
+                async function handleLogin() {
+                    const codePhrase = sdisCodePhraseInput.value.trim();
+                    if (!codePhrase) return;
+
+                    sdisLoginSubmitBtn.disabled = true; 
+                    sdisLoginSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...`;
+                    
+                    try {
+                        const response = await fetch(`${AUTH_WORKER_URL}/login`, { 
+                            method: 'POST', 
+                            headers: { 'Content-Type': 'application/json' }, 
+                            body: JSON.stringify({ codePhrase }) 
+                        });
+                        const result = await response.json();
+                        if (result.success && result.token && result.user) {
+                            authToken = result.token;
+                            currentUser = result.user;
+                            localStorage.setItem('sdis_token', authToken);
+                            localStorage.setItem('sdis_user', JSON.stringify(currentUser));
+                            
+                            updateAuthUI(); 
+                            sdisLoginModal.classList.remove('flex'); 
+                            sdisCodePhraseInput.value = '';
+                            showNotification('Login successful!', 'success');
+                            
+                            if (typeof afterLoginCallback === 'function') { 
+                                afterLoginCallback(); 
+                                afterLoginCallback = null; 
+                            }
+                        } else { 
+                            throw new Error(result.error || 'Login failed'); 
+                        }
+                    } catch (error) { 
+                        showNotification(`Error: ${error.message}`, 'error');
+                    } finally { 
+                        sdisLoginSubmitBtn.disabled = false; 
+                        sdisLoginSubmitBtn.textContent = 'Authenticate'; 
+                    }
+                }
+
+                function handleLogout() { 
+                    authToken = null; 
+                    currentUser = null; 
+                    localStorage.removeItem('sdis_token'); 
+                    localStorage.removeItem('sdis_user');
+                    updateAuthUI(); 
+                    showNotification('You have been logged out.', 'info'); 
+                }
+
+                // --- POI Functions ---
+                function handleMarkPOI() { if (!currentUser) return showLoginModal(handleMarkPOI); poiModal.classList.add('flex'); poiReasonInput.focus(); }
+                function handleUnmarkPOI() { if (!currentUser) return showLoginModal(handleUnmarkPOI); unmarkPOI(); }
+                function handleViewPOI() { if (!currentUser) return showLoginModal(handleViewPOI); fetchAndShowPOIDetails(currentLookupData.profile.id); }
+                
+                async function handleSubmitPOI() {
+                    const reason = poiReasonInput.value.trim();
+                    if (!reason) return showNotification('Reason is required.', 'error');
+                    
+                    const markerName = currentUser?.displayName || 'Unknown Operative';
+                    
+                    await submitPOI(currentLookupData.profile, markerName, reason);
+                    poiModal.classList.remove('flex'); 
+                    poiReasonInput.value = '';
+                }
+
+                async function submitPOI(userData, markerName, reason) {
+                    if (!userData || !markerName || !reason) {
+                        console.error("submitPOI validation failed:", { userData, markerName, reason });
+                        showNotification('Error: Missing data for POI submission.', 'error');
+                        return;
+                    }
+                    try {
+                        const response = await fetch(`${DATA_WORKER_URL}/poi`, { 
+                            method: 'POST', 
+                            headers: { 
+                                'Content-Type': 'application/json', 
+                                'Authorization': `Bearer ${authToken}` 
+                            }, 
+                            body: JSON.stringify({ 
+                                userId: userData.id, 
+                                username: userData.name, 
+                                displayName: userData.displayName, 
+                                markedBy: markerName, 
+                                reason: reason, 
+                                timestamp: new Date().toISOString(),
+                                avatarUrl: userData.avatarUrl
+                            }) 
+                        });
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.error);
+                        showNotification(`${userData.displayName} marked as POI`, 'success');
+                        handleSearch(userData.id.toString());
+                    } catch (error) { 
+                        showNotification(`Error: ${error.message}`, 'error'); 
+                    }
+                }
+
+                async function unmarkPOI() {
+                    const userData = currentLookupData.profile;
+                    try {
+                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userData.id}`, { 
+                            method: 'DELETE', 
+                            headers: { 'Authorization': `Bearer ${authToken}` } 
+                        });
+                        const result = await response.json();
+                        if (!result.success) throw new Error(result.error);
+                        showNotification(`${userData.displayName} unmarked as POI`, 'success');
+                        handleSearch(userData.id.toString());
+                    } catch (error) { 
+                        showNotification(`Error: ${error.message}`, 'error'); 
+                    }
+                }
+
+                async function fetchAndShowPOIDetails(userId) {
+                    try {
+                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, { 
+                            headers: { 'Authorization': `Bearer ${authToken}` } 
+                        });
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            const data = result.data;
+                            poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
+                            poiDetailsReason.textContent = data.reason || 'No reason provided.';
+                            poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+                            poiDetailsModal.classList.add('flex');
+                        } else { 
+                            throw new Error(result.error || 'POI details not found'); 
+                        }
+                    } catch(error) { 
+                        showNotification(`Error: ${error.message}`, 'error'); 
+                    }
+                }
+                
                 async function fetchAndRenderPOIDetails(userId) {
                     const markedByEl = document.getElementById('poi-card-marked-by');
                     const reasonEl = document.getElementById('poi-card-reason');
                     const dateEl = document.getElementById('poi-card-date');
-
                     if (!markedByEl || !reasonEl || !dateEl) return;
 
                     try {
-                        const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
+                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
                         const result = await response.json();
-
                         if (result.success && result.data) {
-                            const data = result.data;
-                            markedByEl.textContent = data.markedBy || 'N/A';
-                            reasonEl.textContent = data.reason || 'No reason provided.';
-                            dateEl.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
-                        } else {
-                            throw new Error(result.error || 'POI details not found');
-                        }
+                            markedByEl.textContent = result.data.markedBy || 'N/A';
+                            reasonEl.textContent = result.data.reason || 'No reason provided.';
+                            dateEl.textContent = result.data.timestamp ? new Date(result.data.timestamp).toLocaleString() : 'N/A';
+                        } else { throw new Error(result.error || 'POI details not found'); }
                     } catch(error) {
                         console.error('Error fetching POI details for card:', error);
                         reasonEl.textContent = `Could not load POI details: ${error.message}`;
                     }
                 }
 
-                const renderProfile = (data) => {
-                     if (!data.profile || !data.profile.id) {
-                        setErrorState("User not found. Please check the username or ID and try again.");
-                        return;
-                    }
-                    
-                    const { profile, banHistory } = data; 
-                    const hasBanHistory = banHistory && banHistory.length > 0;
-                    
-                    // --- Handle POI Theming ---
-                    const bodyEl = document.querySelector('body');
-                    if (profile.isPOI) {
-                        bodyEl.classList.add('poi-background');
-                    } else {
-                        bodyEl.classList.remove('poi-background');
-                    }
 
-                    const now = new Date().getTime();
-                    const activeBan = hasBanHistory ? banHistory.find(ban => {
-                        if (ban.type === 'permban') return true;
-                        if (ban.type === 'timeban' && ban.Duration) {
-                            return (new Date(ban.Date).getTime() + ban.Duration) > now;
-                        }
-                        return false;
-                    }) : null;
-
-                    const createdDate = profile.created && !isNaN(new Date(profile.created)) 
-                        ? new Date(profile.created).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                        : 'Unknown';
-                    
-                    let banInfoHtml = `
-                        <div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle text-green-400 text-2xl mr-3"></i>
-                                <div>
-                                    <h4 class="font-bold text-green-300">No Active Ban</h4>
-                                    <p class="text-sm text-gray-400">This user does not have an active ban in the Saikou network.</p>
-                                </div>
-                            </div>
-                        </div>`;
-
-                    if (activeBan) {
-                        const banDate = new Date(activeBan.Date).toLocaleString();
-                        const banType = activeBan.type === 'permban' ? 'Permanent' : 'Temporary';
-                        banInfoHtml = `
-                            <div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                                <div class="flex items-center mb-4">
-                                    <i class="fas fa-times-circle text-red-400 text-2xl mr-3"></i>
-                                    <div>
-                                        <h4 class="font-bold text-red-300">User is Banned</h4>
-                                        <p class="text-sm text-gray-400">This user has an active ban in the Saikou network.</p>
-                                    </div>
-                                </div>
-                                <div class="space-y-2 text-sm">
-                                    <p><strong class="text-gray-300">Reason:</strong> ${activeBan.Reason || 'N/A'}</p>
-                                    <p><strong class="text-gray-300">Moderator:</strong> ${activeBan.Moderator || 'N/A'}</p>
-                                    <p><strong class="text-gray-300">Ban Type:</strong> ${banType}</p>
-                                    <p><strong class="text-gray-300">Date:</strong> ${banDate}</p>
-                                </div>
-                            </div>`;
-                    }
-                    
-                    let banHistoryHtml = '';
-                    if (hasBanHistory) {
-                        banHistoryHtml = `
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm ban-history-table rounded-lg overflow-hidden">
-                                    <thead><tr><th>Reason</th><th>Moderator</th><th>Date</th><th>Type</th><th>Duration</th></tr></thead>
-                                    <tbody>
-                                        ${banHistory.map(ban => `
-                                            <tr>
-                                                <td>${ban.Reason || 'N/A'}</td>
-                                                <td>${ban.Moderator || 'N/A'}</td>
-                                                <td>${new Date(ban.Date).toLocaleString()}</td>
-                                                <td>${ban.type === 'permban' ? 'Permanent' : 'Temporary'}</td>
-                                                <td>${ban.type === 'timeban' ? formatDuration(ban.Duration) : 'Permanent'}</td>
-                                            </tr>`).join('')}
-                                    </tbody>
-                                </table>
-                            </div>`;
-                    } else {
-                        banHistoryHtml = `<p class="text-sm text-gray-400">No ban history found for this user.</p>`;
-                    }
-                    
-                    let friendsHtml = '';
-                    if (fullFriendsList && fullFriendsList.length > 0) {
-                        friendsHtml = `
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-lg">Friends (${fullFriendsList.length})</h3>
-                                <div id="friends-pagination" class="hidden items-center gap-2">
-                                    <button id="prev-friend-page" class="custom-button px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-                                    <span id="friend-page-info" class="text-sm text-gray-400"></span>
-                                    <button id="next-friend-page" class="custom-button px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-                                </div>
-                            </div>
-                            <div id="friends-grid-container" class="collapsed">
-                                <div id="friends-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    <!-- Friends will be rendered here -->
-                                </div>
-                            </div>
-                            ${fullFriendsList.length > 10 ? `
-                                <div class="text-center mt-4">
-                                    <button id="toggle-friends-btn" class="text-blue-400 hover:underline">Show More</button>
-                                </div>
-                            ` : ''}
-                        `;
-                    } else {
-                         friendsHtml = `
-                            <h3 class="font-bold text-lg mb-2">Friends</h3>
-                            <p class="text-sm text-gray-400">${fullFriendsList ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
-                    }
-
-                    const actionsMenuHtml = `
-                        <div class="relative">
-                            <button id="actions-menu-btn" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
-                                <a href="#" id="action-share-profile" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
-                                    <i class="fas fa-share-alt w-4"></i><span>Share Profile</span>
-                                </a>
-                                <hr class="border-gray-700 my-1">
-                                ${profile.isPOI ? `
-                                    <a href="#" id="action-view-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
-                                        <i class="fas fa-info-circle w-4"></i><span>View POI Details</span>
-                                    </a>
-                                    <a href="#" id="action-unmark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400">
-                                        <i class="fas fa-times w-4"></i><span>Unmark POI</span>
-                                    </a>
-                                ` : `
-                                    <a href="#" id="action-mark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
-                                        <i class="fas fa-exclamation-triangle w-4"></i><span>Mark as POI</span>
-                                    </a>
-                                `}
-                            </div>
-                        </div>
-                    `;
-
-                    resultContainer.innerHTML = `
-                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
-                            <!-- Actions Menu -->
-                            <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
-
-                            <!-- Risk Flag -->
-                            ${profile.isPotentialRisk ? `
-                                <div class="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 mb-6">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mr-3"></i>
-                                        <div>
-                                            <h4 class="font-bold text-yellow-300">Potential Risk Flagged</h4>
-                                            <p class="text-sm text-gray-400">Account is new and has a low friend count. Further investigation may be warranted.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            <!-- Group Rank Card -->
-                            ${profile.groupRole ? `
-                                <div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg"
-                                     style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};">
-                                    <i class="fas fa-shield-alt mr-2"></i>
-                                    <span>${profile.groupRole}</span>
-                                </div>
-                            ` : ''}
-
-                            <!-- Profile Header -->
-                            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-                                <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
-                                <div class="sm:ml-6 mt-4 sm:mt-0">
-                                    <div class="flex items-center gap-3">
-                                        <h2 class="text-3xl font-bold">${profile.displayName}</h2>
-                                    </div>
-                                    <p class="text-gray-400">@${profile.name}</p>
-                                    <a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">
-                                        View on Roblox <i class="fas fa-external-link-alt ml-1"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            
-                            <!-- POI Alert Card -->
-                            ${profile.isPOI ? `
-                                <div class="poi-alert-card mt-6">
-                                    <div class="flex items-start">
-                                        <i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i>
-                                        <div>
-                                            <h3 class="text-2xl font-bold text-red-300">Person of Interest</h3>
-                                            <p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p>
-                                            <div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm">
-                                                <div>
-                                                    <strong class="text-gray-400 font-semibold block">Marked By:</strong>
-                                                    <span id="poi-card-marked-by" class="text-white">Loading...</span>
-                                                </div>
-                                                <div>
-                                                    <strong class="text-gray-400 font-semibold block">Date Marked:</strong>
-                                                    <span id="poi-card-date" class="text-white">Loading...</span>
-                                                </div>
-                                                <div>
-                                                    <strong class="text-gray-400 font-semibold block">Reason:</strong>
-                                                    <p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-
-                            <!-- Bio, Stats, Bans etc. -->
-                            <div class="mt-6 border-t border-gray-700 pt-6">
-                                <h3 class="font-bold text-lg mb-2">About</h3>
-                                <p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p>
-                            </div>
-                            <div class="mt-6 border-t border-gray-700 pt-6">
-                                <h3 class="font-bold text-lg mb-2">Stats</h3>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div>
-                                    <div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div>
-                                    <div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount !== null ? profile.friendCount : 'N/A'}</p></div>
-                                </div>
-                            </div>
-                            <div class="mt-6 border-t border-gray-700 pt-6">
-                                <h3 class="font-bold text-lg mb-2">Current Ban Status</h3>
-                                ${banInfoHtml}
-                            </div>
-                            <div class="mt-6 border-t border-gray-700 pt-6">
-                                <h3 class="font-bold text-lg mb-2">Ban History</h3>
-                                ${banHistoryHtml}
-                            </div>
-                            
-                            ${data.bannedFriends && data.bannedFriends.length > 0 ? `
-                                <div class="mt-6 border-t border-red-900 bg-red-900/10 p-6">
-                                    <h3 class="text-lg font-semibold text-red-400 mb-4">
-                                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                                        Banned Friends (${data.bannedFriends.length})
-                                    </h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        ${data.bannedFriends.map(friend => `
-                                            <div class="bg-red-900/30 border border-red-800 rounded-lg p-4">
-                                                <div class="flex items-center">
-                                                    <img src="${friend.avatarUrl}" 
-                                                         alt="${friend.displayName}"
-                                                         class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"
-                                                         onerror="this.src='https://placehold.co/50x50/1f222c/FFFFFF?text=?'"
-                                                    >
-                                                    <div>
-                                                        <a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${friend.name}">
-                                                            ${friend.displayName} (@${friend.name})
-                                                        </a>
-                                                        <div class="text-xs text-red-400">
-                                                            Banned: ${friend.banInfo && friend.banInfo.Date ? new Date(friend.banInfo.Date).toLocaleDateString() : 'N/A'}
-                                                        </div>
-                                                        ${friend.banInfo && friend.banInfo.Reason ? `
-                                                            <div class="text-xs text-red-300 mt-1">
-                                                                <span class="font-semibold">Reason:</span> ${friend.banInfo.Reason}
-                                                            </div>
-                                                        ` : ''}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
-                            <div class="mt-6 border-t border-gray-700 pt-6">
-                                ${friendsHtml}
-                            </div>
-                        </div>`;
-                    
-                    // After rendering the profile, if the user is a POI, fetch their details for the card.
-                    if (profile.isPOI) {
-                        fetchAndRenderPOIDetails(profile.id);
-                    }
-
-                    if (fullFriendsList && fullFriendsList.length > 0) {
-                        renderFriendsPreview();
-                    }
-                    
-                    updateMetaTags({
-                        displayName: profile.displayName || profile.name || 'User',
-                        id: profile.id || profile.userId,
-                        avatarUrl: profile.avatarUrl || `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.id || profile.userId}&width=420&height=420&format=png`
-                    });
-                };
-
-                 async function submitPOI(userData, markerName, reason) {
-                    const poiData = {
-                        userId: userData.id,
-                        username: userData.name,
-                        displayName: userData.displayName,
-                        markedBy: markerName,
-                        reason: reason,
-                        timestamp: new Date().toISOString(),
-                        avatarUrl: userData.avatarUrl
-                    };
-
-                    try {
-                        const response = await fetch(`${SERVERLESS_URL}/poi`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(poiData)
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            // Optionally show a success message
-                            handleSearch(userData.id.toString()); // Refresh profile
-                        } else {
-                            throw new Error(result.error || 'Failed to mark POI');
-                        }
-                    } catch (error) {
-                        console.error('Error submitting POI:', error);
-                        // Optionally show an error message
-                    }
-                }
-
-                async function unmarkPOI(userData) {
-                    // Replace confirm with a custom modal in a real application
-                    if (!window.confirm(`Are you sure you want to unmark ${userData.displayName} as a Person of Interest?`)) return;
-
-                    try {
-                        const response = await fetch(`${SERVERLESS_URL}/poi/${userData.id}`, {
-                            method: 'DELETE'
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            // Optionally show a success message
-                            handleSearch(userData.id.toString()); // Refresh profile
-                        } else {
-                            throw new Error(result.error || 'Failed to unmark POI');
-                        }
-                    } catch (error) {
-                        console.error('Error unmarking POI:', error);
-                        // Optionally show an error message
-                    }
-                }
-                
-                async function fetchAndShowPOIDetails(userId) {
-                    try {
-                        const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
-                        const result = await response.json();
-
-                        if (result.success && result.data) {
-                            const data = result.data;
-                            poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
-                            poiDetailsReason.textContent = data.reason || 'No reason provided.';
-                            poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
-                            poiDetailsModal.style.display = 'flex';
-                        } else {
-                            throw new Error(result.error || 'POI details not found');
-                        }
-                    } catch(error) {
-                         console.error('Error fetching POI modal details:', error);
-                        // Optionally show an error message
-                    }
+                function showNotification(message, type = 'info') {
+                    const notification = document.createElement('div');
+                    const colors = { success: 'bg-green-600', warning: 'bg-yellow-600', error: 'bg-red-600', info: 'bg-blue-600' };
+                    notification.className = `fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm ${colors[type]} transition-transform duration-300 translate-x-full`;
+                    notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mr-2"></i>${message}`;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+                    setTimeout(() => {
+                        notification.style.transform = 'translateX(calc(100% + 1.25rem))';
+                        notification.addEventListener('transitionend', () => notification.remove());
+                    }, 3000);
                 }
 
                 function updateMetaTags(userData) {
@@ -865,29 +703,26 @@
                     const description = `View ${userData.displayName}'s Roblox profile and moderation status on Saikou.`;
                     const imageUrl = userData.avatarUrl || 'https://saikou.dev/assets/images/og-image.png';
                     const currentUrl = `${window.location.origin}${window.location.pathname}?lookup=${userData.id}`;
-                    
                     document.title = title;
-                    
                     document.querySelector('meta[property="og:title"]').setAttribute('content', title);
                     document.querySelector('meta[property="og:description"]').setAttribute('content', description);
                     document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
                     document.querySelector('meta[property="og:image"]').setAttribute('content', imageUrl);
-                    
                     document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
                     document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
                     document.querySelector('meta[property="twitter:url"]').setAttribute('content', currentUrl);
                     document.querySelector('meta[property="twitter:image"]').setAttribute('content', imageUrl);
                 }
 
+                // Initial Load
                 const urlParams = new URLSearchParams(window.location.search);
                 const lookupParam = urlParams.get('lookup');
                 if (lookupParam) {
-                    searchInput.value = lookupParam;
                     handleSearch(lookupParam);
                 }
+                checkAuth();
             });
         </script>
 	</body>
 </html>
-
 

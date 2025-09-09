@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+    <title>Saikou | SDIS Admin Panel</title>
+    <meta name="description" content="Admin panel for managing SDIS users and roles." />
+    <link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png"
+        onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #121315;
+            color: white;
+        }
+        input, select {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #7f89ff;
+        }
+        .custom-button {
+            font-weight: bold;
+            border-radius: 0.5rem;
+            color: #121315;
+            background-color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+        .custom-button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+        .custom-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .modal-overlay {
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        /* Toggle Switch Styling */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4b5563;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="bg-[#121315]">
+    <!-- Header -->
+    <header class="container mx-auto px-4 md:px-0">
+        <nav class="max-w-7xl mx-auto my-4 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+            <a class="flex items-center" href="/index.html">
+                <span class="text-white font-bold text-xl">[SDIS] Admin Panel</span>
+            </a>
+            <button id="logout-btn" class="hidden custom-button !bg-red-600 !text-white !px-4 !py-2 text-sm">
+                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Login View -->
+        <div id="login-view" class="max-w-md mx-auto">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold">Admin Access</h1>
+                <p class="mt-4 text-lg text-gray-300">Enter your administrative code phrase to continue.</p>
+            </div>
+            <div class="mt-10 bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg">
+                <div id="login-error" class="hidden text-red-400 text-center mb-4 p-3 bg-red-500/10 rounded-lg"></div>
+                <div class="flex flex-col gap-4">
+                    <input type="password" id="code-phrase-input" class="w-full flex-grow" placeholder="Enter Code Phrase...">
+                    <button id="login-btn" class="custom-button">Authenticate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard View -->
+        <div id="dashboard-view" class="hidden max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6">User Management</h1>
+            
+            <!-- Add User Form -->
+            <div class="bg-[#15171c] p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-xl font-bold mb-4">Add New SDIS User</h2>
+                <div id="add-user-error" class="hidden text-red-400 mb-4 p-3 bg-red-500/10 rounded-lg"></div>
+                <div id="add-user-success" class="hidden text-green-400 mb-4 p-3 bg-green-500/10 rounded-lg"></div>
+                <form id="add-user-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label for="roblox-username" class="block text-sm font-medium text-gray-300 mb-2">Roblox Username</label>
+                        <input type="text" id="roblox-username" required placeholder="e.g., builderman">
+                    </div>
+                    <div>
+                        <label for="user-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
+                        <input type="text" id="user-code-phrase" required placeholder="e.g., Tweed Fife Solomon">
+                    </div>
+                    <div>
+                        <label for="sdis-role" class="block text-sm font-medium text-gray-300 mb-2">SDIS Role</label>
+                        <select id="sdis-role">
+                            <option>SDIS Operative</option>
+                            <option>Special Agent</option>
+                            <option>Head of Moderation</option>
+                            <option>Director of Intelligence</option>
+                            <option>Saikou Owner</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="add-user-btn" class="custom-button !bg-blue-600 !text-white h-12">
+                        <i class="fas fa-plus mr-2"></i>Add User
+                    </button>
+                </form>
+            </div>
+
+            <!-- User List -->
+            <div>
+                <h2 class="text-xl font-bold mb-4">Managed Users</h2>
+                <div class="bg-[#15171c] rounded-lg shadow-lg overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-[#0c0d0e]">
+                            <tr>
+                                <th class="p-4">User</th>
+                                <th class="p-4">Code Phrase</th>
+                                <th class="p-4">SDIS Role</th>
+                                <th class="p-4">Has SDIS Access</th>
+                                <th class="p-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-body">
+                            <!-- User rows will be injected here -->
+                            <tr><td colspan="5" class="text-center p-8 text-gray-400">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+<script>
+    const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginView = document.getElementById('login-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        const loginBtn = document.getElementById('login-btn');
+        const codePhraseInput = document.getElementById('code-phrase-input');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const addUserForm = document.getElementById('add-user-form');
+        const addUserBtn = document.getElementById('add-user-btn');
+        const userListBody = document.getElementById('user-list-body');
+        const addUserError = document.getElementById('add-user-error');
+        const addUserSuccess = document.getElementById('add-user-success');
+
+        const checkAuth = () => {
+            const token = localStorage.getItem('sdis_admin_token');
+            if (token) {
+                loginView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                logoutBtn.classList.remove('hidden');
+                fetchUsers(token);
+            } else {
+                loginView.classList.remove('hidden');
+                dashboardView.classList.add('hidden');
+                logoutBtn.classList.add('hidden');
+            }
+        };
+
+        const handleLogin = async () => {
+            const codePhrase = codePhraseInput.value.trim();
+            if (!codePhrase) return;
+
+            loginError.classList.add('hidden');
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Authenticating...';
+
+            try {
+                const response = await fetch(`${AUTH_WORKER_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codePhrase })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    localStorage.setItem('sdis_admin_token', result.token);
+                    checkAuth();
+                } else {
+                    throw new Error(result.error || 'Login failed.');
+                }
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Authenticate';
+                codePhraseInput.value = '';
+            }
+        };
+
+        const handleLogout = () => {
+            localStorage.removeItem('sdis_admin_token');
+            checkAuth();
+        };
+
+        const fetchUsers = async (token) => {
+            try {
+                const response = await fetch(`${AUTH_WORKER_URL}/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Failed to fetch users.');
+
+                renderUsers(result.users);
+            } catch (error) {
+                console.error(error);
+                userListBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-400">${error.message}</td></tr>`;
+            }
+        };
+        
+        const renderUsers = (users) => {
+            if (users.length === 0) {
+                userListBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-400">No users found. Add one above.</td></tr>`;
+                return;
+            }
+
+            const roles = ['SDIS Operative', 'Special Agent', 'Head of Moderation', 'Director of Intelligence', 'Saikou Owner'];
+            userListBody.innerHTML = users.map(user => {
+                const roleOptions = roles.map(role => `<option ${user.sdisRole === role ? 'selected' : ''}>${role}</option>`).join('');
+                return `
+                <tr class="border-b border-gray-800">
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${user.avatarUrl}" class="w-10 h-10 rounded-full" alt="${user.username}'s avatar">
+                            <div>
+                                <p class="font-bold">${user.displayName}</p>
+                                <p class="text-sm text-gray-400">@${user.username} (${user.id})</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-300 font-mono">${user.codePhrase}</td>
+                    <td class="p-4">
+                        <select class="sdis-role-select" data-userid="${user.id}">
+                            ${roleOptions}
+                        </select>
+                    </td>
+                    <td class="p-4">
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="sdis-toggle" data-userid="${user.id}" ${user.hasSdisRole ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                    </td>
+                    <td class="p-4">
+                        <button class="delete-user-btn text-red-400 hover:text-red-600" data-userid="${user.id}" data-username="${user.displayName}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        };
+        
+        const handleAddUser = async (e) => {
+            e.preventDefault();
+            addUserError.classList.add('hidden');
+            addUserSuccess.classList.add('hidden');
+            addUserBtn.disabled = true;
+            addUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adding...';
+
+            const username = document.getElementById('roblox-username').value.trim();
+            const codePhrase = document.getElementById('user-code-phrase').value.trim();
+            const sdisRole = document.getElementById('sdis-role').value;
+            const token = localStorage.getItem('sdis_admin_token');
+            
+            try {
+                const response = await fetch(`${AUTH_WORKER_URL}/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ username, codePhrase, sdisRole })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Failed to add user.');
+                
+                addUserSuccess.textContent = `Successfully added user ${result.user.displayName}.`;
+                addUserSuccess.classList.remove('hidden');
+                addUserForm.reset();
+                fetchUsers(token);
+
+            } catch (error) {
+                addUserError.textContent = error.message;
+                addUserError.classList.remove('hidden');
+            } finally {
+                addUserBtn.disabled = false;
+                addUserBtn.innerHTML = '<i class="fas fa-plus mr-2"></i>Add User';
+            }
+        };
+
+        const handleUserUpdate = async (userId, updates) => {
+             const token = localStorage.getItem('sdis_admin_token');
+             try {
+                const response = await fetch(`${AUTH_WORKER_URL}/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updates)
+                });
+                if (!response.ok) {
+                    const result = await response.json();
+                    throw new Error(result.error || 'Failed to update user.');
+                }
+             } catch (error) {
+                alert(`Error: ${error.message}`);
+                // Refresh to show original state on error
+                fetchUsers(token);
+             }
+        };
+
+        const handleDeleteUser = async (userId, username) => {
+            if (!confirm(`Are you sure you want to delete user ${username}? This action cannot be undone.`)) return;
+            const token = localStorage.getItem('sdis_admin_token');
+             try {
+                const response = await fetch(`${AUTH_WORKER_URL}/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Failed to delete user.');
+                fetchUsers(token); // Refresh list
+             } catch (error) {
+                alert(`Error: ${error.message}`);
+             }
+        };
+
+        // Event Listeners
+        loginBtn.addEventListener('click', handleLogin);
+        codePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
+        logoutBtn.addEventListener('click', handleLogout);
+        addUserForm.addEventListener('submit', handleAddUser);
+        
+        userListBody.addEventListener('change', e => {
+            const target = e.target;
+            const userId = target.dataset.userid;
+            if (!userId) return;
+
+            if (target.classList.contains('sdis-toggle')) {
+                handleUserUpdate(userId, { hasSdisRole: target.checked });
+            } else if (target.classList.contains('sdis-role-select')) {
+                handleUserUpdate(userId, { sdisRole: target.value });
+            }
+        });
+
+         userListBody.addEventListener('click', e => {
+            const deleteButton = e.target.closest('.delete-user-btn');
+            if(deleteButton) {
+                const userId = deleteButton.dataset.userid;
+                const username = deleteButton.dataset.username;
+                handleDeleteUser(userId, username);
+            }
+        });
+
+
+        // Initial check
+        checkAuth();
+    });
+</script>
+</body>
+</html>
+
