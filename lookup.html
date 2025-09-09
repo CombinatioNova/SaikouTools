@@ -86,6 +86,32 @@
                 max-height: 220px; /* Adjust to fit ~2 rows of friend cards */
                 overflow: hidden;
             }
+             .modal-overlay {
+                backdrop-filter: blur(5px);
+            }
+
+            .modal-content {
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            }
+            .modal-content textarea {
+                resize: vertical;
+                min-height: 80px;
+            }
+            #poi-details-modal .detail-label {
+                @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
+            }
+            #poi-details-modal .detail-value {
+                @apply text-sm text-white bg-gray-700/50 p-2 rounded;
+            }
+            #poi-details-modal .detail-reason {
+                @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words;
+            }
+            .actions-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                z-index: 10;
+            }
 		</style>
 	</head>
 	<body class="bg-[#121315]">
@@ -127,6 +153,50 @@
 			</div>
 		</footer>
 
+        <!-- POI Modal -->
+        <div id="poi-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
+            <div class="modal-content">
+                <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
+                <div class="mb-4">
+                    <label for="poi-name" class="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
+                    <input type="text" id="poi-name" class="w-full" placeholder="Enter your name">
+                </div>
+                <div class="mb-4">
+                    <label for="poi-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
+                    <textarea id="poi-reason" class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2" rows="3" placeholder="Why are you marking this user as a person of interest?"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button id="poi-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                    <button id="poi-submit-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Mark as POI</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- POI Details Modal -->
+        <div id="poi-details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
+            <div class="modal-content">
+                <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
+                <div class="space-y-3">
+                    <div>
+                        <p class="detail-label">Marked By</p>
+                        <p id="poi-details-marked-by" class="detail-value">Loading...</p>
+                    </div>
+                    <div>
+                        <p class="detail-label">Reason</p>
+                        <p id="poi-details-reason" class="detail-reason">Loading...</p>
+                    </div>
+                    <div>
+                        <p class="detail-label">Date</p>
+                        <p id="poi-details-date" class="detail-value">Loading...</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button id="poi-details-close-btn" class="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Close</button>
+                </div>
+            </div>
+        </div>
+
+
         <script>
             const SERVERLESS_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
 
@@ -135,11 +205,24 @@
                 const searchBtn = document.getElementById('search-btn');
                 const resultContainer = document.getElementById('result-container');
 
+                // --- POI Modal Elements ---
+                const poiModal = document.getElementById('poi-modal');
+                const poiNameInput = document.getElementById('poi-name');
+                const poiReasonInput = document.getElementById('poi-reason');
+                const poiCancelBtn = document.getElementById('poi-cancel-btn');
+                const poiSubmitBtn = document.getElementById('poi-submit-btn');
+                const poiDetailsModal = document.getElementById('poi-details-modal');
+                const poiDetailsMarkedBy = document.getElementById('poi-details-marked-by');
+                const poiDetailsReason = document.getElementById('poi-details-reason');
+                const poiDetailsDate = document.getElementById('poi-details-date');
+                const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
+
+
                 // --- State for pagination and current user data ---
                 let fullFriendsList = [];
                 let currentFriendsPage = 1;
                 const friendsPerPage = 50;
-                let currentLookupData = {}; // This will hold the complete API response
+                let currentLookupData = {}; 
 
                 const handleSearch = async (queryOverride) => {
                     const query = queryOverride || searchInput.value.trim();
@@ -158,7 +241,7 @@
                             throw new Error(data.error || 'An unknown error occurred.');
                         }
                         
-                        currentLookupData = data; // Store the data globally
+                        currentLookupData = data; 
                         fullFriendsList = data.friends || [];
                         currentFriendsPage = 1;
                         renderProfile(data);
@@ -192,11 +275,9 @@
                         pagination.classList.toggle('hidden', isCollapsed);
                         
                         if (!isCollapsed) {
-                           // When expanding, render the first full page
                            currentFriendsPage = 1;
                            renderFriendsPage();
                         } else {
-                           // When collapsing, render only the small preview
                            renderFriendsPreview();
                         }
                     }
@@ -209,7 +290,48 @@
                         currentFriendsPage++;
                         renderFriendsPage();
                     }
+                    // Actions Menu Toggle
+                    const actionsMenuBtn = e.target.closest('#actions-menu-btn');
+                    if (actionsMenuBtn) {
+                        const dropdown = document.getElementById('actions-menu-dropdown');
+                        dropdown.classList.toggle('hidden');
+                    } else if (!e.target.closest('#actions-menu-dropdown')) {
+                        const dropdown = document.getElementById('actions-menu-dropdown');
+                        if (dropdown) {
+                            dropdown.classList.add('hidden');
+                        }
+                    }
+
+                    // POI Actions from Menu
+                    if (e.target.closest('#action-mark-poi')) {
+                        poiModal.style.display = 'flex';
+                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
+                    }
+                     if (e.target.closest('#action-unmark-poi')) {
+                        unmarkPOI(currentLookupData.profile);
+                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
+                    }
+                    if (e.target.closest('#action-view-poi')) {
+                        fetchAndShowPOIDetails(currentLookupData.profile.id);
+                        document.getElementById('actions-menu-dropdown').classList.add('hidden');
+                    }
                 });
+
+                // --- POI Modal Logic ---
+                poiCancelBtn.addEventListener('click', () => poiModal.style.display = 'none');
+                poiSubmitBtn.addEventListener('click', () => {
+                    const name = poiNameInput.value.trim();
+                    const reason = poiReasonInput.value.trim();
+                    if (name && reason && currentLookupData.profile) {
+                        submitPOI(currentLookupData.profile, name, reason);
+                        poiModal.style.display = 'none';
+                        poiNameInput.value = '';
+                        poiReasonInput.value = '';
+                    } else {
+                        alert('Please fill in both your name and the reason.');
+                    }
+                });
+                poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.style.display = 'none');
 
 
                 const setLoadingState = () => {
@@ -296,7 +418,7 @@
                         return;
                     }
                     
-                    const { profile, banHistory } = data; // friends list is now global
+                    const { profile, banHistory } = data; 
                     const hasBanHistory = banHistory && banHistory.length > 0;
                     
                     const now = new Date().getTime();
@@ -394,8 +516,33 @@
                             <p class="text-sm text-gray-400">${fullFriendsList ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
                     }
 
+                    const actionsMenuHtml = `
+                        <div class="relative">
+                            <button id="actions-menu-btn" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
+                                ${profile.isPOI ? `
+                                    <a href="#" id="action-view-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
+                                        <i class="fas fa-info-circle w-4"></i><span>View POI Details</span>
+                                    </a>
+                                    <a href="#" id="action-unmark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400">
+                                        <i class="fas fa-times w-4"></i><span>Unmark POI</span>
+                                    </a>
+                                ` : `
+                                    <a href="#" id="action-mark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
+                                        <i class="fas fa-exclamation-triangle w-4"></i><span>Mark as POI</span>
+                                    </a>
+                                `}
+                            </div>
+                        </div>
+                    `;
+
                     resultContainer.innerHTML = `
                         <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative">
+                            <!-- Actions Menu -->
+                            <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
+
                             <!-- Risk Flag -->
                             ${profile.isPotentialRisk ? `
                                 <div class="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 mb-6">
@@ -411,7 +558,7 @@
 
                             <!-- Group Rank Card -->
                             ${profile.groupRole ? `
-                                <div class="absolute top-6 right-6 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg"
+                                <div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg"
                                      style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};">
                                     <i class="fas fa-shield-alt mr-2"></i>
                                     <span>${profile.groupRole}</span>
@@ -422,7 +569,10 @@
                             <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
                                 <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
                                 <div class="sm:ml-6 mt-4 sm:mt-0">
-                                    <h2 class="text-3xl font-bold">${profile.displayName}</h2>
+                                    <div class="flex items-center gap-3">
+                                        <h2 class="text-3xl font-bold">${profile.displayName}</h2>
+                                        ${profile.isPOI ? `<span class="bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-semibold px-2.5 py-1 rounded-full">Person of Interest</span>` : ''}
+                                    </div>
                                     <p class="text-gray-400">@${profile.name}</p>
                                     <a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">
                                         View on Roblox <i class="fas fa-external-link-alt ml-1"></i>
@@ -491,12 +641,10 @@
                             </div>
                         </div>`;
 
-                    // Initial render of friends preview
                     if (fullFriendsList && fullFriendsList.length > 0) {
                         renderFriendsPreview();
                     }
                     
-                    // Update meta tags for sharing
                     updateMetaTags({
                         displayName: profile.displayName || profile.name || 'User',
                         id: profile.id || profile.userId,
@@ -504,34 +652,97 @@
                     });
                 };
 
-                // Function to update meta tags for sharing
+                 async function submitPOI(userData, markerName, reason) {
+                    const poiData = {
+                        userId: userData.id,
+                        username: userData.name,
+                        displayName: userData.displayName,
+                        markedBy: markerName,
+                        reason: reason,
+                        timestamp: new Date().toISOString(),
+                        avatarUrl: userData.avatarUrl
+                    };
+
+                    try {
+                        const response = await fetch(`${SERVERLESS_URL}/poi`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(poiData)
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(`${userData.displayName} has been marked as a POI.`);
+                            handleSearch(userData.id.toString()); // Refresh profile
+                        } else {
+                            throw new Error(result.error || 'Failed to mark POI');
+                        }
+                    } catch (error) {
+                        console.error('Error submitting POI:', error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+
+                async function unmarkPOI(userData) {
+                    if (!confirm(`Are you sure you want to unmark ${userData.displayName} as a Person of Interest?`)) return;
+
+                    try {
+                        const response = await fetch(`${SERVERLESS_URL}/poi/${userData.id}`, {
+                            method: 'DELETE'
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            alert(`${userData.displayName} has been unmarked as a POI.`);
+                            handleSearch(userData.id.toString()); // Refresh profile
+                        } else {
+                            throw new Error(result.error || 'Failed to unmark POI');
+                        }
+                    } catch (error) {
+                        console.error('Error unmarking POI:', error);
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+                
+                async function fetchAndShowPOIDetails(userId) {
+                    try {
+                        const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
+                        const result = await response.json();
+
+                        if (result.success && result.data) {
+                            const data = result.data;
+                            poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
+                            poiDetailsReason.textContent = data.reason || 'No reason provided.';
+                            poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+                            poiDetailsModal.style.display = 'flex';
+                        } else {
+                            throw new Error(result.error || 'POI details not found');
+                        }
+                    } catch(error) {
+                        alert(`Error: ${error.message}`);
+                    }
+                }
+
                 function updateMetaTags(userData) {
                     const title = `${userData.displayName}'s Profile | Saikou`;
                     const description = `View ${userData.displayName}'s Roblox profile and moderation status on Saikou.`;
                     const imageUrl = userData.avatarUrl || 'https://saikou.dev/assets/images/og-image.png';
                     const currentUrl = `${window.location.origin}${window.location.pathname}?lookup=${userData.id}`;
                     
-                    // Update document title
                     document.title = title;
                     
-                    // Update Open Graph tags
                     document.querySelector('meta[property="og:title"]').setAttribute('content', title);
                     document.querySelector('meta[property="og:description"]').setAttribute('content', description);
                     document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
                     document.querySelector('meta[property="og:image"]').setAttribute('content', imageUrl);
                     
-                    // Update Twitter card tags
                     document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
                     document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
                     document.querySelector('meta[property="twitter:url"]').setAttribute('content', currentUrl);
                     document.querySelector('meta[property="twitter:image"]').setAttribute('content', imageUrl);
                 }
 
-                // Check for lookup parameter in URL after DOM is loaded
                 const urlParams = new URLSearchParams(window.location.search);
                 const lookupParam = urlParams.get('lookup');
                 if (lookupParam) {
-                    // Set the input value and trigger search
                     searchInput.value = lookupParam;
                     handleSearch(lookupParam);
                 }
@@ -539,3 +750,5 @@
         </script>
 	</body>
 </html>
+
+
