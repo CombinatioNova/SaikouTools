@@ -146,7 +146,7 @@
                     </div>
                     <div>
                         <label for="user-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
-                        <input type="text" id="user-code-phrase" required placeholder="e.g., Tweed Fife Solomon">
+                        <input type="text" id="user-code-phrase" required placeholder="e.g., Zero Dark Thirty">
                     </div>
                     <div>
                         <label for="sdis-role" class="block text-sm font-medium text-gray-300 mb-2">SDIS Role</label>
@@ -187,6 +187,7 @@
             </div>
         </div>
     </main>
+
 <script>
     const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
 
@@ -278,7 +279,7 @@
 
             const roles = ['SDIS Operative', 'Special Agent', 'Head of Moderation', 'Director of Intelligence', 'Saikou Owner'];
             userListBody.innerHTML = users.map(user => {
-                const roleOptions = roles.map(role => `<option ${user.sdisRole === role ? 'selected' : ''}>${role}</option>`).join('');
+                const roleOptions = roles.map(role => `<option value="${role}" ${user.sdisRole === role ? 'selected' : ''}>${role}</option>`).join('');
                 return `
                 <tr class="border-b border-gray-800">
                     <td class="p-4">
@@ -292,7 +293,7 @@
                     </td>
                     <td class="p-4 text-gray-300 font-mono">${user.codePhrase}</td>
                     <td class="p-4">
-                        <select class="sdis-role-select" data-userid="${user.id}">
+                        <select class="sdis-role-select bg-[#1f222c] border border-gray-600 rounded px-2 py-1" data-userid="${user.id}">
                             ${roleOptions}
                         </select>
                     </td>
@@ -336,7 +337,9 @@
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Failed to add user.');
                 
-                addUserSuccess.textContent = `Successfully added user ${result.user.displayName}.`;
+                // Robustly handle success message
+                const addedUsername = result.user ? result.user.displayName : username;
+                addUserSuccess.textContent = `Successfully added user ${addedUsername}.`;
                 addUserSuccess.classList.remove('hidden');
                 addUserForm.reset();
                 fetchUsers(token);
