@@ -34,6 +34,7 @@
 				font-family: 'Montserrat', sans-serif;
 				background-color: #121315;
 				color: white;
+                transition: background-image 0.5s ease-in-out;
 			}
 			input {
 				background-color: #1f222c;
@@ -112,6 +113,40 @@
                 right: 0;
                 z-index: 10;
             }
+            
+            /* --- Person of Interest Theming --- */
+            @keyframes pulse-danger {
+                0%, 100% {
+                    box-shadow: 0 0 25px rgba(220, 38, 38, 0.2);
+                    border-color: rgba(220, 38, 38, 0.4);
+                }
+                50% {
+                    box-shadow: 0 0 35px rgba(220, 38, 38, 0.4);
+                    border-color: rgba(220, 38, 38, 0.6);
+                }
+            }
+            .poi-background {
+                background-color: #121315; /* Fallback */
+                background-image: repeating-linear-gradient(
+                    45deg,
+                    rgba(140, 26, 26, 0.15),
+                    rgba(140, 26, 26, 0.15) 15px,
+                    transparent 15px,
+                    transparent 30px
+                );
+                background-attachment: fixed;
+            }
+            .poi-alert-card {
+                background-color: rgba(153, 27, 27, 0.2);
+                border: 1px solid rgba(220, 38, 38, 0.4);
+                border-radius: 0.5rem;
+                padding: 1.5rem;
+                animation: pulse-danger 2.5s infinite;
+            }
+            .poi-profile-container {
+                border: 1px solid rgba(220, 38, 38, 0.3);
+                box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
+            }
 		</style>
 	</head>
 	<body class="bg-[#121315]">
@@ -119,7 +154,7 @@
 		<header class="container mx-auto px-4 md:px-0">
 			<nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
 				<a class="flex items-center" href="/index.html">
-					<span class="text-white font-bold text-xl">Saikou Tools</span>
+					<span id="header-title" class="text-white font-bold text-xl transition-colors duration-300">Saikou Tools</span>
 				</a>
 			</nav>
 		</header>
@@ -155,7 +190,7 @@
 
         <!-- POI Modal -->
         <div id="poi-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
-            <div class="modal-content">
+            <div class="modal-content bg-[#15171c] p-6 rounded-lg shadow-lg w-full max-w-md">
                 <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
                 <div class="mb-4">
                     <label for="poi-name" class="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
@@ -174,7 +209,7 @@
 
         <!-- POI Details Modal -->
         <div id="poi-details-modal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 modal-overlay">
-            <div class="modal-content">
+            <div class="modal-content bg-[#15171c] p-6 rounded-lg shadow-lg w-full max-w-md">
                 <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
                 <div class="space-y-3">
                     <div>
@@ -231,6 +266,9 @@
                     if(queryOverride) {
                         searchInput.value = query;
                     }
+
+                    // Reset theme on new search
+                    document.querySelector('body').classList.remove('poi-background');
 
                     setLoadingState();
                     try {
@@ -315,6 +353,33 @@
                         fetchAndShowPOIDetails(currentLookupData.profile.id);
                         document.getElementById('actions-menu-dropdown').classList.add('hidden');
                     }
+                     // --- Share Profile Action ---
+                    if (e.target.closest('#action-share-profile')) {
+                        e.preventDefault();
+                        const shareButton = e.target.closest('#action-share-profile');
+                        const profileUrl = `${window.location.origin}${window.location.pathname}?lookup=${currentLookupData.profile.id}`;
+                        
+                        const textArea = document.createElement("textarea");
+                        textArea.value = profileUrl;
+                        textArea.style.position = 'fixed';
+                        textArea.style.top = '-9999px';
+                        textArea.style.left = '-9999px';
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            shareButton.innerHTML = `<i class="fas fa-check w-4 text-green-400"></i><span>Copied!</span>`;
+                        } catch (err) {
+                            console.error('Failed to copy: ', err);
+                            shareButton.innerHTML = `<i class="fas fa-times w-4 text-red-400"></i><span>Failed</span>`;
+                        }
+                        document.body.removeChild(textArea);
+
+                        setTimeout(() => {
+                            shareButton.innerHTML = `<i class="fas fa-share-alt w-4"></i><span>Share Profile</span>`;
+                            document.getElementById('actions-menu-dropdown').classList.add('hidden');
+                        }, 2000);
+                    }
                 });
 
                 // --- POI Modal Logic ---
@@ -328,7 +393,8 @@
                         poiNameInput.value = '';
                         poiReasonInput.value = '';
                     } else {
-                        alert('Please fill in both your name and the reason.');
+                        // Replace alert with a more modern notification if possible
+                        console.warn('POI submission requires name and reason.');
                     }
                 });
                 poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.style.display = 'none');
@@ -344,6 +410,8 @@
                 };
 
                 const setErrorState = (message) => {
+                    // Clear POI theme on error
+                    document.querySelector('body').classList.remove('poi-background');
                     resultContainer.innerHTML = `
                         <div class="text-center p-8 bg-[#1f222c] rounded-lg">
                             <p class="font-bold text-red-400">Error</p>
@@ -412,6 +480,32 @@
                     nextBtn.disabled = currentFriendsPage === totalPages;
                 };
 
+                // New function to fetch POI details and inject them into the main card
+                async function fetchAndRenderPOIDetails(userId) {
+                    const markedByEl = document.getElementById('poi-card-marked-by');
+                    const reasonEl = document.getElementById('poi-card-reason');
+                    const dateEl = document.getElementById('poi-card-date');
+
+                    if (!markedByEl || !reasonEl || !dateEl) return;
+
+                    try {
+                        const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
+                        const result = await response.json();
+
+                        if (result.success && result.data) {
+                            const data = result.data;
+                            markedByEl.textContent = data.markedBy || 'N/A';
+                            reasonEl.textContent = data.reason || 'No reason provided.';
+                            dateEl.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+                        } else {
+                            throw new Error(result.error || 'POI details not found');
+                        }
+                    } catch(error) {
+                        console.error('Error fetching POI details for card:', error);
+                        reasonEl.textContent = `Could not load POI details: ${error.message}`;
+                    }
+                }
+
                 const renderProfile = (data) => {
                      if (!data.profile || !data.profile.id) {
                         setErrorState("User not found. Please check the username or ID and try again.");
@@ -421,6 +515,14 @@
                     const { profile, banHistory } = data; 
                     const hasBanHistory = banHistory && banHistory.length > 0;
                     
+                    // --- Handle POI Theming ---
+                    const bodyEl = document.querySelector('body');
+                    if (profile.isPOI) {
+                        bodyEl.classList.add('poi-background');
+                    } else {
+                        bodyEl.classList.remove('poi-background');
+                    }
+
                     const now = new Date().getTime();
                     const activeBan = hasBanHistory ? banHistory.find(ban => {
                         if (ban.type === 'permban') return true;
@@ -522,6 +624,10 @@
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
+                                <a href="#" id="action-share-profile" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
+                                    <i class="fas fa-share-alt w-4"></i><span>Share Profile</span>
+                                </a>
+                                <hr class="border-gray-700 my-1">
                                 ${profile.isPOI ? `
                                     <a href="#" id="action-view-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700">
                                         <i class="fas fa-info-circle w-4"></i><span>View POI Details</span>
@@ -539,7 +645,7 @@
                     `;
 
                     resultContainer.innerHTML = `
-                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative">
+                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
                             <!-- Actions Menu -->
                             <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
 
@@ -571,7 +677,6 @@
                                 <div class="sm:ml-6 mt-4 sm:mt-0">
                                     <div class="flex items-center gap-3">
                                         <h2 class="text-3xl font-bold">${profile.displayName}</h2>
-                                        ${profile.isPOI ? `<span class="bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-semibold px-2.5 py-1 rounded-full">Person of Interest</span>` : ''}
                                     </div>
                                     <p class="text-gray-400">@${profile.name}</p>
                                     <a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">
@@ -579,6 +684,33 @@
                                     </a>
                                 </div>
                             </div>
+                            
+                            <!-- POI Alert Card -->
+                            ${profile.isPOI ? `
+                                <div class="poi-alert-card mt-6">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i>
+                                        <div>
+                                            <h3 class="text-2xl font-bold text-red-300">Person of Interest</h3>
+                                            <p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p>
+                                            <div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm">
+                                                <div>
+                                                    <strong class="text-gray-400 font-semibold block">Marked By:</strong>
+                                                    <span id="poi-card-marked-by" class="text-white">Loading...</span>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-gray-400 font-semibold block">Date Marked:</strong>
+                                                    <span id="poi-card-date" class="text-white">Loading...</span>
+                                                </div>
+                                                <div>
+                                                    <strong class="text-gray-400 font-semibold block">Reason:</strong>
+                                                    <p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
 
                             <!-- Bio, Stats, Bans etc. -->
                             <div class="mt-6 border-t border-gray-700 pt-6">
@@ -640,6 +772,11 @@
                                 ${friendsHtml}
                             </div>
                         </div>`;
+                    
+                    // After rendering the profile, if the user is a POI, fetch their details for the card.
+                    if (profile.isPOI) {
+                        fetchAndRenderPOIDetails(profile.id);
+                    }
 
                     if (fullFriendsList && fullFriendsList.length > 0) {
                         renderFriendsPreview();
@@ -671,19 +808,20 @@
                         });
                         const result = await response.json();
                         if (result.success) {
-                            alert(`${userData.displayName} has been marked as a POI.`);
+                            // Optionally show a success message
                             handleSearch(userData.id.toString()); // Refresh profile
                         } else {
                             throw new Error(result.error || 'Failed to mark POI');
                         }
                     } catch (error) {
                         console.error('Error submitting POI:', error);
-                        alert(`Error: ${error.message}`);
+                        // Optionally show an error message
                     }
                 }
 
                 async function unmarkPOI(userData) {
-                    if (!confirm(`Are you sure you want to unmark ${userData.displayName} as a Person of Interest?`)) return;
+                    // Replace confirm with a custom modal in a real application
+                    if (!window.confirm(`Are you sure you want to unmark ${userData.displayName} as a Person of Interest?`)) return;
 
                     try {
                         const response = await fetch(`${SERVERLESS_URL}/poi/${userData.id}`, {
@@ -691,14 +829,14 @@
                         });
                         const result = await response.json();
                         if (result.success) {
-                            alert(`${userData.displayName} has been unmarked as a POI.`);
+                            // Optionally show a success message
                             handleSearch(userData.id.toString()); // Refresh profile
                         } else {
                             throw new Error(result.error || 'Failed to unmark POI');
                         }
                     } catch (error) {
                         console.error('Error unmarking POI:', error);
-                        alert(`Error: ${error.message}`);
+                        // Optionally show an error message
                     }
                 }
                 
@@ -717,7 +855,8 @@
                             throw new Error(result.error || 'POI details not found');
                         }
                     } catch(error) {
-                        alert(`Error: ${error.message}`);
+                         console.error('Error fetching POI modal details:', error);
+                        // Optionally show an error message
                     }
                 }
 

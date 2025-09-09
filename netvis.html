@@ -686,6 +686,46 @@
             stroke: #fbbf24 !important;
             stroke-width: 3px !important;
         }
+        
+        /* --- Styles copied from lookup.html for Modal --- */
+        .lookup-modal-content .stat-card {
+            background-color: #1f222c;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .lookup-modal-content .ban-history-table th, .lookup-modal-content .ban-history-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+        .lookup-modal-content .ban-history-table thead {
+            background-color: #1f222c;
+        }
+        .lookup-modal-content .ban-history-table tbody tr:nth-child(odd) {
+            background-color: #1A1C24;
+        }
+        @keyframes pulse-danger {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(220, 38, 38, 0.2);
+                border-color: rgba(220, 38, 38, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(220, 38, 38, 0.4);
+                border-color: rgba(220, 38, 38, 0.6);
+            }
+        }
+        .lookup-modal-content .poi-alert-card {
+            background-color: rgba(153, 27, 27, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            animation: pulse-danger 2.5s infinite;
+        }
+        .lookup-modal-content .poi-profile-container {
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
+        }
+         /* --- End of copied styles --- */
+
 
         /* POI Modal Styling */
         .modal-overlay {
@@ -701,15 +741,15 @@
             min-height: 80px;
         }
         
-        #poi-details-modal .detail-label {
+        #poi-details-modal .detail-label, .lookup-modal-content .detail-label {
             @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
         }
 
-        #poi-details-modal .detail-value {
+        #poi-details-modal .detail-value, .lookup-modal-content .detail-value {
             @apply text-sm text-white bg-gray-700/50 p-2 rounded;
         }
 
-        #poi-details-modal .detail-reason {
+        #poi-details-modal .detail-reason, .lookup-modal-content .detail-reason {
              @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words;
         }
 
@@ -760,6 +800,13 @@
             width: 90%;
             max-width: 350px;
             border: 1px solid #353a4a;
+        }
+        
+        /* Lookup Modal Specific Styles */
+        #lookup-modal .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         input[type="range"] {
@@ -971,7 +1018,10 @@
                     <div class="card-header">
                         <img id="card-avatar" class="card-avatar" src="" alt="Avatar">
                         <div class="card-info">
-                            <h3 id="card-name">Loading...</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 id="card-name">Loading...</h3>
+                                <span id="card-poi-tag" class="hidden bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">POI</span>
+                            </div>
                             <p id="card-username">@username</p>
                             <p id="card-id">ID: 12345</p>
                         </div>
@@ -1034,6 +1084,20 @@
         </div>
     </main>
 
+<!-- Lookup Modal -->
+    <div id="lookup-modal" class="modal-overlay hidden">
+        <div class="modal-content lookup-modal-content">
+            <!-- Content will be injected by JavaScript -->
+             <div id="lookup-modal-content-target">
+                <!-- Loading state -->
+                <div class="text-center p-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                    <p class="mt-4 text-gray-400">Fetching user data...</p>
+                </div>
+             </div>
+        </div>
+    </div>
+    
     <!-- POI Modal -->
     <div id="poi-modal" class="modal-overlay hidden">
         <div class="modal-content">
@@ -1086,9 +1150,7 @@
             </div>
         </div>
     </div>
-
-
-    <!-- Floating Action Button -->
+<!-- Floating Action Button -->
     <div id="fab-container" class="fixed bottom-6 right-6 z-30 flex flex-col items-center gap-3">
         <div id="fab-actions"
             class="flex flex-col items-center gap-3 transition-all duration-300 ease-in-out transform scale-90 opacity-0 -translate-y-4 pointer-events-none">
@@ -1211,6 +1273,12 @@
             const closeCardBtn = document.getElementById('close-card-btn');
             const addToNetworkBtn = document.getElementById('add-to-network-btn');
             const viewProfileBtn = document.getElementById('view-profile-btn');
+            const cardPoiTag = document.getElementById('card-poi-tag');
+
+
+            // New Lookup Modal Elements
+            const lookupModal = document.getElementById('lookup-modal');
+            const lookupModalContentTarget = document.getElementById('lookup-modal-content-target');
             
             const markPoiContainer = document.getElementById('mark-poi-container');
             const unmarkPoiContainer = document.getElementById('unmark-poi-container');
@@ -1245,8 +1313,11 @@
             let currentSearchTerm = '';
             let selectedNode = null;
             let poiTargetNode = null;
-            let currentLinks = []; // Store current links for hover highlighting
+            let currentLinks = []; 
             const MAX_USERS = 10;
+            const localNodeCache = new Map();
+            let detailFetchTimeout = null;
+
 
             // Event listeners
             addUserBtn.addEventListener('click', addSeedUser);
@@ -1293,12 +1364,19 @@
             // Node detail card functionality
             closeCardBtn.addEventListener('click', hideNodeCard);
             addToNetworkBtn.addEventListener('click', addSelectedNodeToNetwork);
+            
             viewProfileBtn.addEventListener('click', () => {
                 if (selectedNode) {
-                    const identifier = selectedNode.name || selectedNode.id;
-                    window.open(`lookup.html?lookup=${encodeURIComponent(identifier)}`, '_blank');
+                    showLookupModal(selectedNode.name || selectedNode.id);
                 }
             });
+
+            lookupModal.addEventListener('click', (e) => {
+                if (e.target === lookupModal) {
+                    lookupModal.classList.add('hidden');
+                }
+            });
+
             
             // POI functionality
             markPoiBtn.addEventListener('click', () => {
@@ -1325,7 +1403,7 @@
                 poiModal.classList.add('hidden');
                 poiNameInput.value = '';
                 poiReasonInput.value = '';
-                poiTargetNode = null; // Clear the target node
+                poiTargetNode = null; 
             });
             
             poiSubmitBtn.addEventListener('click', async () => {
@@ -1337,19 +1415,19 @@
                     return;
                 }
 
-                if (poiTargetNode) { // Use the stored target node
+                if (poiTargetNode) { 
                     await submitPOI(poiTargetNode, name, reason);
                     poiModal.classList.add('hidden');
                     poiNameInput.value = '';
                     poiReasonInput.value = '';
-                    poiTargetNode = null; // Clear after submission
+                    poiTargetNode = null; 
                 }
             });
 
             poiModal.addEventListener('click', (e) => {
                 if (e.target === poiModal) {
                     poiModal.classList.add('hidden');
-                    poiTargetNode = null; // Also clear if clicked outside
+                    poiTargetNode = null; 
                 }
             });
             
@@ -1360,15 +1438,12 @@
                 }
             });
 
-
-            // Close card when clicking outside
             document.addEventListener('click', (e) => {
                 if (!nodeDetailCard.contains(e.target) && !e.target.closest('.node')) {
                     hideNodeCard();
                 }
             });
 
-            // Handle user tag removal
             userTagsContainer.addEventListener('click', e => {
                 if (e.target.closest('.remove-btn')) {
                     const username = e.target.closest('.user-tag').dataset.username;
@@ -1453,7 +1528,6 @@
             }
 
             function showNotification(message, type = 'info') {
-                // Create notification element
                 const notification = document.createElement('div');
                 notification.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
 
@@ -1472,26 +1546,13 @@
                 };
 
                 notification.className += ` ${colors[type]}`;
-                notification.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            <i class="${icons[type]} text-sm"></i>
-                            <span class="text-sm font-medium">${message}</span>
-                        </div>
-                    `;
+                notification.innerHTML = `<div class="flex items-center gap-2"><i class="${icons[type]} text-sm"></i><span class="text-sm font-medium">${message}</span></div>`;
 
                 document.body.appendChild(notification);
-
-                // Animate in
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full');
-                }, 100);
-
-                // Animate out and remove
+                setTimeout(() => notification.classList.remove('translate-x-full'), 100);
                 setTimeout(() => {
                     notification.classList.add('translate-x-full');
-                    setTimeout(() => {
-                        document.body.removeChild(notification);
-                    }, 300);
+                    setTimeout(() => document.body.removeChild(notification), 300);
                 }, 3000);
             }
             
@@ -1522,117 +1583,133 @@
             function applySearchHighlight() {
                 const allNodes = svg.selectAll('.node');
                 let matchCount = 0;
-
-                if (allNodes.empty()) {
-                    return;
-                }
+                if (allNodes.empty()) return;
 
                 if (!currentSearchTerm) {
-                    allNodes.classed('searched', false);
+                    allNodes.classed('searched', false).style('opacity', 1);
                     searchResultsCount.textContent = '0';
-                    allNodes.style('opacity', 1);
                     return;
                 }
 
                 allNodes.each(function (d) {
                     const node = d3.select(this);
-                    const nodeName = (d.name || '').toLowerCase();
-                    const nodeId = (d.id || '').toString().toLowerCase();
-                    const displayName = (d.displayName || '').toLowerCase();
-
-                    const matches = nodeName.includes(currentSearchTerm) ||
-                        nodeId.includes(currentSearchTerm) ||
-                        displayName.includes(currentSearchTerm);
-
+                    const matches = (d.name || '').toLowerCase().includes(currentSearchTerm) ||
+                                  (d.id || '').toString().toLowerCase().includes(currentSearchTerm) ||
+                                  (d.displayName || '').toLowerCase().includes(currentSearchTerm);
                     if (matches) matchCount++;
-
-                    node.classed('searched', matches);
-                    node.style('opacity', matches ? 1 : 0.3);
+                    node.classed('searched', matches).style('opacity', matches ? 1 : 0.3);
                 });
-
                 searchResultsCount.textContent = matchCount.toString();
             }
 
             function updateLegendCounts(nodes) {
-                let staffCount = 0, bannedCount = 0, newCount = 0, normalCount = 0;
-
+                let counts = { staff: 0, banned: 0, new: 0, normal: 0 };
                 nodes.forEach(node => {
-                    if (node.groupRole) staffCount++;
-                    else if (node.isBanned) bannedCount++;
-                    else if (node.isNewAccount) newCount++;
-                    else normalCount++;
+                    counts[getNodeType(node)]++;
                 });
-
-                document.getElementById('staff-count').textContent = staffCount;
-                document.getElementById('banned-count').textContent = bannedCount;
-                document.getElementById('new-count').textContent = newCount;
-                document.getElementById('normal-count').textContent = normalCount;
+                document.getElementById('staff-count').textContent = counts.staff;
+                document.getElementById('banned-count').textContent = counts.banned;
+                document.getElementById('new-count').textContent = counts.new;
+                document.getElementById('normal-count').textContent = counts.normal;
             }
 
-            function showNodeCard(nodeData) {
+             function showNodeCard(nodeData) {
                 selectedNode = nodeData;
+                clearTimeout(detailFetchTimeout); 
 
-                // Update card content
                 document.getElementById('card-name').textContent = nodeData.displayName || nodeData.name || 'Unknown';
                 document.getElementById('card-username').textContent = `@${nodeData.name || 'unknown'}`;
                 document.getElementById('card-id').textContent = `ID: ${nodeData.id}`;
+                cardPoiTag.classList.toggle('hidden', !nodeData.isPOI);
 
                 const avatar = document.getElementById('card-avatar');
                 avatar.src = nodeData.avatarUrl || 'https://placehold.co/60x60/1f222c/FFFFFF?text=?';
                 avatar.className = `card-avatar ${getNodeType(nodeData)}`;
 
-                // Update stats
-                const friendCount = nodeData.friendCount;
-                document.getElementById('card-friends').textContent =
-                    (friendCount !== null && friendCount !== undefined) ? friendCount : 'N/A';
+                const friendsEl = document.getElementById('card-friends');
+                const ageEl = document.getElementById('card-age');
 
-                // Calculate account age
-                if (nodeData.created) {
-                    const ageMs = Date.now() - new Date(nodeData.created).getTime();
-                    const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
-                    document.getElementById('card-age').textContent = ageDays < 365 ? `${ageDays}d` : `${Math.floor(ageDays / 365)}y`;
+                if (nodeData.friendCount !== undefined && nodeData.created) {
+                    updateCardStats(nodeData);
                 } else {
-                    document.getElementById('card-age').textContent = 'N/A';
+                    friendsEl.textContent = '...';
+                    ageEl.textContent = '...';
+                    detailFetchTimeout = setTimeout(() => fetchMissingNodeData(nodeData.id), 1000);
                 }
-
-                // Show ban info if banned
+                
                 const banInfo = document.getElementById('card-ban-info');
-                if (nodeData.isBanned && nodeData.banReason) {
+                banInfo.style.display = (nodeData.isBanned && nodeData.banReason) ? 'block' : 'none';
+                if (nodeData.isBanned) {
                     document.getElementById('ban-reason').textContent = nodeData.banReason;
-                    banInfo.style.display = 'block';
-                } else {
-                    banInfo.style.display = 'none';
                 }
 
-                // Update add button state
                 const isAlreadyAdded = seedUsers.has(nodeData.name) || seedUsers.has(nodeData.id.toString());
                 addToNetworkBtn.disabled = isAlreadyAdded || seedUsers.size >= MAX_USERS;
-                addToNetworkBtn.innerHTML = isAlreadyAdded ?
-                    '<i class="fas fa-check"></i><span>Already Added</span>' :
-                    '<i class="fas fa-plus"></i><span>Add to Network</span>';
-
-                // Update POI button state
+                addToNetworkBtn.innerHTML = isAlreadyAdded ? '<i class="fas fa-check"></i><span>Already Added</span>' : '<i class="fas fa-plus"></i><span>Add to Network</span>';
+                
                 updatePOIButton();
-
-                // Show card
                 nodeDetailCard.classList.add('show');
             }
 
+            function updateCardStats(nodeData) {
+                const friendsEl = document.getElementById('card-friends');
+                const ageEl = document.getElementById('card-age');
+                 if (nodeData.friendCount !== null && nodeData.friendCount !== undefined) {
+                    friendsEl.textContent = nodeData.friendCount;
+                } else {
+                    friendsEl.textContent = 'N/A';
+                }
+                if (nodeData.created) {
+                    const ageMs = Date.now() - new Date(nodeData.created).getTime();
+                    const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
+                    ageEl.textContent = ageDays < 365 ? `${ageDays}d` : `${Math.floor(ageDays / 365)}y`;
+                } else {
+                    ageEl.textContent = 'N/A';
+                }
+            }
+            
+            async function fetchMissingNodeData(userId) {
+                if (localNodeCache.has(userId)) {
+                    const cachedData = localNodeCache.get(userId);
+                     updateNodeData(userId, cachedData);
+                    return;
+                }
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}?lookup=${userId}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        localNodeCache.set(userId, data.profile);
+                        updateNodeData(userId, data.profile);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch node details:", error);
+                }
+            }
+
+            function updateNodeData(userId, profileData) {
+                const allNodes = svg.selectAll('.node').data();
+                const nodeToUpdate = allNodes.find(n => n.id === userId);
+                if (nodeToUpdate) {
+                    Object.assign(nodeToUpdate, profileData);
+                }
+                if (selectedNode && selectedNode.id === userId) {
+                    updateCardStats(profileData);
+                }
+            }
+
             function hideNodeCard() {
+                clearTimeout(detailFetchTimeout);
                 nodeDetailCard.classList.remove('show');
                 selectedNode = null;
             }
 
             function addSelectedNodeToNetwork() {
                 if (!selectedNode || seedUsers.size >= MAX_USERS) return;
-
                 const identifier = selectedNode.name || selectedNode.id.toString();
                 if (!seedUsers.has(identifier)) {
                     seedUsers.add(identifier);
                     updateUI();
                     showNotification(`Added "${selectedNode.displayName || selectedNode.name}" to network`, 'success');
-
-                    // Update button state
                     addToNetworkBtn.disabled = true;
                     addToNetworkBtn.innerHTML = '<i class="fas fa-check"></i><span>Already Added</span>';
                 }
@@ -1641,35 +1718,18 @@
             function filterNodes() {
                 const nodes = svg.selectAll('.node');
                 const links = svg.selectAll('.link');
+                if (nodes.empty() || links.empty()) return;
 
-                if (nodes.empty() || links.empty()) {
-                    return;
-                }
-
-                const checkboxes = document.querySelectorAll('.filter-checkbox');
-                const activeFilters = Array.from(checkboxes)
-                    .filter(cb => cb.checked)
-                    .map(cb => cb.dataset.filter);
-
-                nodes.style('opacity', function (d) {
-                    const nodeType = getNodeType(d);
-                    return activeFilters.includes(nodeType) ? 1 : 0.1;
-                });
-
-                links.style('opacity', function (d) {
-                    const sourceNode = nodes.filter(n => n.id === (d.source.id || d.source));
-                    const targetNode = nodes.filter(n => n.id === (d.target.id || d.target));
-
-                    const sourceVisible = !sourceNode.empty() && sourceNode.style('opacity') == 1;
-                    const targetVisible = !targetNode.empty() && targetNode.style('opacity') == 1;
-
+                const activeFilters = Array.from(document.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.dataset.filter);
+                nodes.style('opacity', d => activeFilters.includes(getNodeType(d)) ? 1 : 0.1);
+                links.style('opacity', d => {
+                    const sourceVisible = nodes.filter(n => n.id === (d.source.id || d.source)).style('opacity') == 1;
+                    const targetVisible = nodes.filter(n => n.id === (d.target.id || d.target)).style('opacity') == 1;
                     return sourceVisible && targetVisible ? 0.6 : 0.1;
                 });
             }
 
-            // Initialize UI
             updateUI();
-
 
             function showLoadingModal() {
                 loadingModal.classList.remove('hidden');
@@ -1693,16 +1753,9 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const data = await response.json();
-                    if (!data.success) {
-                        throw new Error(data.error || 'Server returned an error');
-                    }
-
+                    if (!data.success) throw new Error(data.error || 'Server error');
                     return data;
                 } catch (error) {
                     console.warn(`Worker ${url} failed:`, error.message);
@@ -1711,23 +1764,15 @@
             }
 
             async function generateGraphWithFallback(userArray, isDeepSearch = false) {
-                // Try each worker URL
                 for (let i = 0; i < WORKER_URLS.length; i++) {
                     const url = WORKER_URLS[i];
                     updateProgress(10 + i * 10, `Trying worker ${i + 1}/${WORKER_URLS.length}...`);
-
                     try {
-                        const data = await tryWorkerEndpoint(url, {
-                            users: userArray.join(','),
-                            deepSearch: isDeepSearch
-                        });
-
-                        // Success! Update the working URL for future requests
+                        const data = await tryWorkerEndpoint(url, { users: userArray.join(','), deepSearch: isDeepSearch });
                         SERVERLESS_URL = url;
                         return data;
                     } catch (error) {
                         console.warn(`Worker ${url} failed, trying next...`);
-                        continue;
                     }
                 }
                 throw new Error('All worker endpoints failed. Please try again later.');
@@ -1742,6 +1787,7 @@
                 showLoadingModal();
                 if (placeholder) placeholder.style.display = 'none';
                 svg.selectAll("*").remove();
+                localNodeCache.clear(); // Clear local cache for new graph
 
                 const mode = isDeepSearch ? 'Deep Search (Cache Only)' : 'Normal';
                 const userArray = Array.from(seedUsers);
@@ -1759,7 +1805,13 @@
                     }
 
                     if (data.nodes && data.links) {
-                        renderGraph(data); // Pass full data object
+                        // Populate local cache with initial data
+                        data.nodes.forEach(node => {
+                            if ((node.friendCount !== undefined && node.created) && !localNodeCache.has(node.id)) {
+                                localNodeCache.set(node.id, node);
+                            }
+                        });
+                        renderGraph(data); 
                         showNotification('Graph generated successfully!', 'success');
                     } else {
                         throw new Error(data.error || 'No graph data returned.');
@@ -1799,7 +1851,6 @@
                     });
                 svg.call(zoom);
 
-                // Simulation setup
                 simulation = d3.forceSimulation(nodes)
                     .force("link", d3.forceLink(links).id(d => d.id).distance(+distanceSlider.value))
                     .force("charge", d3.forceManyBody().strength(+chargeSlider.value))
@@ -1808,243 +1859,195 @@
                     .force("y", d3.forceY(height / 2).strength(+gravitySlider.value))
                     .force("collide", d3.forceCollide().radius(20));
 
-                // Render Former Friend Links first
-                const formerLink = g.append("g")
-                    .selectAll("line")
-                    .data(formerLinks || [])
-                    .join("line")
-                    .attr("class", "link former");
-                
-                toggleFormerFriends(); // Set initial visibility
+                const formerLink = g.append("g").selectAll("line").data(formerLinks || []).join("line").attr("class", "link former");
+                toggleFormerFriends();
 
-                // Current Friend Links
-                const link = g.append("g")
-                    .selectAll("line")
-                    .data(links)
-                    .join("line")
-                    .attr("class", "link");
+                const link = g.append("g").selectAll("line").data(links).join("line").attr("class", "link");
 
-                // Nodes
                 const nodeGroup = g.append("g")
                     .selectAll("g")
                     .data(nodes)
                     .join("g")
                     .attr("id", d => `node-${d.id}`)
                     .attr("class", d => `node ${getNodeType(d)} ${seedUsers.has(d.name) || seedUsers.has(d.id.toString()) ? 'seed-user' : ''}`)
-                    .call(d3.drag()
-                        .on("start", dragstarted)
-                        .on("drag", dragged)
-                        .on("end", dragended))
+                    .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
                     .on('mouseover', function (event, d) {
-                        tooltip.style("opacity", 1)
-                            .html(`<p class="font-bold text-sm">${d.displayName || d.name}</p><p class="text-xs text-gray-400">@${d.name || d.id}</p>`);
-                        
+                        tooltip.style("opacity", 1).html(`<p class="font-bold text-sm">${d.displayName || d.name}</p><p class="text-xs text-gray-400">@${d.name || d.id}</p>`);
                         const connected = new Set([d.id]);
-                        link.each(function(l) {
-                             if (l.source.id === d.id) connected.add(l.target.id);
-                             if (l.target.id === d.id) connected.add(l.source.id);
-                        });
-                        formerLink.each(function(l) {
-                            if (l.source.id === d.id) connected.add(l.target.id);
-                             if (l.target.id === d.id) connected.add(l.source.id);
-                        });
-
+                        link.each(l => { if (l.source.id === d.id) connected.add(l.target.id); if (l.target.id === d.id) connected.add(l.source.id); });
+                        formerLink.each(l => { if (l.source.id === d.id) connected.add(l.target.id); if (l.target.id === d.id) connected.add(l.source.id); });
                         nodeGroup.style('opacity', n => connected.has(n.id) ? 1.0 : 0.2);
                         link.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
                         formerLink.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
-
                         d3.select(this).raise();
                     })
-                    .on('mousemove', function (event) {
-                        // Use d3.pointer(event, svg.node()) to get coordinates relative to the SVG container.
-                        // The tooltip is positioned absolutely relative to the graph container (the SVG's parent),
-                        // so using coordinates relative to the SVG ensures correct positioning.
-                        const [x, y] = d3.pointer(event, svg.node());
-                        tooltip.style("left", (x + 15) + "px")
-                            .style("top", (y + 15) + "px");
-                    })
-                    .on('mouseout', function () {
+                    .on('mousemove', event => tooltip.style("left", (d3.pointer(event, svg.node())[0] + 15) + "px").style("top", (d3.pointer(event, svg.node())[1] + 15) + "px"))
+                    .on('mouseout', () => {
                         tooltip.style("opacity", 0);
                         nodeGroup.style('opacity', 1);
                         link.style('stroke-opacity', 0.6);
                         formerLink.style('stroke-opacity', 0.8);
                         applySearchHighlight();
                     })
-                    .on('click', function (event, d) {
-                        event.stopPropagation();
-                        showNodeCard(d);
-                    });
+                    .on('click', (event, d) => { event.stopPropagation(); showNodeCard(d); });
 
-                // Node visual elements
                 nodeGroup.append("circle").attr("class", "node-background").attr("r", 15);
                 nodeGroup.append("circle").attr("class", "node-outline").attr("r", 15).attr("fill", "none");
-                nodeGroup.append("image")
-                    .attr("href", d => d.avatarUrl || 'https://placehold.co/30x30/1f222c/FFFFFF?text=?')
-                    .attr("x", -12).attr("y", -12)
-                    .attr("width", 24).attr("height", 24)
-                    .attr("clip-path", "circle(12px)");
+                nodeGroup.append("image").attr("href", d => d.avatarUrl || 'https://placehold.co/30x30/1f222c/FFFFFF?text=?').attr("x", -12).attr("y", -12).attr("width", 24).attr("height", 24).attr("clip-path", "circle(12px)");
+                nodeGroup.each(function (d) { if (d.isPOI) addPOIVisual(d3.select(this)); });
 
-                // Add POI indicators
-                nodeGroup.each(function (d) {
-                    if (d.isPOI) {
-                       addPOIVisual(d3.select(this));
-                    }
-                });
-
-                // Simulation tick function
                 simulation.on("tick", () => {
-                    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-                        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
-                    formerLink.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
-                        .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                    link.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                    formerLink.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
                     nodeGroup.attr("transform", d => `translate(${d.x},${d.y})`);
                 });
 
-                // Drag functions
-                function dragstarted(event, d) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    d.fx = d.x;
-                    d.fy = d.y;
-                }
-
-                function dragged(event, d) {
-                    d.fx = event.x;
-                    d.fy = event.y;
-                }
-
-                function dragended(event, d) {
-                    if (!event.active) simulation.alphaTarget(0);
-                    d.fx = null;
-                    d.fy = null;
-                }
+                function dragstarted(event, d) { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+                function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+                function dragended(event, d) { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
                 updateLegendCounts(nodes);
-
-                setTimeout(() => {
-                    applySearchHighlight();
-                    filterNodes();
-                }, 100);
+                setTimeout(() => { applySearchHighlight(); filterNodes(); }, 100);
             }
             
             function addPOIVisual(nodeElement) {
-                nodeElement.append("circle")
-                    .attr("class", "poi-indicator")
-                    .attr("cx", 10)
-                    .attr("cy", -10)
-                    .attr("r", 8)
-                    .attr("fill", "#ef4444")
-                    .attr("stroke", "#121315")
-                    .attr("stroke-width", 2);
-
-                const icon = nodeElement.append("g")
-                    .attr("class", "poi-icon")
-                    .attr("transform", "translate(10, -10) scale(0.4)");
-                
-                icon.append("path")
-                    .attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z")
-                    .attr("fill", "white")
-                    .attr("transform", "translate(0, 10)");
+                nodeElement.append("circle").attr("class", "poi-indicator").attr("cx", 10).attr("cy", -10).attr("r", 8).attr("fill", "#ef4444").attr("stroke", "#121315").attr("stroke-width", 2);
+                const icon = nodeElement.append("g").attr("class", "poi-icon").attr("transform", "translate(10, -10) scale(0.4)");
+                icon.append("path").attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z").attr("fill", "white").attr("transform", "translate(0, 10)");
             }
 
             async function submitPOI(nodeData, markerName, reason) {
-                const poiData = {
-                    userId: nodeData.id,
-                    username: nodeData.name,
-                    displayName: nodeData.displayName || nodeData.name,
-                    markedBy: markerName,
-                    reason: reason,
-                    timestamp: new Date().toISOString(),
-                    avatarUrl: nodeData.avatarUrl
-                };
-
+                const poiData = { userId: nodeData.id, username: nodeData.name, displayName: nodeData.displayName || nodeData.name, markedBy: markerName, reason: reason, timestamp: new Date().toISOString(), avatarUrl: nodeData.avatarUrl };
                 try {
-                    const response = await fetch(`${SERVERLESS_URL}/poi`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(poiData)
-                    });
+                    const response = await fetch(`${SERVERLESS_URL}/poi`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(poiData) });
                     const result = await response.json();
                     if (result.success) {
                         showNotification(`${nodeData.displayName || nodeData.name} marked as POI`, 'success');
-                        if (selectedNode && selectedNode.id === nodeData.id) {
-                            selectedNode.isPOI = true;
-                        }
+                        if (selectedNode && selectedNode.id === nodeData.id) selectedNode.isPOI = true;
                         nodeData.isPOI = true;
                         updateNodePOIStatus(nodeData);
                         updatePOIButton();
-                    } else {
-                        throw new Error(result.error || 'Failed to mark POI');
-                    }
-                } catch (error) {
-                    console.error('Error submitting POI:', error);
-                    showNotification(`Error: ${error.message}`, 'error');
-                }
+                    } else { throw new Error(result.error || 'Failed to mark POI'); }
+                } catch (error) { showNotification(`Error: ${error.message}`, 'error'); }
             }
 
             async function unmarkPOI(nodeData) {
                 try {
-                    const response = await fetch(`${SERVERLESS_URL}/poi/${nodeData.id}`, {
-                        method: 'DELETE'
-                    });
+                    const response = await fetch(`${SERVERLESS_URL}/poi/${nodeData.id}`, { method: 'DELETE' });
                     const result = await response.json();
                     if (result.success) {
                         showNotification(`${nodeData.displayName || nodeData.name} unmarked as POI`, 'success');
-                        if (selectedNode && selectedNode.id === nodeData.id) {
-                            selectedNode.isPOI = false;
-                        }
+                        if (selectedNode && selectedNode.id === nodeData.id) selectedNode.isPOI = false;
                         nodeData.isPOI = false;
                         updateNodePOIStatus(nodeData);
                         updatePOIButton();
-                    } else {
-                        throw new Error(result.error || 'Failed to unmark POI');
-                    }
-                } catch (error) {
-                    console.error('Error unmarking POI:', error);
-                    showNotification(`Error: ${error.message}`, 'error');
-                }
+                    } else { throw new Error(result.error || 'Failed to unmark POI'); }
+                } catch (error) { showNotification(`Error: ${error.message}`, 'error'); }
             }
             
             function updatePOIButton() {
                 if (!selectedNode) return;
                 const isPOI = selectedNode.isPOI;
-                
                 markPoiContainer.classList.toggle('hidden', isPOI);
                 unmarkPoiContainer.classList.toggle('hidden', !isPOI);
+                cardPoiTag.classList.toggle('hidden', !isPOI);
             }
 
             async function fetchAndShowPOIDetails(userId) {
                 try {
                     const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
                     const result = await response.json();
-
                     if (result.success && result.data) {
                         const data = result.data;
                         poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
                         poiDetailsReason.textContent = data.reason || 'No reason provided.';
                         poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
                         poiDetailsModal.classList.remove('hidden');
-                    } else {
-                        throw new Error(result.error || 'POI details not found');
-                    }
-                } catch(error) {
-                    showNotification(`Error: ${error.message}`, 'error');
-                }
+                    } else { throw new Error(result.error || 'POI details not found'); }
+                } catch(error) { showNotification(`Error: ${error.message}`, 'error'); }
             }
 
             function updateNodePOIStatus(nodeData) {
                 const nodeElement = svg.select(`#node-${nodeData.id}`);
                 if (!nodeElement.empty()) {
-                    // Clear existing indicator first
                     nodeElement.selectAll('.poi-indicator, .poi-icon').remove();
-                    
-                    if (nodeData.isPOI) {
-                       addPOIVisual(nodeElement);
-                    }
+                    if (nodeData.isPOI) addPOIVisual(nodeElement);
                 }
+            }
+
+            async function showLookupModal(query) {
+                lookupModal.classList.remove('hidden');
+                lookupModalContentTarget.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Fetching user data for ${query}...</p></div>`;
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}?lookup=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    if (!response.ok || !data.success) throw new Error(data.error || "Failed to fetch user data.");
+                    localNodeCache.set(data.profile.id, data.profile);
+                    renderLookupProfile(data);
+                } catch (error) {
+                    lookupModalContentTarget.innerHTML = `<div class="text-center p-8 bg-[#1f222c] rounded-lg"><p class="font-bold text-red-400">Error</p><p class="text-sm mt-1 text-gray-300">${error.message}</p></div>`;
+                }
+            }
+
+            function renderLookupProfile(data) {
+                const { profile } = data;
+                if (!profile) {
+                    lookupModalContentTarget.innerHTML = `<p class="text-red-400">User not found.</p>`;
+                    return;
+                }
+                const createdDate = profile.created ? new Date(profile.created).toLocaleDateString() : 'Unknown';
+                let banInfoHtml = `<div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30"><div class="flex items-center"><i class="fas fa-check-circle text-green-400 text-2xl mr-3"></i><div><h4 class="font-bold text-green-300">No Active Ban</h4><p class="text-sm text-gray-400">This user does not have an active ban.</p></div></div></div>`;
+                if (profile.isBanned && profile.banInfo) {
+                    banInfoHtml = `<div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30"><div class="flex items-center mb-4"><i class="fas fa-times-circle text-red-400 text-2xl mr-3"></i><div><h4 class="font-bold text-red-300">User is Banned</h4></div></div><div class="space-y-2 text-sm"><p><strong class="text-gray-300">Reason:</strong> ${profile.banInfo.Reason || 'N/A'}</p><p><strong class="text-gray-300">Moderator:</strong> ${profile.banInfo.Moderator || 'N/A'}</p></div></div>`;
+                }
+
+                lookupModalContentTarget.innerHTML = `
+                    <div class="bg-[#15171c] p-6 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
+                        <div class="absolute top-4 right-4">
+                             <a href="lookup.html?lookup=${profile.id}" target="_blank" class="card-btn secondary !w-auto !px-3 !py-1.5 text-xs"><i class="fas fa-external-link-alt"></i><span>Open in New Tab</span></a>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                            <img src="${profile.avatarUrl}" alt="Avatar" class="w-24 h-24 rounded-full border-4 border-gray-700">
+                            <div class="sm:ml-6 mt-4 sm:mt-0">
+                                <h2 class="text-3xl font-bold">${profile.displayName}</h2>
+                                <p class="text-gray-400">@${profile.name}</p>
+                                <a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">View on Roblox <i class="fas fa-external-link-alt ml-1"></i></a>
+                            </div>
+                        </div>
+                        ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm" id="modal-poi-details"><p class="text-gray-400">Loading POI details...</p></div></div></div></div>` : ''}
+                        <div class="mt-6 border-t border-gray-700 pt-6">
+                            <h3 class="font-bold text-lg mb-2">Stats</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div>
+                                <div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div>
+                                <div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div>
+                            </div>
+                        </div>
+                        <div class="mt-6 border-t border-gray-700 pt-6">
+                            <h3 class="font-bold text-lg mb-2">Current Ban Status</h3>
+                            ${banInfoHtml}
+                        </div>
+                    </div>`;
+                if(profile.isPOI) fetchAndRenderPOIDetailsForModal(profile.id);
+            }
+            
+            async function fetchAndRenderPOIDetailsForModal(userId) {
+                const target = document.getElementById('modal-poi-details');
+                if(!target) return;
+                try {
+                    const response = await fetch(`${SERVERLESS_URL}/poi/${userId}`);
+                    const result = await response.json();
+                    if(result.success && result.data) {
+                        const data = result.data;
+                        target.innerHTML = `
+                             <div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span class="text-white">${data.markedBy || 'N/A'}</span></div>
+                            <div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span class="text-white">${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}</span></div>
+                            <div><strong class="text-gray-400 font-semibold block">Reason:</strong><p class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">${data.reason || 'No reason provided.'}</p></div>`;
+                    } else { throw new Error(result.error || 'Details not found'); }
+                } catch (e) { target.innerHTML = `<p class="text-red-400">Could not load POI details: ${e.message}</p>`; }
             }
         });
     </script>
 </body>
-
 </html>
 
