@@ -1565,18 +1565,33 @@
             }
 
             function showLoadingModal(show = true) {
+                const modal = document.getElementById('loading-modal');
                 if (show) {
-                    loadingModal.classList.remove('hidden');
-                    setTimeout(() => loadingModal.classList.remove('opacity-0'), 10);
+                    
+                    modal.style.display = 'flex';
+                    modal.style.opacity = '0';
+                    setTimeout(() => {
+                        modal.style.opacity = '1';
+                    }, 10);
                 } else {
-                    loadingModal.classList.add('opacity-0');
-                    setTimeout(() => loadingModal.classList.add('hidden'), 300);
+                    modal.style.opacity = '0';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
                 }
             }
 
             function updateProgress(progress, message) {
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = message;
+                const bar = document.getElementById('progress-bar');
+                const text = document.getElementById('progress-text');
+                
+                if (bar) {
+                    bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                }
+                
+                if (text) {
+                    text.textContent = message || `${progress}% complete`;
+                }
             }
 
             async function generateGraphWithFallback(userArray, isDeepSearch = false) {
@@ -1608,12 +1623,11 @@
                 
                 try {
                     const data = await generateGraphWithFallback(Array.from(seedUsers), isDeepSearch);
-                    if (data.progressSteps) {
-                        for (const step of data.progressSteps) {
-                            updateProgress(step.progress, step.message);
-                            await new Promise(resolve => setTimeout(resolve, 50));
-                        }
-                    }
+                    
+                    // Final progress update
+                    updateProgress(100, 'Rendering graph...');
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
                     if (data.nodes && data.links) {
                         renderGraph(data);
                         showNotification('Graph generated successfully!', 'success');
@@ -1626,7 +1640,10 @@
                     placeholder.textContent = `Error: ${error.message}`;
                     placeholder.style.display = 'flex';
                 } finally {
-                    showLoadingModal(false);
+                    // Small delay before hiding modal to show completion
+                    setTimeout(() => {
+                        showLoadingModal(false);
+                    }, 300);
                 }
             }
 
