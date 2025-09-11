@@ -1703,7 +1703,11 @@
                         link.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
                         d3.select(this).raise();
                     })
-                    .on('mousemove', e => tooltip.style("left", (e.pageX + 15) + "px").style("top", (e.pageY + 15) + "px"))
+                    .on('mousemove', event => {
+    const graphContainer = document.getElementById('graph-container');
+    const [x, y] = d3.pointer(event, graphContainer);
+    tooltip.style("left", (x + 15) + "px").style("top", (y + 15) + "px");
+})
                     .on('mouseout', () => (tooltip.style("opacity", 0), nodeGroup.style('opacity', 1), link.style('stroke-opacity', 0.6), applySearchHighlight()))
                     .on('click', (event, d) => (event.stopPropagation(), showNodeCard(d)));
 
