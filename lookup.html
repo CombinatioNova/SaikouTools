@@ -1,459 +1,546 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
-		<title>Saikou | User Lookup</title>
-		<meta name="description" content="A tool for moderators to look up Roblox user information and Saikou ban status." />
-		<link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png" onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
-        <!-- Tailwind CSS -->
-		<script src="https://cdn.tailwindcss.com"></script>
-		<!-- Open Graph / Facebook -->
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://saikou.dev/tools/lookup/" />
-		<meta property="og:title" content="Saikou | User Lookup" />
-		<meta property="og:description" content="Look up Roblox user information and ban status" />
-		<meta property="og:image" content="https://saikou.dev/assets/images/og-image.png" />
 
-		<!-- Twitter -->
-		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:url" content="https://saikou.dev/tools/lookup/" />
-		<meta property="twitter:title" content="Saikou | User Lookup" />
-		<meta property="twitter:description" content="Look up Roblox user information and ban status" />
-		<meta property="twitter:image" content="https://saikou.dev/assets/images/og-image.png" />
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+    <title>Saikou | User Lookup</title>
+    <meta name="description"
+        content="A tool for moderators to look up Roblox user information and Saikou ban status." />
+    <link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png"
+        onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://saikou.dev/tools/lookup/" />
+    <meta property="og:title" content="Saikou | User Lookup" />
+    <meta property="og:description" content="Look up Roblox user information and ban status" />
+    <meta property="og:image" content="https://saikou.dev/assets/images/og-image.png" />
 
-		<!-- Fonts & Icons -->
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://saikou.dev/tools/lookup/" />
+    <meta property="twitter:title" content="Saikou | User Lookup" />
+    <meta property="twitter:description" content="Look up Roblox user information and ban status" />
+    <meta property="twitter:image" content="https://saikou.dev/assets/images/og-image.png" />
 
-		<style>
-			body {
-				font-family: 'Montserrat', sans-serif;
-				background-color: #121315;
-				color: white;
-                transition: background-image 0.5s ease-in-out;
-			}
-			input {
-				background-color: #1f222c;
-				border: 1px solid #353a4a;
-				color: white;
-				border-radius: 0.5rem;
-				padding: 0.75rem;
-                transition: border-color 0.3s ease;
-			}
-            input:focus {
-                outline: none;
-                border-color: #7f89ff;
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        xintegrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #121315;
+            color: white;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        input {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #7f89ff;
+        }
+
+        .custom-button {
+            font-weight: bold;
+            border-radius: 0.5rem;
+            color: #121315;
+            background-color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .custom-button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        .custom-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stat-card {
+            background-color: #1f222c;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .ban-history-table th,
+        .ban-history-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+        }
+
+        .ban-history-table thead {
+            background-color: #1f222c;
+        }
+
+        .ban-history-table tbody tr:nth-child(odd) {
+            background-color: #1A1C24;
+        }
+
+        .friends-grid-container {
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .friends-grid-container.collapsed {
+            max-height: 220px;
+            /* Adjust to fit ~2 rows of friend cards */
+            overflow: hidden;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.flex {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #1f222c;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #353a4a;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .detail-label {
+            @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
+        }
+
+        .detail-value {
+            @apply text-sm text-white bg-gray-700/50 p-2 rounded;
+        }
+
+        .detail-reason {
+            @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words;
+        }
+
+        .actions-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 10;
+        }
+
+        /* --- Person of Interest Theming --- */
+        @keyframes pulse-danger {
+
+            0%,
+            100% {
+                box-shadow: 0 0 25px rgba(220, 38, 38, 0.2);
+                border-color: rgba(220, 38, 38, 0.4);
             }
-			.custom-button {
-				font-weight: bold;
-				border-radius: 0.5rem;
-				color: #121315;
-				background-color: #ffffff;
-                padding: 0.75rem 1.5rem;
-				opacity: 1;
-				transition: opacity 0.3s ease;
-                cursor: pointer;
-			}
-			.custom-button:hover:not(:disabled) {
-				opacity: 0.8;
-			}
-            .custom-button:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
+
+            50% {
+                box-shadow: 0 0 35px rgba(220, 38, 38, 0.4);
+                border-color: rgba(220, 38, 38, 0.6);
             }
-            .stat-card {
-                background-color: #1f222c;
-                border-radius: 0.5rem;
-                padding: 1rem;
-            }
-            .ban-history-table th, .ban-history-table td {
-                padding: 0.75rem 1rem;
-                text-align: left;
-            }
-            .ban-history-table thead {
-                background-color: #1f222c;
-            }
-            .ban-history-table tbody tr:nth-child(odd) {
-                background-color: #1A1C24;
-            }
-            .friends-grid-container {
-                transition: max-height 0.5s ease-in-out;
-            }
-            .friends-grid-container.collapsed {
-                max-height: 220px; /* Adjust to fit ~2 rows of friend cards */
-                overflow: hidden;
-            }
-            .modal-overlay {
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background-color: rgba(0, 0, 0, 0.7);
-                display: none;
-                align-items: center; justify-content: center; z-index: 50;
-                backdrop-filter: blur(5px);
-                transition: opacity 0.3s ease;
-            }
-            .modal-overlay.flex { display: flex; }
-            .modal-content {
-                background-color: #1f222c; padding: 1.5rem; border-radius: 0.5rem;
-                width: 90%; max-width: 500px; border: 1px solid #353a4a;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            }
-            .modal-content textarea {
-                resize: vertical;
-                min-height: 80px;
-            }
-            .detail-label { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider; }
-            .detail-value { @apply text-sm text-white bg-gray-700/50 p-2 rounded; }
-            .detail-reason { @apply text-sm text-white bg-gray-700/50 p-2 rounded whitespace-pre-wrap break-words; }
-            .actions-menu {
-                position: absolute;
-                top: 100%;
-                right: 0;
-                z-index: 10;
-            }
-            
-            /* --- Person of Interest Theming --- */
-            @keyframes pulse-danger { 0%, 100% { box-shadow: 0 0 25px rgba(220, 38, 38, 0.2); border-color: rgba(220, 38, 38, 0.4); } 50% { box-shadow: 0 0 35px rgba(220, 38, 38, 0.4); border-color: rgba(220, 38, 38, 0.6); } }
-            .poi-background { background-image: repeating-linear-gradient(45deg, rgba(140, 26, 26, 0.15), rgba(140, 26, 26, 0.15) 15px, transparent 15px, transparent 30px); background-attachment: fixed; }
-            .poi-alert-card { background-color: rgba(153, 27, 27, 0.2); border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 0.5rem; padding: 1.5rem; animation: pulse-danger 2.5s infinite; }
-            .poi-profile-container { border: 1px solid rgba(220, 38, 38, 0.3); box-shadow: 0 0 30px rgba(220, 38, 38, 0.15); }
-		</style>
-	</head>
-	<body class="bg-[#121315]">
-		<!-- Header -->
-		<header class="container mx-auto px-4 md:px-0">
-			<nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
-				<a class="flex items-center" href="/index.html">
-					<span id="header-title" class="text-white font-bold text-xl transition-colors duration-300">Saikou Tools</span>
-				</a>
-                <!-- Auth UI Container -->
-                <div>
-                    <!-- Logged Out View -->
-                    <div id="login-container">
-                        <button id="login-btn" class="custom-button !bg-blue-600 !text-white !px-4 !py-2 text-sm">
-                            <i class="fas fa-sign-in-alt mr-2"></i>SDIS Login
+        }
+
+        .poi-background {
+            background-image: repeating-linear-gradient(45deg, rgba(140, 26, 26, 0.15), rgba(140, 26, 26, 0.15) 15px, transparent 15px, transparent 30px);
+            background-attachment: fixed;
+        }
+
+        .poi-alert-card {
+            background-color: rgba(153, 27, 27, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            animation: pulse-danger 2.5s infinite;
+        }
+
+        .poi-profile-container {
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
+        }
+    </style>
+</head>
+
+<body class="bg-[#121315]">
+    <!-- Header -->
+    <header class="container mx-auto px-4 md:px-0">
+        <nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+            <a class="flex items-center" href="/index.html">
+                <span id="header-title" class="text-white font-bold text-xl transition-colors duration-300">Saikou
+                    Tools</span>
+            </a>
+            <!-- Auth UI Container -->
+            <div>
+                <!-- Logged Out View -->
+                <div id="login-container">
+                    <button id="login-btn" class="custom-button !bg-blue-600 !text-white !px-4 !py-2 text-sm">
+                        <i class="fas fa-sign-in-alt mr-2"></i>SDIS Login
+                    </button>
+                </div>
+                <!-- Logged In View -->
+                <div id="user-status-container" class="hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p id="user-status-name" class="font-bold text-sm text-white">User Name</p>
+                            <p id="user-status-role" class="text-xs text-gray-400">SDIS Operative</p>
+                        </div>
+                        <img id="user-status-avatar" src="" alt="User Avatar"
+                            class="w-10 h-10 rounded-full border-2 border-blue-500">
+                        <button id="logout-btn" class="custom-button !bg-red-600 !text-white !px-3 !py-1.5 text-xs">
+                            <i class="fas fa-sign-out-alt"></i>
                         </button>
                     </div>
-                    <!-- Logged In View -->
-                    <div id="user-status-container" class="hidden">
-                        <div class="flex items-center gap-3">
-                            <div class="text-right">
-                                <p id="user-status-name" class="font-bold text-sm text-white">User Name</p>
-                                <p id="user-status-role" class="text-xs text-gray-400">SDIS Operative</p>
-                            </div>
-                            <img id="user-status-avatar" src="" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-blue-500">
-                            <button id="logout-btn" class="custom-button !bg-red-600 !text-white !px-3 !py-1.5 text-xs">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-			</nav>
-		</header>
-
-		<!-- Main Content -->
-		<main class="container mx-auto px-4 py-8">
-            <div class="max-w-4xl mx-auto">
-                <div class="text-center">
-                    <h1 class="text-4xl md:text-5xl font-bold">Moderator User Lookup</h1>
-                    <p class="mt-4 text-lg text-gray-300">Enter a Roblox username or ID to view their profile and ban status.</p>
-                </div>
-
-                <div class="mt-10 bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg">
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <input type="text" id="search-input" class="w-full flex-grow" placeholder="Enter Roblox username or ID...">
-                        <button id="search-btn" class="custom-button">Search</button>
-                    </div>
-                </div>
-
-                <!-- Result Display -->
-                <div id="result-container" class="mt-8">
-                    <!-- This will be populated with the user profile or a message -->
                 </div>
             </div>
-		</main>
+        </nav>
+    </header>
 
-		<!-- Footer -->
-		<footer class="text-center bg-[#0c0d0e] mt-20 py-12">
-			<div class="container mx-auto px-4">
-				<p class="text-sm text-gray-500"> 2025, Saikou. All rights reserved.</p>
-			</div>
-		</footer>
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold">Moderator User Lookup</h1>
+                <p class="mt-4 text-lg text-gray-300">Enter a Roblox username or ID to view their profile and ban
+                    status.</p>
+            </div>
 
-        <!-- POI Modal -->
-        <div id="poi-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
-                <div class="mb-4">
-                    <label for="poi-name" class="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
-                    <input type="text" id="poi-name" class="w-full" placeholder="Enter your name" readonly>
+            <div class="mt-10 bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="search-input" class="w-full flex-grow"
+                        placeholder="Enter Roblox username or ID...">
+                    <button id="search-btn" class="custom-button">Search</button>
                 </div>
-                <div class="mb-4">
-                    <label for="poi-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
-                    <textarea id="poi-reason" class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2" rows="3" placeholder="Why are you marking this user as a person of interest?"></textarea>
-                </div>
-                <div class="flex gap-3">
-                    <button id="poi-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
-                    <button id="poi-submit-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Mark as POI</button>
-                </div>
+            </div>
+
+            <!-- Result Display -->
+            <div id="result-container" class="mt-8">
+                <!-- This will be populated with the user profile or a message -->
             </div>
         </div>
+    </main>
 
-        <!-- POI Details Modal -->
-        <div id="poi-details-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
-                <div class="space-y-3">
-                    <div>
-                        <p class="detail-label">Marked By</p>
-                        <p id="poi-details-marked-by" class="detail-value">Loading...</p>
-                    </div>
-                    <div>
-                        <p class="detail-label">Reason</p>
-                        <p id="poi-details-reason" class="detail-reason">Loading...</p>
-                    </div>
-                    <div>
-                        <p class="detail-label">Date</p>
-                        <p id="poi-details-date" class="detail-value">Loading...</p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button id="poi-details-close-btn" class="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Close</button>
-                </div>
+    <!-- Footer -->
+    <footer class="text-center bg-[#0c0d0e] mt-20 py-12">
+        <div class="container mx-auto px-4">
+            <p class="text-sm text-gray-500"> 2025, Saikou. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- POI Modal -->
+    <div id="poi-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">Mark as Person of Interest</h3>
+            <div class="mb-4">
+                <label for="poi-name" class="block text-sm font-medium text-gray-300 mb-2">Your Name</label>
+                <input type="text" id="poi-name" class="w-full" placeholder="Enter your name" readonly>
+            </div>
+            <div class="mb-4">
+                <label for="poi-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
+                <textarea id="poi-reason"
+                    class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2" rows="3"
+                    placeholder="Why are you marking this user as a person of interest?"></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button id="poi-cancel-btn"
+                    class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                <button id="poi-submit-btn"
+                    class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Mark as
+                    POI</button>
             </div>
         </div>
+    </div>
 
-        <!-- Login Modal -->
-        <div id="sdis-login-modal" class="modal-overlay">
-            <div class="modal-content">
-                <h3 class="text-lg font-bold mb-4 text-white">SDIS Authentication</h3>
-                <p class="text-sm text-gray-400 mb-4">Please enter your assigned code phrase to access protected actions.</p>
-                <div class="mb-4">
-                    <label for="sdis-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
-                    <input type="password" id="sdis-code-phrase" class="w-full" placeholder="Enter your code phrase...">
+    <!-- POI Details Modal -->
+    <div id="poi-details-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">Person of Interest Details</h3>
+            <div class="space-y-3">
+                <div>
+                    <p class="detail-label">Marked By</p>
+                    <p id="poi-details-marked-by" class="detail-value">Loading...</p>
                 </div>
-                <div class="flex gap-3">
-                    <button id="sdis-login-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
-                    <button id="sdis-login-submit-btn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Authenticate</button>
+                <div>
+                    <p class="detail-label">Reason</p>
+                    <p id="poi-details-reason" class="detail-reason">Loading...</p>
+                </div>
+                <div>
+                    <p class="detail-label">Date</p>
+                    <p id="poi-details-date" class="detail-value">Loading...</p>
                 </div>
             </div>
+            <div class="mt-4">
+                <button id="poi-details-close-btn"
+                    class="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Close</button>
+            </div>
         </div>
+    </div>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
-                const DATA_WORKER_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
+    <!-- Login Modal -->
+    <div id="sdis-login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">SDIS Authentication</h3>
+            <p class="text-sm text-gray-400 mb-4">Please enter your assigned code phrase to access protected actions.
+            </p>
+            <div class="mb-4">
+                <label for="sdis-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
+                <input type="password" id="sdis-code-phrase" class="w-full" placeholder="Enter your code phrase...">
+            </div>
+            <div class="flex gap-3">
+                <button id="sdis-login-cancel-btn"
+                    class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                <button id="sdis-login-submit-btn"
+                    class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Authenticate</button>
+            </div>
+        </div>
+    </div>
 
-                // --- DOM Elements ---
-                const searchInput = document.getElementById('search-input');
-                const searchBtn = document.getElementById('search-btn');
-                const resultContainer = document.getElementById('result-container');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
+            const DATA_WORKER_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev';
 
-                // POI Modals
-                const poiModal = document.getElementById('poi-modal');
-                const poiNameInput = document.getElementById('poi-name');
-                const poiReasonInput = document.getElementById('poi-reason');
-                const poiCancelBtn = document.getElementById('poi-cancel-btn');
-                const poiSubmitBtn = document.getElementById('poi-submit-btn');
-                const poiDetailsModal = document.getElementById('poi-details-modal');
-                const poiDetailsMarkedBy = document.getElementById('poi-details-marked-by');
-                const poiDetailsReason = document.getElementById('poi-details-reason');
-                const poiDetailsDate = document.getElementById('poi-details-date');
-                const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
+            // --- DOM Elements ---
+            const searchInput = document.getElementById('search-input');
+            const searchBtn = document.getElementById('search-btn');
+            const resultContainer = document.getElementById('result-container');
 
-                // Auth Elements
-                const loginContainer = document.getElementById('login-container');
-                const loginBtn = document.getElementById('login-btn');
-                const userStatusContainer = document.getElementById('user-status-container');
-                const userStatusName = document.getElementById('user-status-name');
-                const userStatusRole = document.getElementById('user-status-role');
-                const userStatusAvatar = document.getElementById('user-status-avatar');
-                const logoutBtn = document.getElementById('logout-btn');
-                const sdisLoginModal = document.getElementById('sdis-login-modal');
-                const sdisCodePhraseInput = document.getElementById('sdis-code-phrase');
-                const sdisLoginSubmitBtn = document.getElementById('sdis-login-submit-btn');
-                const sdisLoginCancelBtn = document.getElementById('sdis-login-cancel-btn');
+            // POI Modals
+            const poiModal = document.getElementById('poi-modal');
+            const poiNameInput = document.getElementById('poi-name');
+            const poiReasonInput = document.getElementById('poi-reason');
+            const poiCancelBtn = document.getElementById('poi-cancel-btn');
+            const poiSubmitBtn = document.getElementById('poi-submit-btn');
+            const poiDetailsModal = document.getElementById('poi-details-modal');
+            const poiDetailsMarkedBy = document.getElementById('poi-details-marked-by');
+            const poiDetailsReason = document.getElementById('poi-details-reason');
+            const poiDetailsDate = document.getElementById('poi-details-date');
+            const poiDetailsCloseBtn = document.getElementById('poi-details-close-btn');
 
-                // --- State ---
-                let fullFriendsList = [];
-                let currentFriendsPage = 1;
-                const friendsPerPage = 50;
-                let currentLookupData = {}; 
+            // Auth Elements
+            const loginContainer = document.getElementById('login-container');
+            const loginBtn = document.getElementById('login-btn');
+            const userStatusContainer = document.getElementById('user-status-container');
+            const userStatusName = document.getElementById('user-status-name');
+            const userStatusRole = document.getElementById('user-status-role');
+            const userStatusAvatar = document.getElementById('user-status-avatar');
+            const logoutBtn = document.getElementById('logout-btn');
+            const sdisLoginModal = document.getElementById('sdis-login-modal');
+            const sdisCodePhraseInput = document.getElementById('sdis-code-phrase');
+            const sdisLoginSubmitBtn = document.getElementById('sdis-login-submit-btn');
+            const sdisLoginCancelBtn = document.getElementById('sdis-login-cancel-btn');
 
-                // --- Auth State ---
-                let authToken = localStorage.getItem('sdis_token');
-                let currentUser = null; // Will be populated from localStorage
-                let afterLoginCallback = null;
+            // --- State ---
+            let fullFriendsList = [];
+            let currentFriendsPage = 1;
+            const friendsPerPage = 50;
+            let currentLookupData = {};
 
-                const handleSearch = async (queryOverride) => {
-                    const query = queryOverride || searchInput.value.trim();
-                    if (!query) return;
+            // --- Auth State ---
+            let authToken = localStorage.getItem('sdis_token');
+            let currentUser = null; // Will be populated from localStorage
+            let afterLoginCallback = null;
 
-                    if(queryOverride) searchInput.value = query;
-                    
-                    document.body.classList.remove('poi-background');
-                    setLoadingState();
-                    try {
-                        const response = await fetch(`${DATA_WORKER_URL}?lookup=${encodeURIComponent(query)}`);
-                        const data = await response.json();
+            const handleSearch = async (queryOverride) => {
+                const query = queryOverride || searchInput.value.trim();
+                if (!query) return;
 
-                        if (!response.ok || !data.success) {
-                            throw new Error(data.error || 'An unknown error occurred.');
-                        }
-                        
-                        currentLookupData = data; 
-                        fullFriendsList = data.friends || [];
-                        currentFriendsPage = 1;
-                        renderProfile(data);
+                if (queryOverride) searchInput.value = query;
 
-                    } catch (error) {
-                        console.error('Lookup Error:', error);
-                        setErrorState(error.message);
-                    }
-                };
-                
-                searchInput.addEventListener('keydown', e => e.key === 'Enter' && handleSearch());
-                searchBtn.addEventListener('click', () => handleSearch());
+                document.body.classList.remove('poi-background');
+                setLoadingState();
+                try {
+                    const response = await fetch(`${DATA_WORKER_URL}?lookup=${encodeURIComponent(query)}`);
+                    const data = await response.json();
 
-                // --- Event Delegation ---
-                resultContainer.addEventListener('click', (e) => {
-                    if (e.target.matches('.friend-link, .friend-link *')) {
-                        e.preventDefault();
-                        const friendName = e.target.closest('.friend-link').dataset.username;
-                        if(friendName) handleSearch(friendName);
-                    }
-                    if (e.target.id === 'toggle-friends-btn') {
-                        const grid = document.getElementById('friends-grid-container');
-                        const pagination = document.getElementById('friends-pagination');
-                        const isCollapsed = grid.classList.toggle('collapsed');
-                        e.target.textContent = isCollapsed ? 'Show More' : 'Show Less';
-                        pagination.classList.toggle('hidden', isCollapsed);
-                        if (!isCollapsed) renderFriendsPage(1); else renderFriendsPreview();
-                    }
-                    if (e.target.id === 'prev-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage - 1);
-                    if (e.target.id === 'next-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage + 1);
-                    
-                    const actionsMenuBtn = e.target.closest('#actions-menu-btn');
-                    if (actionsMenuBtn) {
-                        document.getElementById('actions-menu-dropdown').classList.toggle('hidden');
-                    } else if (!e.target.closest('#actions-menu-dropdown')) {
-                        const dropdown = document.getElementById('actions-menu-dropdown');
-                        if (dropdown) dropdown.classList.add('hidden');
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || 'An unknown error occurred.');
                     }
 
-                    if (e.target.closest('#action-mark-poi')) handleMarkPOI();
-                    if (e.target.closest('#action-unmark-poi')) handleUnmarkPOI();
-                    if (e.target.closest('#action-view-poi')) handleViewPOI();
+                    currentLookupData = data;
+                    fullFriendsList = data.friends || [];
+                    currentFriendsPage = 1;
+                    renderProfile(data);
 
-                    if (e.target.closest('#action-share-profile')) {
-                        e.preventDefault();
-                        const shareButton = e.target.closest('#action-share-profile');
-                        const profileUrl = `${window.location.origin}${window.location.pathname}?lookup=${currentLookupData.profile.id}`;
-                        navigator.clipboard.writeText(profileUrl).then(() => {
-                            shareButton.innerHTML = `<i class="fas fa-check w-4 text-green-400"></i><span>Copied!</span>`;
-                        }).catch(err => {
-                            shareButton.innerHTML = `<i class="fas fa-times w-4 text-red-400"></i><span>Failed</span>`;
-                        });
-                        setTimeout(() => {
-                            shareButton.innerHTML = `<i class="fas fa-share-alt w-4"></i><span>Share Profile</span>`;
-                            document.getElementById('actions-menu-dropdown')?.classList.add('hidden');
-                        }, 2000);
-                    }
-                });
+                } catch (error) {
+                    console.error('Lookup Error:', error);
+                    setErrorState(error.message);
+                }
+            };
 
-                // --- POI & Login Modal Logic ---
-                poiCancelBtn.addEventListener('click', () => poiModal.classList.remove('flex'));
-                poiSubmitBtn.addEventListener('click', handleSubmitPOI);
-                poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.classList.remove('flex'));
-                sdisLoginCancelBtn.addEventListener('click', () => {
-                    sdisLoginModal.classList.remove('flex');
-                    afterLoginCallback = null;
-                });
-                sdisLoginSubmitBtn.addEventListener('click', handleLogin);
-                sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
-                loginBtn.addEventListener('click', () => showLoginModal());
-                logoutBtn.addEventListener('click', handleLogout);
+            searchInput.addEventListener('keydown', e => e.key === 'Enter' && handleSearch());
+            searchBtn.addEventListener('click', () => handleSearch());
 
-                const setLoadingState = () => {
-                    resultContainer.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Fetching user data...</p></div>`;
-                };
-                const setErrorState = (message) => {
-                    document.body.classList.remove('poi-background');
-                    resultContainer.innerHTML = `<div class="text-center p-8 bg-[#1f222c] rounded-lg"><p class="font-bold text-red-400">Error</p><p class="text-sm mt-1 text-gray-300">${message}</p></div>`;
-                };
-                
-                const formatDuration = (ms) => {
-                    if (!ms) return 'N/A';
-                    let seconds = Math.floor(ms / 1000); let minutes = Math.floor(seconds / 60); let hours = Math.floor(minutes / 60); let days = Math.floor(hours / 24);
-                    hours %= 24; minutes %= 60; seconds %= 60;
-                    if (days > 0) return `${days} day(s)`; if (hours > 0) return `${hours} hour(s)`; if (minutes > 0) return `${minutes} minute(s)`; return `${seconds} second(s)`;
-                };
-                
-                const renderFriendCard = (friend, bannedFriends = []) => {
-                    const isBanned = bannedFriends.some(bf => bf.id === friend.id);
-                    return `<div class="relative">${isBanned ? `<div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Banned Friend"><i class="fas fa-ban"></i></div>` : ''}<a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors block" data-username="${friend.name}"><img src="${friend.avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 ${isBanned ? 'border-red-500' : 'border-gray-600'}"><p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p><p class="text-xs text-gray-400 truncate">@${friend.name}</p></a></div>`;
-                };
+            // --- Event Delegation ---
+            resultContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.friend-link, .friend-link *')) {
+                    e.preventDefault();
+                    const friendName = e.target.closest('.friend-link').dataset.username;
+                    if (friendName) handleSearch(friendName);
+                }
+                if (e.target.id === 'toggle-friends-btn') {
+                    const grid = document.getElementById('friends-grid-container');
+                    const pagination = document.getElementById('friends-pagination');
+                    const isCollapsed = grid.classList.toggle('collapsed');
+                    e.target.textContent = isCollapsed ? 'Show More' : 'Show Less';
+                    pagination.classList.toggle('hidden', isCollapsed);
+                    if (!isCollapsed) renderFriendsPage(1); else renderFriendsPreview();
+                }
+                if (e.target.id === 'prev-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage - 1);
+                if (e.target.id === 'next-friend-page' && !e.target.disabled) renderFriendsPage(currentFriendsPage + 1);
 
-                const renderFriendsPreview = () => {
-                    const grid = document.getElementById('friends-grid');
-                    if (!grid) return;
-                    grid.innerHTML = fullFriendsList.slice(0, 10).map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
-                };
+                const actionsMenuBtn = e.target.closest('#actions-menu-btn');
+                if (actionsMenuBtn) {
+                    document.getElementById('actions-menu-dropdown').classList.toggle('hidden');
+                } else if (!e.target.closest('#actions-menu-dropdown')) {
+                    const dropdown = document.getElementById('actions-menu-dropdown');
+                    if (dropdown) dropdown.classList.add('hidden');
+                }
 
-                const renderFriendsPage = (page) => {
-                    currentFriendsPage = page;
-                    const grid = document.getElementById('friends-grid');
-                    const pageInfo = document.getElementById('friend-page-info');
-                    const prevBtn = document.getElementById('prev-friend-page');
-                    const nextBtn = document.getElementById('next-friend-page');
-                    if (!grid || !pageInfo || !prevBtn || !nextBtn) return;
+                if (e.target.closest('#action-mark-poi')) handleMarkPOI();
+                if (e.target.closest('#action-unmark-poi')) handleUnmarkPOI();
+                if (e.target.closest('#action-view-poi')) handleViewPOI();
 
-                    const totalPages = Math.ceil(fullFriendsList.length / friendsPerPage);
-                    const start = (currentFriendsPage - 1) * friendsPerPage;
-                    const end = start + friendsPerPage;
-                    const paginatedFriends = fullFriendsList.slice(start, end);
+                if (e.target.closest('#action-share-profile')) {
+                    e.preventDefault();
+                    const shareButton = e.target.closest('#action-share-profile');
+                    const profileUrl = `${window.location.origin}${window.location.pathname}?lookup=${currentLookupData.profile.id}`;
+                    navigator.clipboard.writeText(profileUrl).then(() => {
+                        shareButton.innerHTML = `<i class="fas fa-check w-4 text-green-400"></i><span>Copied!</span>`;
+                    }).catch(err => {
+                        shareButton.innerHTML = `<i class="fas fa-times w-4 text-red-400"></i><span>Failed</span>`;
+                    });
+                    setTimeout(() => {
+                        shareButton.innerHTML = `<i class="fas fa-share-alt w-4"></i><span>Share Profile</span>`;
+                        document.getElementById('actions-menu-dropdown')?.classList.add('hidden');
+                    }, 2000);
+                }
+            });
 
-                    grid.innerHTML = paginatedFriends.map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
-                    pageInfo.textContent = `Page ${currentFriendsPage} of ${totalPages}`;
-                    prevBtn.disabled = currentFriendsPage === 1;
-                    nextBtn.disabled = currentFriendsPage === totalPages;
-                };
+            // --- POI & Login Modal Logic ---
+            poiCancelBtn.addEventListener('click', () => poiModal.classList.remove('flex'));
+            poiSubmitBtn.addEventListener('click', handleSubmitPOI);
+            poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.classList.remove('flex'));
+            sdisLoginCancelBtn.addEventListener('click', () => {
+                sdisLoginModal.classList.remove('flex');
+                afterLoginCallback = null;
+            });
+            sdisLoginSubmitBtn.addEventListener('click', handleLogin);
+            sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
+            loginBtn.addEventListener('click', () => showLoginModal());
+            logoutBtn.addEventListener('click', handleLogout);
 
-                const renderProfile = (data) => {
-                     if (!data.profile || !data.profile.id) {
-                        return setErrorState("User not found. Please check the username or ID and try again.");
-                    }
-                    
-                    const { profile, banHistory, bannedFriends, friends } = data; 
-                    const hasBanHistory = banHistory && banHistory.length > 0;
-                    
-                    document.body.classList.toggle('poi-background', profile.isPOI);
+            const setLoadingState = () => {
+                resultContainer.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Fetching user data...</p></div>`;
+            };
+            const setErrorState = (message) => {
+                document.body.classList.remove('poi-background');
+                resultContainer.innerHTML = `<div class="text-center p-8 bg-[#1f222c] rounded-lg"><p class="font-bold text-red-400">Error</p><p class="text-sm mt-1 text-gray-300">${message}</p></div>`;
+            };
 
-                    const now = new Date().getTime();
-                    const activeBan = hasBanHistory ? banHistory.find(ban => ban.type === 'permban' || (ban.type === 'timeban' && (new Date(ban.Date).getTime() + ban.Duration) > now)) : null;
+            const formatDuration = (ms) => {
+                if (!ms) return 'N/A';
+                let seconds = Math.floor(ms / 1000); let minutes = Math.floor(seconds / 60); let hours = Math.floor(minutes / 60); let days = Math.floor(hours / 24);
+                hours %= 24; minutes %= 60; seconds %= 60;
+                if (days > 0) return `${days} day(s)`; if (hours > 0) return `${hours} hour(s)`; if (minutes > 0) return `${minutes} minute(s)`; return `${seconds} second(s)`;
+            };
 
-                    const createdDate = profile.created ? new Date(profile.created).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
-                    
-                    let banInfoHtml = `<div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-2xl"></i><div><h4 class="font-bold text-green-300">No Active Ban</h4><p class="text-sm text-gray-400">This user does not have an active ban.</p></div></div>`;
-                    if (activeBan) {
-                        banInfoHtml = `<div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30"><div class="flex items-center gap-3 mb-4"><i class="fas fa-times-circle text-red-400 text-2xl"></i><div><h4 class="font-bold text-red-300">User is Banned</h4><p class="text-sm text-gray-400">This user has an active ban.</p></div></div><div class="space-y-2 text-sm"><p><strong class="text-gray-300">Reason:</strong> ${activeBan.Reason || 'N/A'}</p><p><strong class="text-gray-300">Moderator:</strong> ${activeBan.Moderator || 'N/A'}</p><p><strong class="text-gray-300">Date:</strong> ${new Date(activeBan.Date).toLocaleString()}</p></div></div>`;
-                    }
-                    
-                    const banHistoryHtml = hasBanHistory ? `
+            const renderFriendCard = (friend, bannedFriends = []) => {
+                const isBanned = bannedFriends.some(bf => bf.id === friend.id);
+                // Fix: Add fallback for missing avatarUrl (pagination issue)
+                const avatarUrl = friend.avatarUrl || `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${friend.id}&size=150x150&format=Png&isCircular=false`;
+                return `<div class="relative">${isBanned ? `<div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" title="Banned Friend"><i class="fas fa-ban"></i></div>` : ''}<a href="#" class="friend-link stat-card text-center hover:bg-gray-700 transition-colors block" data-username="${friend.name}"><img src="${avatarUrl}" alt="${friend.name}'s avatar" class="w-16 h-16 rounded-full mx-auto border-2 ${isBanned ? 'border-red-500' : 'border-gray-600'}" onerror="this.src='https://placehold.co/150x150/1f222c/FFFFFF?text=?'"><p class="mt-2 text-sm font-semibold truncate">${friend.displayName}</p><p class="text-xs text-gray-400 truncate">@${friend.name}</p></a></div>`;
+            };
+
+            const renderFriendsPreview = () => {
+                const grid = document.getElementById('friends-grid');
+                if (!grid) return;
+                grid.innerHTML = fullFriendsList.slice(0, 10).map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
+            };
+
+            const renderFriendsPage = (page) => {
+                currentFriendsPage = page;
+                const grid = document.getElementById('friends-grid');
+                const pageInfo = document.getElementById('friend-page-info');
+                const prevBtn = document.getElementById('prev-friend-page');
+                const nextBtn = document.getElementById('next-friend-page');
+                if (!grid || !pageInfo || !prevBtn || !nextBtn) return;
+
+                const totalPages = Math.ceil(fullFriendsList.length / friendsPerPage);
+                const start = (currentFriendsPage - 1) * friendsPerPage;
+                const end = start + friendsPerPage;
+                const paginatedFriends = fullFriendsList.slice(start, end);
+
+                grid.innerHTML = paginatedFriends.map(friend => renderFriendCard(friend, currentLookupData.bannedFriends || [])).join('');
+                pageInfo.textContent = `Page ${currentFriendsPage} of ${totalPages}`;
+                prevBtn.disabled = currentFriendsPage === 1;
+                nextBtn.disabled = currentFriendsPage === totalPages;
+            };
+
+            const renderProfile = (data) => {
+                if (!data.profile || !data.profile.id) {
+                    return setErrorState("User not found. Please check the username or ID and try again.");
+                }
+
+                const { profile, banHistory, bannedFriends, friends } = data;
+                const hasBanHistory = banHistory && banHistory.length > 0;
+
+                document.body.classList.toggle('poi-background', profile.isPOI);
+
+                const now = new Date().getTime();
+                const activeBan = hasBanHistory ? banHistory.find(ban => ban.type === 'permban' || (ban.type === 'timeban' && (new Date(ban.Date).getTime() + ban.Duration) > now)) : null;
+
+                const createdDate = profile.created ? new Date(profile.created).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown';
+
+                let banInfoHtml = `<div class="p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-2xl"></i><div><h4 class="font-bold text-green-300">No Active Ban</h4><p class="text-sm text-gray-400">This user does not have an active ban.</p></div></div>`;
+                if (activeBan) {
+                    banInfoHtml = `<div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30"><div class="flex items-center gap-3 mb-4"><i class="fas fa-times-circle text-red-400 text-2xl"></i><div><h4 class="font-bold text-red-300">User is Banned</h4><p class="text-sm text-gray-400">This user has an active ban.</p></div></div><div class="space-y-2 text-sm"><p><strong class="text-gray-300">Reason:</strong> ${activeBan.Reason || 'N/A'}</p><p><strong class="text-gray-300">Moderator:</strong> ${activeBan.Moderator || 'N/A'}</p><p><strong class="text-gray-300">Date:</strong> ${new Date(activeBan.Date).toLocaleString()}</p></div></div>`;
+                }
+
+                const banHistoryHtml = hasBanHistory ? `
                         <div class="overflow-x-auto"><table class="w-full text-sm ban-history-table rounded-lg overflow-hidden"><thead><tr><th>Reason</th><th>Moderator</th><th>Date</th><th>Type</th><th>Duration</th></tr></thead><tbody>
                             ${banHistory.map(ban => `<tr><td>${ban.Reason || 'N/A'}</td><td>${ban.Moderator || 'N/A'}</td><td>${new Date(ban.Date).toLocaleString()}</td><td>${ban.type === 'permban' ? 'Permanent' : 'Temporary'}</td><td>${ban.type === 'timeban' ? formatDuration(ban.Duration) : 'Permanent'}</td></tr>`).join('')}
                         </tbody></table></div>` : `<p class="text-sm text-gray-400">No ban history found for this user.</p>`;
-                    
-                    const friendsHtml = friends?.length > 0 ? `
+
+                const friendsHtml = friends?.length > 0 ? `
                         <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-lg">Friends (${friends.length})</h3><div id="friends-pagination" class="hidden items-center gap-2"><button id="prev-friend-page" class="custom-button !px-3 !py-1 text-xs">&lt;</button><span id="friend-page-info" class="text-sm text-gray-400"></span><button id="next-friend-page" class="custom-button !px-3 !py-1 text-xs">&gt;</button></div></div>
                         <div id="friends-grid-container" class="collapsed"><div id="friends-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div></div>
-                        ${friends.length > 10 ? `<div class="text-center mt-4"><button id="toggle-friends-btn" class="text-blue-400 hover:underline">Show More</button></div>` : ''}` 
-                        : `<h3 class="font-bold text-lg mb-2">Friends</h3><p class="text-sm text-gray-400">${friends ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
+                        ${friends.length > 10 ? `<div class="text-center mt-4"><button id="toggle-friends-btn" class="text-blue-400 hover:underline">Show More</button></div>` : ''}`
+                    : `<h3 class="font-bold text-lg mb-2">Friends</h3><p class="text-sm text-gray-400">${friends ? 'This user has no friends, or their friends list is private.' : 'Could not load friends list.'}</p>`;
 
-                    const actionsMenuHtml = `
+                const actionsMenuHtml = `
                         <div class="relative">
                             <button id="actions-menu-btn" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"><i class="fas fa-ellipsis-v"></i></button>
                             <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
@@ -464,7 +551,7 @@
                             </div>
                         </div>`;
 
-                    resultContainer.innerHTML = `
+                resultContainer.innerHTML = `
                         <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
                             <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
                             ${profile.groupRole ? `<div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg" style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};"><i class="fas fa-shield-alt mr-2"></i><span>${profile.groupRole}</span></div>` : ''}
@@ -475,254 +562,256 @@
                             ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm"><div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span id="poi-card-marked-by" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span id="poi-card-date" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Reason:</strong><p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p></div></div></div></div></div>` : ''}
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">About</h3><p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p></div>
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Stats</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div><div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div></div></div>
+                            ${profile.groups && profile.groups.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Groups (${profile.groups.length})</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${profile.groups.slice(0, 6).map(g => `<div class="stat-card flex items-center gap-3"><div class="flex-shrink-0"><i class="fas fa-users text-blue-400 text-xl"></i></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm truncate">${g.name}</p><p class="text-xs text-gray-400">${g.role || 'Member'}</p></div></div>`).join('')}${profile.groups.length > 6 ? `<div class="stat-card flex items-center justify-center text-gray-400 text-sm">+${profile.groups.length - 6} more groups</div>` : ''}</div></div>` : ''}
+                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Account Settings</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card flex items-center gap-3"><i class="fas ${profile.allowJoinRequests !== false ? 'fa-check-circle text-green-400' : 'fa-times-circle text-red-400'} text-xl"></i><div><p class="text-xs text-gray-400">Join Requests</p><p class="font-semibold text-sm">${profile.allowJoinRequests !== false ? 'Enabled' : 'Disabled'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.inventoryHidden !== true ? 'fa-eye text-green-400' : 'fa-eye-slash text-red-400'} text-xl"></i><div><p class="text-xs text-gray-400">Inventory</p><p class="font-semibold text-sm">${profile.inventoryHidden !== true ? 'Visible' : 'Hidden'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.hasVerifiedBadge ? 'fa-badge-check text-blue-400' : 'fa-user text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Verification</p><p class="font-semibold text-sm">${profile.hasVerifiedBadge ? 'Verified' : 'Not Verified'}</p></div></div></div></div>
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Current Ban Status</h3>${banInfoHtml}</div>
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Ban History</h3>${banHistoryHtml}</div>
                             ${bannedFriends?.length > 0 ? `<div class="mt-6 border-t border-red-900 bg-red-900/10 p-6"><h3 class="text-lg font-semibold text-red-400 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Banned Friends (${bannedFriends.length})</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${bannedFriends.map(f => `<div class="bg-red-900/30 border border-red-800 rounded-lg p-4 flex items-center gap-3"><img src="${f.avatarUrl}" class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"><div class="text-sm"><a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${f.name}">${f.displayName} (@${f.name})</a><div class="text-xs text-red-400">Banned: ${f.banInfo?.Date ? new Date(f.banInfo.Date).toLocaleDateString() : 'N/A'}</div>${f.banInfo?.Reason ? `<div class="text-xs text-red-300 mt-1"><span class="font-semibold">Reason:</span> ${f.banInfo.Reason}</div>` : ''}</div></div>`).join('')}</div></div>` : ''}
                             <div class="mt-6 border-t border-gray-700 pt-6">${friendsHtml}</div>
                         </div>`;
-                    
-                    if (profile.isPOI) fetchAndRenderPOIDetails(profile.id);
-                    if (friends?.length > 0) renderFriendsPreview();
-                    updateAuthUI();
-                    updateMetaTags(profile);
-                };
-                <!-- --- Auth Functions --- -->
-                function updateAuthUI() {
-                    const isAuth = !!currentUser;
-                    loginContainer.classList.toggle('hidden', isAuth);
-                    userStatusContainer.classList.toggle('hidden', !isAuth);
-                    
-                    const markPoi = document.getElementById('action-mark-poi');
-                    const unmarkPoi = document.getElementById('action-unmark-poi');
-                    const viewPoi = document.getElementById('action-view-poi');
 
-                    if (markPoi && unmarkPoi && viewPoi) {
-                        const isPOI = currentLookupData?.profile?.isPOI;
-                        markPoi.style.display = isAuth && !isPOI ? 'flex' : 'none';
-                        unmarkPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
-                        viewPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
-                    }
+                if (profile.isPOI) fetchAndRenderPOIDetails(profile.id);
+                if (friends?.length > 0) renderFriendsPreview();
+                updateAuthUI();
+                updateMetaTags(profile);
+            };
+            <!-- --- Auth Functions --- -->
+            function updateAuthUI() {
+                const isAuth = !!currentUser;
+                loginContainer.classList.toggle('hidden', isAuth);
+                userStatusContainer.classList.toggle('hidden', !isAuth);
 
-                    if (isAuth) {
-                        userStatusName.textContent = currentUser.displayName || currentUser.username;
-                        userStatusAvatar.src = currentUser.avatarUrl || 'https://placehold.co/40x40/1f222c/FFFFFF?text=?';
-                        userStatusRole.textContent = currentUser.sdisRole || 'SDIS Operative';
-                        poiNameInput.value = currentUser.displayName || currentUser.username;
-                    }
+                const markPoi = document.getElementById('action-mark-poi');
+                const unmarkPoi = document.getElementById('action-unmark-poi');
+                const viewPoi = document.getElementById('action-view-poi');
+
+                if (markPoi && unmarkPoi && viewPoi) {
+                    const isPOI = currentLookupData?.profile?.isPOI;
+                    markPoi.style.display = isAuth && !isPOI ? 'flex' : 'none';
+                    unmarkPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
+                    viewPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
                 }
 
-                function showLoginModal(callback) { 
-                    afterLoginCallback = callback; 
-                    sdisLoginModal.classList.add('flex'); 
-                    sdisCodePhraseInput.focus(); 
+                if (isAuth) {
+                    userStatusName.textContent = currentUser.displayName || currentUser.username;
+                    userStatusAvatar.src = currentUser.avatarUrl || 'https://placehold.co/40x40/1f222c/FFFFFF?text=?';
+                    userStatusRole.textContent = currentUser.sdisRole || 'SDIS Operative';
+                    poiNameInput.value = currentUser.displayName || currentUser.username;
                 }
+            }
 
-                function checkAuth() {
-                    authToken = localStorage.getItem('sdis_token');
-                    const storedUser = localStorage.getItem('sdis_user');
-                    if (authToken && storedUser) {
-                        currentUser = JSON.parse(storedUser);
-                    } else {
-                        currentUser = null;
-                        authToken = null;
-                        localStorage.removeItem('sdis_token');
-                        localStorage.removeItem('sdis_user');
-                    }
-                    updateAuthUI();
-                }
+            function showLoginModal(callback) {
+                afterLoginCallback = callback;
+                sdisLoginModal.classList.add('flex');
+                sdisCodePhraseInput.focus();
+            }
 
-                async function handleLogin() {
-                    const codePhrase = sdisCodePhraseInput.value.trim();
-                    if (!codePhrase) return;
-
-                    sdisLoginSubmitBtn.disabled = true; 
-                    sdisLoginSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...`;
-                    
-                    try {
-                        const response = await fetch(`${AUTH_WORKER_URL}/login`, { 
-                            method: 'POST', 
-                            headers: { 'Content-Type': 'application/json' }, 
-                            body: JSON.stringify({ codePhrase }) 
-                        });
-                        const result = await response.json();
-                        if (result.success && result.token && result.user) {
-                            authToken = result.token;
-                            currentUser = result.user;
-                            localStorage.setItem('sdis_token', authToken);
-                            localStorage.setItem('sdis_user', JSON.stringify(currentUser));
-                            
-                            updateAuthUI(); 
-                            sdisLoginModal.classList.remove('flex'); 
-                            sdisCodePhraseInput.value = '';
-                            showNotification('Login successful!', 'success');
-                            
-                            if (typeof afterLoginCallback === 'function') { 
-                                afterLoginCallback(); 
-                                afterLoginCallback = null; 
-                            }
-                        } else { 
-                            throw new Error(result.error || 'Login failed'); 
-                        }
-                    } catch (error) { 
-                        showNotification(`Error: ${error.message}`, 'error');
-                    } finally { 
-                        sdisLoginSubmitBtn.disabled = false; 
-                        sdisLoginSubmitBtn.textContent = 'Authenticate'; 
-                    }
-                }
-
-                function handleLogout() { 
-                    authToken = null; 
-                    currentUser = null; 
-                    localStorage.removeItem('sdis_token'); 
+            function checkAuth() {
+                authToken = localStorage.getItem('sdis_token');
+                const storedUser = localStorage.getItem('sdis_user');
+                if (authToken && storedUser) {
+                    currentUser = JSON.parse(storedUser);
+                } else {
+                    currentUser = null;
+                    authToken = null;
+                    localStorage.removeItem('sdis_token');
                     localStorage.removeItem('sdis_user');
-                    updateAuthUI(); 
-                    showNotification('You have been logged out.', 'info'); 
                 }
+                updateAuthUI();
+            }
 
-                // --- POI Functions ---
-                function handleMarkPOI() { if (!currentUser) return showLoginModal(handleMarkPOI); poiModal.classList.add('flex'); poiReasonInput.focus(); }
-                function handleUnmarkPOI() { if (!currentUser) return showLoginModal(handleUnmarkPOI); unmarkPOI(); }
-                function handleViewPOI() { if (!currentUser) return showLoginModal(handleViewPOI); fetchAndShowPOIDetails(currentLookupData.profile.id); }
-                
-                async function handleSubmitPOI() {
-                    const reason = poiReasonInput.value.trim();
-                    if (!reason) return showNotification('Reason is required.', 'error');
-                    
-                    const markerName = currentUser?.displayName || 'Unknown Operative';
-                    
-                    await submitPOI(currentLookupData.profile, markerName, reason);
-                    poiModal.classList.remove('flex'); 
-                    poiReasonInput.value = '';
-                }
+            async function handleLogin() {
+                const codePhrase = sdisCodePhraseInput.value.trim();
+                if (!codePhrase) return;
 
-                async function submitPOI(userData, markerName, reason) {
-                    if (!userData || !markerName || !reason) {
-                        console.error("submitPOI validation failed:", { userData, markerName, reason });
-                        showNotification('Error: Missing data for POI submission.', 'error');
-                        return;
-                    }
-                    try {
-                        const response = await fetch(`${DATA_WORKER_URL}/poi`, { 
-                            method: 'POST', 
-                            headers: { 
-                                'Content-Type': 'application/json', 
-                                'Authorization': `Bearer ${authToken}` 
-                            }, 
-                            body: JSON.stringify({ 
-                                userId: userData.id, 
-                                username: userData.name, 
-                                displayName: userData.displayName, 
-                                markedBy: markerName, 
-                                reason: reason, 
-                                timestamp: new Date().toISOString(),
-                                avatarUrl: userData.avatarUrl
-                            }) 
-                        });
-                        const result = await response.json();
-                        if (!result.success) throw new Error(result.error);
-                        showNotification(`${userData.displayName} marked as POI`, 'success');
-                        handleSearch(userData.id.toString());
-                    } catch (error) { 
-                        showNotification(`Error: ${error.message}`, 'error'); 
-                    }
-                }
+                sdisLoginSubmitBtn.disabled = true;
+                sdisLoginSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...`;
 
-                async function unmarkPOI() {
-                    const userData = currentLookupData.profile;
-                    try {
-                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userData.id}`, { 
-                            method: 'DELETE', 
-                            headers: { 'Authorization': `Bearer ${authToken}` } 
-                        });
-                        const result = await response.json();
-                        if (!result.success) throw new Error(result.error);
-                        showNotification(`${userData.displayName} unmarked as POI`, 'success');
-                        handleSearch(userData.id.toString());
-                    } catch (error) { 
-                        showNotification(`Error: ${error.message}`, 'error'); 
-                    }
-                }
+                try {
+                    const response = await fetch(`${AUTH_WORKER_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ codePhrase })
+                    });
+                    const result = await response.json();
+                    if (result.success && result.token && result.user) {
+                        authToken = result.token;
+                        currentUser = result.user;
+                        localStorage.setItem('sdis_token', authToken);
+                        localStorage.setItem('sdis_user', JSON.stringify(currentUser));
 
-                async function fetchAndShowPOIDetails(userId) {
-                    try {
-                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, { 
-                            headers: { 'Authorization': `Bearer ${authToken}` } 
-                        });
-                        const result = await response.json();
-                        if (result.success && result.data) {
-                            const data = result.data;
-                            poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
-                            poiDetailsReason.textContent = data.reason || 'No reason provided.';
-                            poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
-                            poiDetailsModal.classList.add('flex');
-                        } else { 
-                            throw new Error(result.error || 'POI details not found'); 
+                        updateAuthUI();
+                        sdisLoginModal.classList.remove('flex');
+                        sdisCodePhraseInput.value = '';
+                        showNotification('Login successful!', 'success');
+
+                        if (typeof afterLoginCallback === 'function') {
+                            afterLoginCallback();
+                            afterLoginCallback = null;
                         }
-                    } catch(error) { 
-                        showNotification(`Error: ${error.message}`, 'error'); 
+                    } else {
+                        throw new Error(result.error || 'Login failed');
                     }
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                } finally {
+                    sdisLoginSubmitBtn.disabled = false;
+                    sdisLoginSubmitBtn.textContent = 'Authenticate';
                 }
-                
-                async function fetchAndRenderPOIDetails(userId) {
-                    const markedByEl = document.getElementById('poi-card-marked-by');
-                    const reasonEl = document.getElementById('poi-card-reason');
-                    const dateEl = document.getElementById('poi-card-date');
-                    if (!markedByEl || !reasonEl || !dateEl) return;
+            }
 
-                    try {
-                        const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
-                        const result = await response.json();
-                        if (result.success && result.data) {
-                            markedByEl.textContent = result.data.markedBy || 'N/A';
-                            reasonEl.textContent = result.data.reason || 'No reason provided.';
-                            dateEl.textContent = result.data.timestamp ? new Date(result.data.timestamp).toLocaleString() : 'N/A';
-                        } else { throw new Error(result.error || 'POI details not found'); }
-                    } catch(error) {
-                        console.error('Error fetching POI details for card:', error);
-                        reasonEl.textContent = `Could not load POI details: ${error.message}`;
+            function handleLogout() {
+                authToken = null;
+                currentUser = null;
+                localStorage.removeItem('sdis_token');
+                localStorage.removeItem('sdis_user');
+                updateAuthUI();
+                showNotification('You have been logged out.', 'info');
+            }
+
+            // --- POI Functions ---
+            function handleMarkPOI() { if (!currentUser) return showLoginModal(handleMarkPOI); poiModal.classList.add('flex'); poiReasonInput.focus(); }
+            function handleUnmarkPOI() { if (!currentUser) return showLoginModal(handleUnmarkPOI); unmarkPOI(); }
+            function handleViewPOI() { if (!currentUser) return showLoginModal(handleViewPOI); fetchAndShowPOIDetails(currentLookupData.profile.id); }
+
+            async function handleSubmitPOI() {
+                const reason = poiReasonInput.value.trim();
+                if (!reason) return showNotification('Reason is required.', 'error');
+
+                const markerName = currentUser?.displayName || 'Unknown Operative';
+
+                await submitPOI(currentLookupData.profile, markerName, reason);
+                poiModal.classList.remove('flex');
+                poiReasonInput.value = '';
+            }
+
+            async function submitPOI(userData, markerName, reason) {
+                if (!userData || !markerName || !reason) {
+                    console.error("submitPOI validation failed:", { userData, markerName, reason });
+                    showNotification('Error: Missing data for POI submission.', 'error');
+                    return;
+                }
+                try {
+                    const response = await fetch(`${DATA_WORKER_URL}/poi`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            userId: userData.id,
+                            username: userData.name,
+                            displayName: userData.displayName,
+                            markedBy: markerName,
+                            reason: reason,
+                            timestamp: new Date().toISOString(),
+                            avatarUrl: userData.avatarUrl
+                        })
+                    });
+                    const result = await response.json();
+                    if (!result.success) throw new Error(result.error);
+                    showNotification(`${userData.displayName} marked as POI`, 'success');
+                    handleSearch(userData.id.toString());
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            async function unmarkPOI() {
+                const userData = currentLookupData.profile;
+                try {
+                    const response = await fetch(`${DATA_WORKER_URL}/poi/${userData.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const result = await response.json();
+                    if (!result.success) throw new Error(result.error);
+                    showNotification(`${userData.displayName} unmarked as POI`, 'success');
+                    handleSearch(userData.id.toString());
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            async function fetchAndShowPOIDetails(userId) {
+                try {
+                    const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const data = result.data;
+                        poiDetailsMarkedBy.textContent = data.markedBy || 'N/A';
+                        poiDetailsReason.textContent = data.reason || 'No reason provided.';
+                        poiDetailsDate.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A';
+                        poiDetailsModal.classList.add('flex');
+                    } else {
+                        throw new Error(result.error || 'POI details not found');
                     }
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
                 }
+            }
+
+            async function fetchAndRenderPOIDetails(userId) {
+                const markedByEl = document.getElementById('poi-card-marked-by');
+                const reasonEl = document.getElementById('poi-card-reason');
+                const dateEl = document.getElementById('poi-card-date');
+                if (!markedByEl || !reasonEl || !dateEl) return;
+
+                try {
+                    const response = await fetch(`${DATA_WORKER_URL}/poi/${userId}`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        markedByEl.textContent = result.data.markedBy || 'N/A';
+                        reasonEl.textContent = result.data.reason || 'No reason provided.';
+                        dateEl.textContent = result.data.timestamp ? new Date(result.data.timestamp).toLocaleString() : 'N/A';
+                    } else { throw new Error(result.error || 'POI details not found'); }
+                } catch (error) {
+                    console.error('Error fetching POI details for card:', error);
+                    reasonEl.textContent = `Could not load POI details: ${error.message}`;
+                }
+            }
 
 
-                function showNotification(message, type = 'info') {
-                    const notification = document.createElement('div');
-                    const colors = { success: 'bg-green-600', warning: 'bg-yellow-600', error: 'bg-red-600', info: 'bg-blue-600' };
-                    notification.className = `fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm ${colors[type]} transition-transform duration-300 translate-x-full`;
-                    notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mr-2"></i>${message}`;
-                    document.body.appendChild(notification);
-                    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
-                    setTimeout(() => {
-                        notification.style.transform = 'translateX(calc(100% + 1.25rem))';
-                        notification.addEventListener('transitionend', () => notification.remove());
-                    }, 3000);
-                }
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                const colors = { success: 'bg-green-600', warning: 'bg-yellow-600', error: 'bg-red-600', info: 'bg-blue-600' };
+                notification.className = `fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm ${colors[type]} transition-transform duration-300 translate-x-full`;
+                notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} mr-2"></i>${message}`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(calc(100% + 1.25rem))';
+                    notification.addEventListener('transitionend', () => notification.remove());
+                }, 3000);
+            }
 
-                function updateMetaTags(userData) {
-                    const title = `${userData.displayName}'s Profile | Saikou`;
-                    const description = `View ${userData.displayName}'s Roblox profile and moderation status on Saikou.`;
-                    const imageUrl = userData.avatarUrl || 'https://saikou.dev/assets/images/og-image.png';
-                    const currentUrl = `${window.location.origin}${window.location.pathname}?lookup=${userData.id}`;
-                    document.title = title;
-                    document.querySelector('meta[property="og:title"]').setAttribute('content', title);
-                    document.querySelector('meta[property="og:description"]').setAttribute('content', description);
-                    document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
-                    document.querySelector('meta[property="og:image"]').setAttribute('content', imageUrl);
-                    document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
-                    document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
-                    document.querySelector('meta[property="twitter:url"]').setAttribute('content', currentUrl);
-                    document.querySelector('meta[property="twitter:image"]').setAttribute('content', imageUrl);
-                }
+            function updateMetaTags(userData) {
+                const title = `${userData.displayName}'s Profile | Saikou`;
+                const description = `View ${userData.displayName}'s Roblox profile and moderation status on Saikou.`;
+                const imageUrl = userData.avatarUrl || 'https://saikou.dev/assets/images/og-image.png';
+                const currentUrl = `${window.location.origin}${window.location.pathname}?lookup=${userData.id}`;
+                document.title = title;
+                document.querySelector('meta[property="og:title"]').setAttribute('content', title);
+                document.querySelector('meta[property="og:description"]').setAttribute('content', description);
+                document.querySelector('meta[property="og:url"]').setAttribute('content', currentUrl);
+                document.querySelector('meta[property="og:image"]').setAttribute('content', imageUrl);
+                document.querySelector('meta[property="twitter:title"]').setAttribute('content', title);
+                document.querySelector('meta[property="twitter:description"]').setAttribute('content', description);
+                document.querySelector('meta[property="twitter:url"]').setAttribute('content', currentUrl);
+                document.querySelector('meta[property="twitter:image"]').setAttribute('content', imageUrl);
+            }
 
-                // Initial Load
-                const urlParams = new URLSearchParams(window.location.search);
-                const lookupParam = urlParams.get('lookup');
-                if (lookupParam) {
-                    handleSearch(lookupParam);
-                }
-                checkAuth();
-            });
-        </script>
-	</body>
+            // Initial Load
+            const urlParams = new URLSearchParams(window.location.search);
+            const lookupParam = urlParams.get('lookup');
+            if (lookupParam) {
+                handleSearch(lookupParam);
+            }
+            checkAuth();
+        });
+    </script>
+</body>
+
 </html>
-

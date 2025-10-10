@@ -1,7 +1,6 @@
 /**
  * Optimized Cloudflare Worker - Efficient caching with rate limiting and progress tracking
  * Supports up to 5 users with unlimited friends, smart caching, and deep search mode
- * Now with Firestore integration for persistent caching and audit logging
  */
 
 const CORS_HEADERS = {
@@ -23,15 +22,6 @@ const LIMITS = {
     DEEP_SEARCH_CACHE_UNLIMITED: true, // Deep search uses any cache age
     BATCH_SIZE: 50,                  // Batch size for user details/avatars
     MAX_TOTAL_SUBREQUESTS: 45        // Conservative subrequest limit
-};
-
-// Firestore cache durations
-const FIRESTORE_CACHE_DURATIONS = {
-    USER_DETAILS: 24 * 60 * 60 * 1000,     // 24 hours
-    FRIENDS_LIST: 6 * 60 * 60 * 1000,      // 6 hours
-    USER_LOOKUP: 24 * 60 * 60 * 1000,      // 24 hours
-    STAFF_ROLES: 6 * 60 * 60 * 1000,       // 6 hours
-    AVATARS: 7 * 24 * 60 * 60 * 1000,      // 7 days
 };
 
 function withCorsHeaders(response) {
@@ -75,201 +65,6 @@ async function applyRateLimit(request) {
     return null;
 }
 
-// --- Firebase Firestore REST API Client ---
-class Firestore {
-    constructor(projectId, serviceAccount) {
-        this.projectId = projectId;
-        this.serviceAccount = serviceAccount;
-        this.token = null;
-        this.tokenExpires = 0;
-        this.baseUrl = `https://firestore.googleapis.com/v1/projects/${this.projectId}/databases/(default)/documents`;
-    }
-
-    async getAuthToken() {
-        if (Date.now() < this.tokenExpires) {
-            return this.token;
-        }
-
-        const header = { alg: 'RS256', typ: 'JWT' };
-        const now = Math.floor(Date.now() / 1000);
-        const payload = {
-            iss: this.serviceAccount.client_email,
-            sub: this.serviceAccount.client_email,
-            aud: 'https://oauth2.googleapis.com/token',
-            iat: now,
-            exp: now + 3600,
-            scope: 'https://www.googleapis.com/auth/datastore'
-        };
-
-        const encodedHeader = btoa(JSON.stringify(header)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        const encodedPayload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        const dataToSign = `${encodedHeader}.${encodedPayload}`;
-
-        const key = await crypto.subtle.importKey(
-            'pkcs8',
-             this.pemToBuffer(this.serviceAccount.private_key),
-            { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-            false,
-            ['sign']
-        );
-        
-        const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, this.strToBuffer(dataToSign));
-        const encodedSignature = this.bufferToBase64Url(signature);
-
-        const jwt = `${dataToSign}.${encodedSignature}`;
-
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-        });
-
-        const tokenData = await tokenResponse.json();
-        this.token = tokenData.access_token;
-        this.tokenExpires = Date.now() + (tokenData.expires_in * 1000) - 60000; // Refresh 1 min before expiry
-        return this.token;
-    }
-
-    async batchGetDocuments(paths) {
-        if (paths.length === 0) return [];
-        const token = await this.getAuthToken();
-        const url = `${this.baseUrl}:batchGet`;
-        const fullPaths = paths.map(path => `projects/${this.projectId}/databases/(default)/documents/${path}`);
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ documents: fullPaths })
-        });
-
-        if (!response.ok) throw new Error(`Firestore batchGet failed: ${response.status}`);
-        return await response.json();
-    }
-    
-    createWriteOperation(path, data) {
-        return {
-            update: {
-                name: `projects/${this.projectId}/databases/(default)/documents/${path}`,
-                fields: {
-                    data: { stringValue: JSON.stringify(data) },
-                    lastUpdated: { timestampValue: new Date().toISOString() }
-                }
-            }
-        };
-    }
-    
-    createLogOperation(basePath, logTimestamp, oldData, originalTimestamp) {
-        return {
-             update: {
-                name: `projects/${this.projectId}/databases/(default)/documents/${basePath}/logs/${logTimestamp}`,
-                fields: {
-                    data: { stringValue: JSON.stringify(oldData) },
-                    originalTimestamp: { timestampValue: originalTimestamp || new Date().toISOString() }
-                }
-            }
-        };
-    }
-
-    async batchWriteDocuments(writes) {
-        if (writes.length === 0) return;
-        const token = await this.getAuthToken();
-        const url = `${this.baseUrl}:commit`;
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ writes })
-        });
-        
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error("Firestore batchWrite error:", errorBody);
-            throw new Error(`Firestore batchWrite failed: ${response.status}`);
-        }
-    }
-
-    async createDocument(path, data) {
-        const token = await this.getAuthToken();
-        const url = `${this.baseUrl}/${path}`;
-        
-        const response = await fetch(url, {
-            method: 'PATCH',
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json',
-                'X-HTTP-Method-Override': 'PATCH'
-            },
-            body: JSON.stringify({
-                fields: data.fields,
-                updateMask: { fieldPaths: Object.keys(data.fields) }
-            })
-        });
-        
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error("Firestore createDocument error:", errorBody);
-            throw new Error(`Firestore createDocument failed: ${response.status}`);
-        }
-        
-        return await response.json();
-    }
-    
-    async getDocument(path) {
-        const token = await this.getAuthToken();
-        const url = `${this.baseUrl}/${path}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 
-                'Authorization': `Bearer ${token}`, 
-                'Content-Type': 'application/json' 
-            }
-        });
-        
-        if (!response.ok) {
-            if (response.status === 404) {
-                return null;
-            }
-            const errorBody = await response.text();
-            console.error("Firestore getDocument error:", errorBody);
-            throw new Error(`Firestore getDocument failed: ${response.status}`);
-        }
-        
-        return await response.json();
-    }
-    
-    formatFirestoreResponse(response) {
-        if (!response.fields || !response.fields.data) return null;
-        try {
-            return {
-                data: JSON.parse(response.fields.data.stringValue),
-                lastUpdated: response.fields.lastUpdated.timestampValue
-            };
-        } catch (e) {
-            return null;
-        }
-    }
-    
-    pemToBuffer(pem) {
-        const base64 = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g, '');
-        const binaryString = atob(base64);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        return bytes.buffer;
-    }
-    
-    strToBuffer(str) {
-        return new TextEncoder().encode(str);
-    }
-    
-    bufferToBase64Url(buffer) {
-        return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-}
-
 // Subrequest counter to stay within limits
 class SubrequestManager {
     constructor() {
@@ -310,11 +105,15 @@ class SubrequestManager {
                 if (retryCount < 3) { // Max 3 retries
                     console.log(`Rate limited (429), retrying after ${retryAfter}s (attempt ${retryCount + 1}/3)`);
 
+                    // Add progress callback for rate limiting if available
                     if (options.onRateLimit) {
                         options.onRateLimit(`Rate limited - waiting ${retryAfter}s (retry ${retryCount + 1}/3)`);
                     }
 
+                    // Wait for the retry period
                     await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+
+                    // Don't increment count for retries
                     this.count--;
                     return await this.makeRequest(url, options, retryCount + 1);
                 } else {
@@ -344,149 +143,63 @@ class SubrequestManager {
 
 const subrequestManager = new SubrequestManager();
 
-// Hybrid cache implementation (Firestore + in-memory fallback)
-class HybridCache {
-    constructor(firestore) {
-        this.firestore = firestore;
-        this.memoryCache = new Map();
-        this.maxMemorySize = 500; // Smaller memory cache since we have Firestore
-    }
-
-    async get(key, maxAgeMs = LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000, useDeepSearch = false) {
-        // For deep search, check Firestore for any cached data regardless of age
-        if (useDeepSearch) {
-            try {
-                const doc = await this.firestore.getDocument(`cache/${key.replace(/[^a-zA-Z0-9]/g, '_')}`);
-                if (doc) {
-                    const cacheData = this.firestore.formatFirestoreResponse(doc);
-                    if (cacheData && cacheData.data) {
-                        console.log(`Firestore deep search hit for: ${key}`);
-                        return cacheData.data;
-                    }
-                }
-            } catch (error) {
-                console.warn(`Firestore deep search failed for ${key}:`, error.message);
-            }
-            return null;
-        }
-
-        // Normal cache logic - check memory first, then Firestore
-        const memoryItem = this.memoryCache.get(key);
-        if (memoryItem && !this._isExpired(memoryItem, maxAgeMs)) {
-            // Validate cache completeness for user data
-            if (this._isCacheDataComplete(key, memoryItem.data)) {
-                console.log(`Memory cache hit for: ${key}`);
-                return memoryItem.data;
-            } else {
-                console.log(`Memory cache incomplete for: ${key}, removing`);
-                this.memoryCache.delete(key);
-            }
-        }
-
-        // Check Firestore
-        try {
-            const doc = await this.firestore.getDocument(`cache/${key.replace(/[^a-zA-Z0-9]/g, '_')}`);
-            if (doc) {
-                const cacheData = this.firestore.formatFirestoreResponse(doc);
-                if (cacheData && !this._isFirestoreExpired(cacheData, maxAgeMs)) {
-                    // Validate cache completeness
-                    if (this._isCacheDataComplete(key, cacheData.data)) {
-                        // Store in memory cache for faster future access
-                        this.memoryCache.set(key, {
-                            data: cacheData.data,
-                            timestamp: new Date(cacheData.lastUpdated).getTime()
-                        });
-                        console.log(`Firestore cache hit for: ${key}`);
-                        return cacheData.data;
-                    } else {
-                        console.log(`Firestore cache incomplete for: ${key}, treating as miss`);
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn(`Firestore cache failed for ${key}:`, error.message);
-        }
-
-        return null;
-    }
-
-    _isCacheDataComplete(key, data) {
-        // Check if user detail cache has avatar data
-        if (key.startsWith('userdetails:') || key.startsWith('user:')) {
-            if (!data) return false;
-            // User data should have an avatarUrl field, and it shouldn't be just a placeholder
-            if (!data.avatarUrl) {
-                console.log(`Cache data missing avatarUrl for key: ${key}`);
-                return false;
-            }
-            // Check if it's just a placeholder (question mark image)
-            if (data.avatarUrl.includes('text=?') || data.avatarUrl.includes('text=%3F') || 
-                data.avatarUrl.includes('placehold.co')) {
-                console.log(`Cache data has placeholder avatar for key: ${key}`);
-                return false;
-            }
-            // Additional check: make sure it's actually a valid Roblox avatar URL or reasonable image URL
-            if (!data.avatarUrl.includes('rbxcdn.com') && !data.avatarUrl.includes('roblox.com') && 
-                !data.avatarUrl.startsWith('https://') && !data.avatarUrl.startsWith('http://')) {
-                console.log(`Cache data has invalid avatar URL for key: ${key}`);
-                return false;
-            }
-        }
-        
-        // Check if friend data has required fields
-        if (key.startsWith('friends:')) {
-            if (!Array.isArray(data)) return false;
-        }
-        
-        return true;
-    }
-
-    async set(key, data, documentsToWrite = null) {
-        const timestamp = Date.now();
-        
-        // Always store in memory cache
-        if (this.memoryCache.size >= this.maxMemorySize) {
-            const firstKey = this.memoryCache.keys().next().value;
-            this.memoryCache.delete(firstKey);
-        }
-
-        this.memoryCache.set(key, {
-            data,
-            timestamp
-        });
-
-        // Store in Firestore (batch operation if documentsToWrite provided)
-        const firestoreKey = key.replace(/[^a-zA-Z0-9]/g, '_');
-        const writeOperation = this.firestore.createWriteOperation(`cache/${firestoreKey}`, data);
-
-        if (documentsToWrite) {
-            documentsToWrite.push(writeOperation);
-        } else {
-            try {
-                await this.firestore.batchWriteDocuments([writeOperation]);
-            } catch (error) {
-                console.warn(`Failed to write to Firestore cache for ${key}:`, error.message);
-            }
-        }
+// Simple cache implementation (in production, use KV storage)
+class SimpleCache {
+    constructor() {
+        this.cache = new Map();
+        this.maxSize = 1000; // Prevent memory issues
     }
 
     _isExpired(item, maxAgeMs) {
         return Date.now() - item.timestamp > maxAgeMs;
     }
 
-    _isFirestoreExpired(cacheData, maxAgeMs) {
-        return Date.now() - new Date(cacheData.lastUpdated).getTime() > maxAgeMs;
+    get(key, maxAgeMs = LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000) {
+        const item = this.cache.get(key);
+        if (!item) return null;
+
+        // For deep search, never expire cache
+        if (maxAgeMs === Infinity) {
+            return item.data;
+        }
+
+        if (this._isExpired(item, maxAgeMs)) {
+            this.cache.delete(key);
+            return null;
+        }
+
+        return item.data;
+    }
+
+    set(key, data) {
+        // Simple LRU: remove oldest if at capacity
+        if (this.cache.size >= this.maxSize) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+
+        this.cache.set(key, {
+            data,
+            timestamp: Date.now()
+        });
+    }
+
+    has(key, maxAgeMs = LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000) {
+        return this.get(key, maxAgeMs) !== null;
     }
 
     getStats() {
         return {
-            memorySize: this.memoryCache.size,
-            maxMemorySize: this.maxMemorySize
+            size: this.cache.size,
+            maxSize: this.maxSize
         };
     }
 }
 
-// Staff role checking - more efficient than individual calls
+const cache = new SimpleCache();
+
+// Batch staff role checking - more efficient than individual calls
+// Daily cached staff list for specific roles
 const STAFF_ROLES = [
     'Lead Developer',
     'Community Manager',
@@ -508,24 +221,26 @@ const ROLE_COLORS = {
     'Trial Contractor': '#1f8b4c'
 };
 
-async function getStaffMap(groupId = 3149674, firestore, cache) {
-    const cacheKey = `staff_roles_${groupId}`;
-    
-    // Check cache first
-    const cached = await cache.get(cacheKey, FIRESTORE_CACHE_DURATIONS.STAFF_ROLES);
-    if (cached) {
-        console.log(`Using cached staff data`);
-        return new Map(Object.entries(cached).map(([id, role]) => [parseInt(id, 10), role]));
-    }
+// Cache for staff list - daily refresh
+let staffCache = {
+    data: new Map(), // userId -> roleName
+    lastUpdated: 0,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+};
 
-    console.log('Building staff cache...');
+async function buildStaffCache(groupId = 3149674) {
+    console.log('Building daily staff cache...');
     const staffMap = new Map();
 
     try {
+        // Get all group roles
         const rolesResponse = await subrequestManager.makeRequest(`https://groups.roblox.com/v1/groups/${groupId}/roles`);
+
+        // Filter to only the staff roles we care about
         const targetRoles = rolesResponse.roles.filter(role => STAFF_ROLES.includes(role.name));
         console.log(`Found ${targetRoles.length} target staff roles:`, targetRoles.map(r => r.name));
 
+        // Fetch members for each target role
         for (const role of targetRoles) {
             if (!subrequestManager.canMakeRequest()) {
                 console.warn('Subrequest limit reached while building staff cache');
@@ -536,21 +251,27 @@ async function getStaffMap(groupId = 3149674, firestore, cache) {
             let pageCount = 0;
 
             do {
-                if (!subrequestManager.canMakeRequest()) break;
+                if (!subrequestManager.canMakeRequest()) {
+                    console.warn('Subrequest limit reached, stopping role fetch');
+                    break;
+                }
 
                 const url = `https://groups.roblox.com/v1/groups/${groupId}/roles/${role.id}/users?limit=100&sortOrder=Asc${nextPageCursor ? `&cursor=${nextPageCursor}` : ''}`;
 
                 try {
                     const membersResponse = await subrequestManager.makeRequest(url);
+
                     if (membersResponse.data) {
                         for (const member of membersResponse.data) {
                             staffMap.set(member.userId, role.name);
                         }
                         console.log(`Cached ${membersResponse.data.length} ${role.name} members`);
                     }
+
                     nextPageCursor = membersResponse.nextPageCursor;
                     pageCount++;
 
+                    // Limit pages to prevent too many subrequests
                     if (pageCount >= 5) {
                         console.warn(`Limiting ${role.name} to 5 pages to save subrequests`);
                         break;
@@ -562,8 +283,13 @@ async function getStaffMap(groupId = 3149674, firestore, cache) {
             } while (nextPageCursor);
         }
 
-        const staffObject = Object.fromEntries(staffMap);
-        await cache.set(cacheKey, staffObject);
+        // Update cache
+        staffCache = {
+            data: staffMap,
+            lastUpdated: Date.now(),
+            maxAge: staffCache.maxAge
+        };
+
         console.log(`Staff cache built with ${staffMap.size} staff members`);
         return staffMap;
 
@@ -572,6 +298,21 @@ async function getStaffMap(groupId = 3149674, firestore, cache) {
         return new Map();
     }
 }
+
+async function getStaffMap(groupId = 3149674) {
+    // Check if cache is still valid
+    const cacheAge = Date.now() - staffCache.lastUpdated;
+
+    if (cacheAge < staffCache.maxAge && staffCache.data.size > 0) {
+        console.log(`Using cached staff data (age: ${Math.round(cacheAge / (60 * 60 * 1000))} hours)`);
+        return staffCache.data;
+    }
+
+    // Cache is stale or empty, rebuild it
+    console.log('Staff cache is stale, rebuilding...');
+    return await buildStaffCache(groupId);
+}
+
 // Individual user role check for lookup feature
 async function getUserGroupRole(userId, groupId = 3149674) {
     try {
@@ -587,6 +328,7 @@ async function getUserGroupRole(userId, groupId = 3149674) {
             if (saikouGroup) {
                 const roleName = saikouGroup.role.name;
 
+                // Only return role if it's one of our target staff roles
                 if (STAFF_ROLES.includes(roleName)) {
                     console.log(`User ${userId} has staff role: ${roleName}`);
                     return {
@@ -606,22 +348,25 @@ async function getUserGroupRole(userId, groupId = 3149674) {
     }
 }
 
-async function getUserByUsername(username, isDeepSearch = false, cache) {
+async function getUserByUsername(username, isDeepSearch = false) {
     const cacheKey = `user:username:${username.toLowerCase()}`;
-    const maxAge = isDeepSearch ? Infinity : FIRESTORE_CACHE_DURATIONS.USER_DETAILS;
+    const maxAge = isDeepSearch ? Infinity : LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000;
 
-    const cached = await cache.get(cacheKey, maxAge, isDeepSearch);
+    // Check cache first. This cache should now always be the full user object.
+    const cached = cache.get(cacheKey, maxAge);
     if (cached) {
         console.log(`Cache hit for username: ${username}`);
         return cached;
     }
 
+    // Skip API call for deep search if no cache
     if (isDeepSearch) {
         console.log(`Deep search: no cache for username ${username}, skipping API call`);
         return null;
     }
 
     try {
+        // Step 1: Resolve username to ID
         const usernameResponse = await subrequestManager.makeRequest('https://users.roblox.com/v1/usernames/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -633,10 +378,13 @@ async function getUserByUsername(username, isDeepSearch = false, cache) {
             return null;
         }
 
-        const fullUser = await getUserById(partialUser.id, isDeepSearch, cache);
+        // Step 2: Fetch full user details using the ID
+        // This will also handle caching the full object under the ID key.
+        const fullUser = await getUserById(partialUser.id, isDeepSearch);
 
         if (fullUser) {
-            await cache.set(cacheKey, fullUser);
+            // Step 3: Cache the full user object under the username key as well.
+            cache.set(cacheKey, fullUser);
         }
 
         return fullUser;
@@ -646,60 +394,50 @@ async function getUserByUsername(username, isDeepSearch = false, cache) {
     }
 }
 
-async function getUserById(userId, isDeepSearch = false, cache) {
+async function getUserById(userId, isDeepSearch = false) {
     const cacheKey = `user:id:${userId}`;
-    const maxAge = isDeepSearch ? Infinity : FIRESTORE_CACHE_DURATIONS.USER_DETAILS;
+    const maxAge = isDeepSearch ? Infinity : LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000;
 
-    const cached = await cache.get(cacheKey, maxAge, isDeepSearch);
+    // Check cache first
+    const cached = cache.get(cacheKey, maxAge);
     if (cached) {
         console.log(`Cache hit for user ID: ${userId}`);
         return cached;
     }
 
+    // Skip API call for deep search if no cache
     if (isDeepSearch) {
         console.log(`Deep search: no cache for user ID ${userId}, skipping API call`);
         return null;
     }
 
     try {
-        // Fetch both user data and avatar in parallel
-        const [userData, avatarData] = await Promise.all([
-            subrequestManager.makeRequest(`https://users.roblox.com/v1/users/${userId}`),
-            subrequestManager.makeRequest(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`)
-        ]);
-        
-        if (userData) {
-            // Add avatar URL to user data
-            const avatarUrl = avatarData?.data?.[0]?.imageUrl || 'https://placehold.co/150x150/1f222c/FFFFFF?text=?';
-            const completeUserData = {
-                ...userData,
-                avatarUrl: avatarUrl
-            };
-            
-            await cache.set(cacheKey, completeUserData);
-            if (userData.name) {
-                await cache.set(`user:username:${userData.name.toLowerCase()}`, completeUserData);
+        const data = await subrequestManager.makeRequest(`https://users.roblox.com/v1/users/${userId}`);
+        if (data) {
+            cache.set(cacheKey, data);
+            if (data.name) {
+                cache.set(`user:username:${data.name.toLowerCase()}`, data);
             }
-            
-            return completeUserData;
         }
-        return null;
+        return data;
     } catch (error) {
         console.error(`Failed to get user ${userId}:`, error);
         return null;
     }
 }
 
-async function getUserFriends(userId, isDeepSearch = false, cache) {
+async function getUserFriends(userId, isDeepSearch = false) {
     const cacheKey = `friends:${userId}`;
-    const maxAge = isDeepSearch ? Infinity : FIRESTORE_CACHE_DURATIONS.FRIENDS_LIST;
+    const maxAge = isDeepSearch ? Infinity : LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000;
 
-    const cached = await cache.get(cacheKey, maxAge, isDeepSearch);
+    // Check cache first
+    const cached = cache.get(cacheKey, maxAge);
     if (cached) {
         console.log(`Cache hit for friends of user: ${userId}`);
         return cached;
     }
 
+    // Skip API call for deep search if no cache
     if (isDeepSearch) {
         console.log(`Deep search: no cache for friends of ${userId}, skipping API call`);
         return [];
@@ -709,7 +447,8 @@ async function getUserFriends(userId, isDeepSearch = false, cache) {
         const data = await subrequestManager.makeRequest(`https://friends.roblox.com/v1/users/${userId}/friends`);
         const friends = data.data || [];
 
-        await cache.set(cacheKey, friends);
+        // No limit on friends as requested
+        cache.set(cacheKey, friends);
         return friends;
     } catch (error) {
         console.error(`Failed to get friends for ${userId}:`, error);
@@ -717,22 +456,22 @@ async function getUserFriends(userId, isDeepSearch = false, cache) {
     }
 }
 
-async function getBatchUserDetails(userIds, isDeepSearch = false, onProgress = null, cache, documentsToWrite = []) {
+async function getBatchUserDetails(userIds, isDeepSearch = false, onProgress = null) {
     const results = new Map();
     const uncachedIds = [];
-    const maxAge = isDeepSearch ? Infinity : FIRESTORE_CACHE_DURATIONS.USER_DETAILS;
 
     // Check cache for each user
-    for (const id of userIds) {
+    userIds.forEach(id => {
         const cacheKey = `userdetails:${id}`;
-        const cached = await cache.get(cacheKey, maxAge, isDeepSearch);
+        const maxAge = isDeepSearch ? Infinity : LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000;
+        const cached = cache.get(cacheKey, maxAge);
 
         if (cached) {
             results.set(id, cached);
         } else if (!isDeepSearch) {
             uncachedIds.push(id);
         }
-    }
+    });
 
     console.log(`User details: ${results.size} cached, ${uncachedIds.length} need fetching`);
 
@@ -749,6 +488,7 @@ async function getBatchUserDetails(userIds, isDeepSearch = false, onProgress = n
 
         const batch = uncachedIds.slice(i, i + LIMITS.BATCH_SIZE);
 
+        // Report progress
         if (onProgress) {
             const progress = Math.round(((i + batch.length) / uncachedIds.length) * 100);
             onProgress(`Fetching user details... ${i + batch.length}/${uncachedIds.length}`, progress);
@@ -768,14 +508,13 @@ async function getBatchUserDetails(userIds, isDeepSearch = false, onProgress = n
 
             data.data?.forEach(user => {
                 results.set(user.id, user);
-                // Add to batch write operations
-                const cacheKey = `userdetails:${user.id}`;
-                cache.set(cacheKey, user, documentsToWrite);
+                cache.set(`userdetails:${user.id}`, user);
             });
         } catch (error) {
             console.error(`Failed to get batch user details:`, error);
         }
 
+        // Rate limiting delay
         if (i + LIMITS.BATCH_SIZE < uncachedIds.length) {
             await new Promise(resolve => setTimeout(resolve, LIMITS.REQUEST_DELAY));
         }
@@ -784,24 +523,25 @@ async function getBatchUserDetails(userIds, isDeepSearch = false, onProgress = n
     return results;
 }
 
-async function getBatchAvatars(userIds, isDeepSearch = false, onProgress = null, cache, documentsToWrite = []) {
+async function getBatchAvatars(userIds, isDeepSearch = false, onProgress = null) {
     const results = new Map();
     const uncachedIds = [];
-    const maxAge = isDeepSearch ? Infinity : FIRESTORE_CACHE_DURATIONS.AVATARS;
 
     // Check cache for each avatar
-    for (const id of userIds) {
+    userIds.forEach(id => {
         const cacheKey = `avatar:${id}`;
-        const cached = await cache.get(cacheKey, maxAge, isDeepSearch);
+        const maxAge = isDeepSearch ? Infinity : LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000;
+        const cached = cache.get(cacheKey, maxAge);
 
         if (cached) {
             results.set(id, cached);
         } else if (!isDeepSearch) {
             uncachedIds.push(id);
         } else {
+            // For deep search, use placeholder if no cache
             results.set(id, 'https://placehold.co/150x150/1f222c/FFFFFF?text=?');
         }
-    }
+    });
 
     console.log(`Avatars: ${results.size} cached, ${uncachedIds.length} need fetching`);
 
@@ -818,6 +558,7 @@ async function getBatchAvatars(userIds, isDeepSearch = false, onProgress = null,
 
         const batch = uncachedIds.slice(i, i + 100);
 
+        // Report progress
         if (onProgress) {
             const progress = Math.round(((i + batch.length) / uncachedIds.length) * 100);
             onProgress(`Fetching avatars... ${i + batch.length}/${uncachedIds.length}`, progress);
@@ -838,20 +579,19 @@ async function getBatchAvatars(userIds, isDeepSearch = false, onProgress = null,
             data.data?.forEach(avatar => {
                 const avatarUrl = avatar.imageUrl || 'https://placehold.co/150x150/1f222c/FFFFFF?text=?';
                 results.set(avatar.targetId, avatarUrl);
-                // Add to batch write operations
-                const cacheKey = `avatar:${avatar.targetId}`;
-                cache.set(cacheKey, avatarUrl, documentsToWrite);
+                cache.set(`avatar:${avatar.targetId}`, avatarUrl);
             });
         } catch (error) {
             console.error(`Failed to get batch avatars:`, error);
+            // Set placeholder avatars for this batch
             batch.forEach(id => {
                 const placeholder = 'https://placehold.co/150x150/1f222c/FFFFFF?text=?';
                 results.set(id, placeholder);
-                const cacheKey = `avatar:${id}`;
-                cache.set(cacheKey, placeholder, documentsToWrite);
+                cache.set(`avatar:${id}`, placeholder);
             });
         }
 
+        // Rate limiting delay
         if (i + 100 < uncachedIds.length) {
             await new Promise(resolve => setTimeout(resolve, LIMITS.REQUEST_DELAY));
         }
@@ -862,6 +602,7 @@ async function getBatchAvatars(userIds, isDeepSearch = false, onProgress = null,
 
 async function handleBanList(env) {
     try {
+        // Option 1: Use dedicated ban cache worker if configured
         if (env.BAN_CACHE_WORKER_URL) {
             console.log('Using dedicated ban cache worker');
             const response = await fetch(env.BAN_CACHE_WORKER_URL);
@@ -871,21 +612,24 @@ async function handleBanList(env) {
             }
 
             const data = await response.json();
-            return data;
+            return data; // Already in correct format
         }
 
+        // Option 2: Try multiple ban list URLs (including the working one from old worker)
         const banListUrls = [
             env.BAN_LIST_URL,
-            'http://bans.saikouapi.xyz/v1/bans/list-bans?sortOrder=Desc',
+            'http://bans.saikouapi.xyz/v1/bans/list-bans',
+            'http://api.saikou.dev/v1/bans/list-bans?sortOrder=Desc', // From old worker - HTTP not HTTPS!
             'https://saikou-banlist-proxy.saikoudevelopment.workers.dev',
             'https://saikou.banlist.workers.dev',
             'https://api.saikou.dev/v1/bans/list-bans'
-        ].filter(Boolean);
+        ].filter(Boolean); // Remove null/undefined values
 
         for (let i = 0; i < banListUrls.length; i++) {
             const banListUrl = banListUrls[i];
             const headers = {};
 
+            // Add API key if provided (use the same header as old worker)
             if (env.SAIKOU_API_KEY) {
                 headers['X-API-KEY'] = env.SAIKOU_API_KEY;
             } else if (env['X-API-KEY']) {
@@ -895,8 +639,9 @@ async function handleBanList(env) {
             console.log(`Trying ban list URL ${i + 1}/${banListUrls.length}: ${banListUrl}`);
 
             try {
+                // Add timeout to prevent hanging
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
                 const response = await fetch(banListUrl, {
                     headers,
@@ -910,7 +655,9 @@ async function handleBanList(env) {
                     const data = await response.json();
                     console.log(`SUCCESS with ${banListUrl} - data type: ${Array.isArray(data) ? 'array' : typeof data}, length: ${Array.isArray(data) ? data.length : 'N/A'}`);
 
+                    // Handle both array response and object response
                     const banList = Array.isArray(data) ? data : (data.data || data);
+
                     return { success: true, data: banList };
                 } else {
                     console.warn(`Failed ${banListUrl}: HTTP ${response.status}`);
@@ -920,8 +667,10 @@ async function handleBanList(env) {
             }
         }
 
+        // If all URLs failed, use emergency fallback for testing
         console.warn('All ban list URLs failed, using emergency fallback');
 
+        // Emergency fallback - minimal ban list for testing
         const emergencyBanList = [
             {
                 "RobloxUsername": "TestBannedUser",
@@ -941,6 +690,8 @@ async function handleBanList(env) {
         };
     } catch (error) {
         console.error('Ban list error:', error);
+
+        // Follow the old worker pattern - just log and continue with empty ban list
         console.error("Could not fetch Saikou ban list for graph:", error.message);
         return {
             success: true,
@@ -951,85 +702,31 @@ async function handleBanList(env) {
     }
 }
 
-// Person of Interest Functions
-async function getPersonOfInterestStatus(userId, firestore) {
-    try {
-        const doc = await firestore.getDocument(`poi/${userId}`);
-        if (doc && doc.fields) {
-            return {
-                isPoi: true,
-                markedBy: doc.fields.markedBy?.stringValue || 'Unknown',
-                reason: doc.fields.reason?.stringValue || 'No reason provided',
-                timestamp: doc.fields.timestamp?.timestampValue || new Date().toISOString()
-            };
-        }
-    } catch (error) {
-        console.error('Error fetching POI status:', error);
-    }
-    return { isPoi: false };
-}
-
-async function setPersonOfInterestStatus(userId, data, firestore) {
-    const timestamp = new Date().toISOString();
-    const poiData = {
-        fields: {
-            isPoi: { booleanValue: data.isPoi },
-            markedBy: { stringValue: data.markedBy || 'Unknown' },
-            reason: { stringValue: data.reason || '' },
-            timestamp: { timestampValue: timestamp },
-            userId: { integerValue: userId },
-            username: { stringValue: data.username || '' }
-        }
-    };
-
-    const auditLogData = {
-        fields: {
-            action: { stringValue: data.isPoi ? 'MARKED_POI' : 'UNMARKED_POI' },
-            userId: { integerValue: userId },
-            username: { stringValue: data.username || '' },
-            markedBy: { stringValue: data.markedBy || 'Unknown' },
-            reason: { stringValue: data.reason || '' },
-            timestamp: { timestampValue: timestamp }
-        }
-    };
-
-    try {
-        await firestore.createDocument(`poi/${userId}`, poiData);
-        await firestore.createDocument(`poi_logs/${userId}_${Date.now()}`, auditLogData);
-        return { success: true };
-    } catch (error) {
-        console.error('Error updating POI status:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-async function handleUserLookup(query, env, firestore, cache) {
+async function handleUserLookup(query, env) {
     subrequestManager.reset();
 
     try {
         let user;
         if (isNaN(query)) {
-            user = await getUserByUsername(query, false, cache);
+            user = await getUserByUsername(query);
         } else {
-            user = await getUserById(parseInt(query), false, cache);
+            user = await getUserById(parseInt(query));
         }
 
         if (!user) {
             return { success: false, error: 'User not found' };
         }
 
-        const documentsToWrite = [];
-
         // Get friends
-        const friends = await getUserFriends(user.id, false, cache);
+        const friends = await getUserFriends(user.id);
 
         // Get avatar
-        const avatarMap = await getBatchAvatars([user.id], false, null, cache, documentsToWrite);
+        const avatarMap = await getBatchAvatars([user.id]);
         user.avatarUrl = avatarMap.get(user.id);
 
         // Get friend avatars (limited batch for performance)
         const friendIds = friends.slice(0, 50).map(f => f.id);
-        const friendAvatars = await getBatchAvatars(friendIds, false, null, cache, documentsToWrite);
+        const friendAvatars = await getBatchAvatars(friendIds);
         friends.forEach(friend => {
             if (friendAvatars.has(friend.id)) {
                 friend.avatarUrl = friendAvatars.get(friend.id);
@@ -1049,8 +746,48 @@ async function handleUserLookup(query, env, firestore, cache) {
         // Check group role
         const roleInfo = await getUserGroupRole(user.id, 3149674);
 
-        // Check POI status
-        const poiStatus = await getPersonOfInterestStatus(user.id, firestore);
+        // Get user's groups
+        let userGroups = [];
+        try {
+            if (subrequestManager.canMakeRequest()) {
+                const groupsResponse = await subrequestManager.makeRequest(`https://groups.roblox.com/v2/users/${user.id}/groups/roles`);
+                if (groupsResponse.data) {
+                    userGroups = groupsResponse.data.slice(0, 10).map(g => ({
+                        id: g.group.id,
+                        name: g.group.name,
+                        role: g.role.name,
+                        memberCount: g.group.memberCount
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching user groups:', error);
+        }
+
+        // Get account settings (inventory visibility, join requests)
+        let accountSettings = {
+            inventoryHidden: false,
+            allowJoinRequests: true,
+            hasVerifiedBadge: user.hasVerifiedBadge || false
+        };
+        try {
+            if (subrequestManager.canMakeRequest()) {
+                const settingsResponse = await subrequestManager.makeRequest(`https://accountsettings.roblox.com/v1/users/${user.id}/settings`);
+                if (settingsResponse) {
+                    accountSettings.inventoryHidden = settingsResponse.inventoryPrivacy === 'NoOne' || settingsResponse.inventoryPrivacy === 'Friends';
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching account settings:', error);
+        }
+
+        // Check POI status from KV
+        let isPOI = false;
+        if (env.POI_DATA) {
+            const poiRecord = await env.POI_DATA.get(user.id.toString());
+            isPOI = !!poiRecord;
+        }
+
 
         // Risk assessment
         const accountAgeMs = Date.now() - new Date(user.created).getTime();
@@ -1059,7 +796,7 @@ async function handleUserLookup(query, env, firestore, cache) {
         const friendCount = friends.length;
         const isPotentialRisk = isNewAccount && friendCount < 50;
 
-        const result = {
+        return {
             success: true,
             profile: {
                 ...user,
@@ -1069,31 +806,19 @@ async function handleUserLookup(query, env, firestore, cache) {
                 groupRole: roleInfo?.groupRole || null,
                 groupRoleColor: roleInfo?.groupRoleColor || null,
                 isPotentialRisk: isPotentialRisk,
-                isPOI: poiStatus.isPoi,
-                poiData: poiStatus.isPoi ? poiStatus : undefined
+                isPOI: isPOI,
+                groups: userGroups,
+                inventoryHidden: accountSettings.inventoryHidden,
+                allowJoinRequests: accountSettings.allowJoinRequests,
+                hasVerifiedBadge: accountSettings.hasVerifiedBadge
             },
             friends: friends,
             bannedFriends: bannedFriends.map(friend => ({
                 ...friend,
                 banInfo: banMap.get(friend.id)
             })),
-            banHistory: banMap.has(user.id) ? [banMap.get(user.id)] : []
+            banHistory: banMap.has(user.id) ? [banMap.get(user.id)] : [] 
         };
-
-        // Cache the lookup result
-        const lookupCacheKey = `lookup:${user.id}`;
-        await cache.set(lookupCacheKey, result, documentsToWrite);
-
-        // Write all cache updates to Firestore
-        if (documentsToWrite.length > 0) {
-            try {
-                await firestore.batchWriteDocuments(documentsToWrite);
-            } catch (error) {
-                console.warn('Failed to write cache updates to Firestore:', error.message);
-            }
-        }
-
-        return result;
 
     } catch (error) {
         console.error('Lookup error:', error);
@@ -1101,46 +826,9 @@ async function handleUserLookup(query, env, firestore, cache) {
     }
 }
 
+
 async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
-    subrequestManager.reset();
-
-    // Initialize Firestore if available
-    let firestore = null;
-    let cache = null;
-
-    try {
-        if (env.FIREBASE_PROJECT_ID && env.FIREBASE_SERVICE_ACCOUNT) {
-            const FIREBASE_PROJECT_ID = env.FIREBASE_PROJECT_ID;
-            const FIREBASE_SERVICE_ACCOUNT = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
-            firestore = new Firestore(FIREBASE_PROJECT_ID, FIREBASE_SERVICE_ACCOUNT);
-            cache = new HybridCache(firestore);
-        }
-    } catch (error) {
-        console.warn('Failed to initialize Firestore, using memory-only cache:', error.message);
-    }
-
-    // Fallback to simple cache if Firestore unavailable
-    if (!cache) {
-        const SimpleCache = class {
-            constructor() { this.cache = new Map(); this.maxSize = 1000; }
-            async get(key, maxAge, useDeepSearch = false) {
-                const item = this.cache.get(key);
-                if (!item) return null;
-                if (useDeepSearch) return item.data;
-                if (Date.now() - item.timestamp > maxAge) { this.cache.delete(key); return null; }
-                return item.data;
-            }
-            async set(key, data) {
-                if (this.cache.size >= this.maxSize) {
-                    const firstKey = this.cache.keys().next().value;
-                    this.cache.delete(firstKey);
-                }
-                this.cache.set(key, { data, timestamp: Date.now() });
-            }
-            getStats() { return { memorySize: this.cache.size, maxMemorySize: this.maxSize }; }
-        };
-        cache = new SimpleCache();
-    }
+    subrequestManager.reset(); // Reset counter for each request
 
     const usernames = usersQuery.split(',').map(u => u.trim()).slice(0, LIMITS.MAX_USERS_PER_REQUEST);
 
@@ -1157,8 +845,6 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
         console.log(`Progress: ${message} (${progress}%)`);
     };
 
-    const documentsToWrite = [];
-
     try {
         addProgress('Resolving initial users...', 5);
 
@@ -1167,8 +853,8 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
         for (let i = 0; i < usernames.length; i++) {
             const username = usernames[i];
             const user = isNaN(username) ?
-                await getUserByUsername(username, isDeepSearch, cache) :
-                await getUserById(parseInt(username), isDeepSearch, cache);
+                await getUserByUsername(username, isDeepSearch) :
+                await getUserById(parseInt(username), isDeepSearch);
 
             if (user) {
                 initialUsers.push(user);
@@ -1201,17 +887,17 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
             addProgress('Starting deep cache search...', 20);
             const queue = [...initialUsers.map(u => u.id)];
             const processed = new Set();
-            const maxNodes = 500;
+            const maxNodes = 500; // Safety limit to prevent huge graphs
 
             while(queue.length > 0 && nodes.size < maxNodes) {
                 const currentUserId = queue.shift();
                 if (processed.has(currentUserId)) continue;
                 processed.add(currentUserId);
 
-                const friends = await getUserFriends(currentUserId, true, cache);
+                const friends = await getUserFriends(currentUserId, true); // cache-only
                 
                 if (!nodes.has(currentUserId)) {
-                     const userDetails = await getUserById(currentUserId, true, cache);
+                     const userDetails = await getUserById(currentUserId, true); // cache-only
                      if (userDetails) {
                          nodes.set(currentUserId, {
                             id: userDetails.id,
@@ -1247,7 +933,7 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
             for (let i = 0; i < initialUsers.length; i++) {
                 const user = initialUsers[i];
                 addProgress(`Fetching friends for ${user.name}... (${i + 1}/${initialUsers.length})`, 15 + (i / initialUsers.length) * 25);
-                const friends = await getUserFriends(user.id, isDeepSearch, cache);
+                const friends = await getUserFriends(user.id, isDeepSearch);
                 friendResults.push({ userId: user.id, friends });
                 if (i < initialUsers.length - 1) {
                     await new Promise(resolve => setTimeout(resolve, LIMITS.REQUEST_DELAY));
@@ -1267,42 +953,36 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
             });
         }
 
+
         addProgress('Processing user details...', 50);
 
+        // Step 3: Get user details and avatars with progress tracking
         const allUserIds = Array.from(nodes.keys());
 
         const userDetails = await getBatchUserDetails(allUserIds, isDeepSearch, (message, progress) => {
             addProgress(`User details: ${message}`, 50 + progress * 0.2);
-        }, cache, documentsToWrite);
+        });
 
         addProgress('Processing avatars...', 70);
 
         const avatars = await getBatchAvatars(allUserIds, isDeepSearch, (message, progress) => {
             addProgress(`Avatars: ${message}`, 70 + progress * 0.15);
-        }, cache, documentsToWrite);
+        });
 
         addProgress('Loading staff cache...', 80);
-        const staffRoleMap = await getStaffMap(3149674, firestore, cache);
+        const staffRoleMap = await getStaffMap(3149674);
 
         addProgress('Fetching ban list...', 85);
         const banList = await handleBanList(env);
         
         addProgress('Fetching POI list...', 88);
-        const poiStatuses = new Map();
-        if (firestore) {
-            try {
-                for (const userId of allUserIds) {
-                    const poiStatus = await getPersonOfInterestStatus(userId, firestore);
-                    if (poiStatus.isPoi) {
-                        poiStatuses.set(userId, poiStatus);
-                    }
-                }
-            } catch (error) {
-                console.warn('Failed to fetch POI statuses:', error.message);
-            }
+        let poiList = [];
+        if (env.POI_DATA) {
+            const list = await env.POI_DATA.list();
+            poiList = list.keys.map(key => key.name);
         }
 
-        // Update nodes with details and avatars
+        // Update nodes with details
         for (const [userId, node] of nodes.entries()) {
             const details = userDetails.get(userId);
             if (details) {
@@ -1314,30 +994,29 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
                 });
             }
 
-            // Always set avatar URL from the avatars map
             node.avatarUrl = avatars.get(userId) || 'https://placehold.co/150x150/1f222c/FFFFFF?text=?';
 
+            // Add staff role if user has one
             if (staffRoleMap.has(userId)) {
                 node.groupRole = staffRoleMap.get(userId);
-                node.groupRoleColor = ROLE_COLORS[staffRoleMap.get(userId)] || null;
             }
 
+            // Check if new account
             if (node.created) {
                 const accountAge = Date.now() - new Date(node.created).getTime();
                 const ninetyDays = 90 * 24 * 60 * 60 * 1000;
                 node.isNewAccount = accountAge < ninetyDays;
             }
             
-            if (poiStatuses.has(userId)) {
-                node.isPOI = true;
-                node.poiData = poiStatuses.get(userId);
-            }
+            // Check POI status
+            node.isPOI = poiList.includes(userId.toString());
         }
 
         // Apply ban status
         if (banList.success && banList.data) {
             const banMap = new Map();
             banList.data.forEach(ban => {
+                // Use RobloxID field like the old worker
                 const userId = ban.RobloxID || ban.userId || ban.id;
                 const reason = ban.Reason || ban.reason || 'No reason provided.';
                 banMap.set(userId, reason);
@@ -1351,6 +1030,7 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
             });
         }
 
+        // Convert links
         const finalLinks = Array.from(links)
             .map(link => {
                 try {
@@ -1362,16 +1042,6 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
             .filter(link => link && nodes.has(link.source) && nodes.has(link.target));
 
         addProgress('Finalizing graph...', 95);
-
-        // Write all cache updates to Firestore
-        if (documentsToWrite.length > 0 && firestore) {
-            try {
-                await firestore.batchWriteDocuments(documentsToWrite);
-                console.log(`Wrote ${documentsToWrite.length} cache updates to Firestore`);
-            } catch (error) {
-                console.warn('Failed to write cache updates to Firestore:', error.message);
-            }
-        }
 
         const usage = subrequestManager.getUsage();
         const cacheStats = cache.getStats();
@@ -1389,10 +1059,9 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
                 linkCount: finalLinks.length,
                 subrequestsUsed: usage.used,
                 subrequestsRemaining: usage.remaining,
-                cacheHits: cacheStats.memorySize || 0,
+                cacheHits: cacheStats.size,
                 limitInfo: `Used ${usage.used}/${usage.max} subrequests`,
-                processingMode: isDeepSearch ? 'Deep Search (Cache Only)' : 'Normal (API + Cache)',
-                firestoreEnabled: !!firestore
+                processingMode: isDeepSearch ? 'Deep Search (Cache Only)' : 'Normal (API + Cache)'
             }
         };
 
@@ -1403,19 +1072,7 @@ async function handleFriendGraph(usersQuery, env, isDeepSearch = false) {
 }
 
 async function handlePoiRequest(request, env) {
-    // Initialize Firestore
-    let firestore = null;
-    try {
-        if (env.FIREBASE_PROJECT_ID && env.FIREBASE_SERVICE_ACCOUNT) {
-            const FIREBASE_PROJECT_ID = env.FIREBASE_PROJECT_ID;
-            const FIREBASE_SERVICE_ACCOUNT = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
-            firestore = new Firestore(FIREBASE_PROJECT_ID, FIREBASE_SERVICE_ACCOUNT);
-        }
-    } catch (error) {
-        return { success: false, error: 'Firestore configuration error.' };
-    }
-
-    if (!firestore) {
+    if (!env.POI_DATA) {
         return { success: false, error: 'POI data store not configured.' };
     }
     
@@ -1429,29 +1086,28 @@ async function handlePoiRequest(request, env) {
                 if (!poiData.userId || !poiData.markedBy || !poiData.reason) {
                      return { success: false, error: 'Missing required POI data.' };
                 }
-                return await setPersonOfInterestStatus(poiData.userId, poiData, firestore);
+                await env.POI_DATA.put(poiData.userId.toString(), JSON.stringify(poiData));
+                return { success: true };
             } catch (e) {
                 return { success: false, error: 'Invalid POI data format.' };
             }
         
         case 'GET':
              if (!userId) return { success: false, error: 'User ID is required.' };
-             const status = await getPersonOfInterestStatus(userId, firestore);
-             return { success: true, data: status };
+             const data = await env.POI_DATA.get(userId);
+             if (!data) return { success: false, error: 'POI record not found.' };
+             return { success: true, data: JSON.parse(data) };
 
         case 'DELETE':
             if (!userId) return { success: false, error: 'User ID is required.' };
-            try {
-                await setPersonOfInterestStatus(userId, { isPoi: false, markedBy: 'System', reason: 'Removed' }, firestore);
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: error.message };
-            }
+            await env.POI_DATA.delete(userId);
+            return { success: true };
 
         default:
             return { success: false, error: `Method ${request.method} not allowed.` };
     }
 }
+
 
 async function handleRequest(request, env) {
     if (request.method === 'OPTIONS') {
@@ -1469,22 +1125,6 @@ async function handleRequest(request, env) {
     let result;
 
     try {
-        // Initialize Firestore for requests that need it
-        let firestore = null;
-        let cache = null;
-
-        try {
-            if (env.FIREBASE_PROJECT_ID && env.FIREBASE_SERVICE_ACCOUNT && 
-                (endpoint === 'poi' || url.searchParams.has('lookup') || endpoint === 'graph')) {
-                const FIREBASE_PROJECT_ID = env.FIREBASE_PROJECT_ID;
-                const FIREBASE_SERVICE_ACCOUNT = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
-                firestore = new Firestore(FIREBASE_PROJECT_ID, FIREBASE_SERVICE_ACCOUNT);
-                cache = new HybridCache(firestore);
-            }
-        } catch (error) {
-            console.warn('Failed to initialize Firestore, continuing without persistent cache:', error.message);
-        }
-
         if (endpoint === 'poi') {
             result = await handlePoiRequest(request, env);
         } else if (endpoint === 'graph' && request.method === 'POST') {
@@ -1492,44 +1132,8 @@ async function handleRequest(request, env) {
             const isDeepSearch = body.deepSearch === true;
             result = await handleFriendGraph(body.users, env, isDeepSearch);
         } else if (url.searchParams.has('lookup')) {
-            const lookupQuery = url.searchParams.get('lookup');
-            if (firestore && cache) {
-                result = await handleUserLookup(lookupQuery, env, firestore, cache);
-            } else {
-                // Fallback to simple lookup without Firestore
-                subrequestManager.reset();
-                try {
-                    let user;
-                    if (isNaN(lookupQuery)) {
-                        const usernameResponse = await subrequestManager.makeRequest('https://users.roblox.com/v1/usernames/users', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ usernames: [lookupQuery] })
-                        });
-                        const partialUser = usernameResponse.data?.[0];
-                        if (!partialUser) throw new Error('User not found');
-                        user = await subrequestManager.makeRequest(`https://users.roblox.com/v1/users/${partialUser.id}`);
-                    } else {
-                        user = await subrequestManager.makeRequest(`https://users.roblox.com/v1/users/${parseInt(lookupQuery)}`);
-                    }
-
-                    result = {
-                        success: true,
-                        profile: {
-                            ...user,
-                            avatarUrl: 'https://placehold.co/150x150/1f222c/FFFFFF?text=?',
-                            friendCount: 0,
-                            isPotentialRisk: false,
-                            isPOI: false
-                        },
-                        friends: [],
-                        bannedFriends: [],
-                        banHistory: []
-                    };
-                } catch (error) {
-                    result = { success: false, error: error.message };
-                }
-            }
+             const lookupQuery = url.searchParams.get('lookup');
+            result = await handleUserLookup(lookupQuery, env);
         } else if (endpoint === 'bans' || endpoint === 'banlist') {
             result = await handleBanList(env);
         } else {
@@ -1561,3 +1165,4 @@ export default {
         return await handleRequest(request, env);
     }
 };
+

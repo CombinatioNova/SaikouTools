@@ -1201,6 +1201,15 @@
                     </div>
                 </label>
             </div>
+            
+            <!-- Shared Groups Toggle -->
+            <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
+                <span class="text-xs font-semibold text-gray-300">Show Shared Groups</span>
+                <label for="shared-groups-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" id="shared-groups-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
         </div>
 
         <!-- Main FAB Button -->
@@ -1243,6 +1252,7 @@
             const fabMainBtn = document.getElementById('fab-main-btn');
             const deepSearchBtn = document.getElementById('deep-search-btn');
             const formerFriendsToggle = document.getElementById('former-friends-toggle');
+            const sharedGroupsToggle = document.getElementById('shared-groups-toggle');
             const nodeSearch = document.getElementById('node-search');
             const searchResultsCount = document.getElementById('search-results-count');
             const nodeDetailCard = document.getElementById('node-detail-card');
@@ -1443,6 +1453,10 @@
 
             function toggleFormerFriends() {
                 svg.selectAll(".link.former").style("display", formerFriendsToggle.checked ? "inline" : "none");
+            }
+            
+            function toggleSharedGroups() {
+                svg.selectAll(".shared-group-indicator").style("display", sharedGroupsToggle.checked ? "inline" : "none");
             }
 
             function applySearchHighlight() {
@@ -1671,6 +1685,19 @@
             }
 
             function renderGraph({ nodes, links, formerLinks = [] }) {
+                // Filter out removed users (userId === -1)
+                nodes = nodes.filter(node => node.id !== -1);
+                links = links.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    return sourceId !== -1 && targetId !== -1;
+                });
+                formerLinks = formerLinks.filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    return sourceId !== -1 && targetId !== -1;
+                });
+                
                 const graphContainer = document.getElementById('graph-container');
                 const width = graphContainer.clientWidth;
                 const height = graphContainer.clientHeight;
@@ -1714,7 +1741,10 @@
                 nodeGroup.append("circle").attr("class", "node-background").attr("r", 15);
                 nodeGroup.append("circle").attr("class", "node-outline").attr("r", 15).attr("fill", "none");
                 nodeGroup.append("image").attr("href", d => d.avatarUrl || 'https://placehold.co/30x30/1f222c/FFFFFF?text=?').attr("x", -12).attr("y", -12).attr("width", 24).attr("height", 24).attr("clip-path", "circle(12px)");
-                nodeGroup.each(function(d) { if (d.isPOI) addPOIVisual(d3.select(this)); });
+                nodeGroup.each(function(d) { 
+                    if (d.isPOI) addPOIVisual(d3.select(this)); 
+                    if (d.hasSharedGroups) addSharedGroupIndicator(d3.select(this));
+                });
 
                 simulation.on("tick", () => {
                     link.attr("x1", d=>d.source.x).attr("y1", d=>d.source.y).attr("x2", d=>d.target.x).attr("y2", d=>d.target.y);
@@ -1734,6 +1764,10 @@
                 nodeElement.append("circle").attr("class", "poi-indicator").attr("cx", 10).attr("cy", -10).attr("r", 8).attr("fill", "#ef4444").attr("stroke", "#121315").attr("stroke-width", 2);
                 const icon = nodeElement.append("g").attr("class", "poi-icon").attr("transform", "translate(10, -10) scale(0.4)");
                 icon.append("path").attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z").attr("fill", "white").attr("transform", "translate(0, 10)");
+            }
+            
+            function addSharedGroupIndicator(nodeElement) {
+                nodeElement.append("circle").attr("class", "shared-group-indicator").attr("cx", -10).attr("cy", -10).attr("r", 6).attr("fill", "#3b82f6").attr("stroke", "#121315").attr("stroke-width", 2).style("display", sharedGroupsToggle.checked ? "inline" : "none");
             }
 
             // --- POI Functions ---
