@@ -38,7 +38,7 @@
             color: white;
             border-radius: 0.5rem;
             padding: 0.75rem;
-            transition: border-color: 0.3s ease;
+            transition: border-color 0.3s ease;
         }
 
         input:focus {
@@ -710,6 +710,30 @@
             overflow-y: auto;
         }
 
+        .profile-modal-content {
+            background-color: #121315;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .stat-card {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .poi-profile-container {
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
+        }
+
+        .poi-alert-card {
+            background-color: rgba(153, 27, 27, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+        }
+
         .modal-content textarea {
             resize: vertical;
             min-height: 80px;
@@ -901,6 +925,8 @@
             <div id="graph-container" class="graph-container mt-4">
                 <div id="graph-tooltip" class="tooltip"></div>
                 <svg id="graph-svg"></svg>
+                
+
 
                 <!-- Graph Controls -->
                 <div class="graph-controls">
@@ -1009,6 +1035,73 @@
                         </div>
                     </div>
 
+
+
+                    <!-- Loading Progress Bar -->
+                    <div id="card-loading-bar" class="hidden mt-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="animate-spin rounded-full h-3 w-3 border border-blue-300 border-t-transparent"></div>
+                            <span class="text-xs text-blue-300">Loading enhanced data...</span>
+                        </div>
+                        <div class="bg-gray-700 rounded-full h-1">
+                            <div id="card-loading-progress" class="bg-blue-400 h-1 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Account Status -->
+                    <div id="card-account-settings" class="hidden mt-4">
+                        <h4 class="text-xs font-semibold text-gray-300 mb-2">Account Status</h4>
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div class="text-center">
+                                <i id="card-inventory-icon" class="fas fa-question text-gray-400 block mb-1"></i>
+                                <span class="text-gray-400">Inventory</span>
+                            </div>
+                            <div class="text-center">
+                                <i id="card-verified-icon" class="fas fa-question text-gray-400 block mb-1"></i>
+                                <span class="text-gray-400">Verified</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Enhanced Activity Stats -->
+                        <div id="card-activity-stats" class="hidden mt-3 pt-3 border-t border-gray-600">
+                            <h5 class="text-xs font-semibold text-gray-300 mb-2">Activity & Stats</h5>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="text-center">
+                                    <span id="card-followers" class="block font-semibold text-blue-400">...</span>
+                                    <span class="text-gray-400">Followers</span>
+                                </div>
+                                <div class="text-center">
+                                    <span id="card-following" class="block font-semibold text-blue-400">...</span>
+                                    <span class="text-gray-400">Following</span>
+                                </div>
+                                <div class="text-center">
+                                    <span id="card-badges" class="block font-semibold text-yellow-400">...</span>
+                                    <span class="text-gray-400">Badges</span>
+                                </div>
+                                <div class="text-center">
+                                    <span id="card-places" class="block font-semibold text-green-400">...</span>
+                                    <span class="text-gray-400">Places</span>
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <!-- Activity Level -->
+                        <div id="card-activity-level" class="hidden mt-3 pt-3 border-t border-gray-600">
+                            <div class="flex items-center justify-center gap-2">
+                                <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                                <span class="text-xs font-medium text-gray-300">Activity:</span>
+                                <span id="card-activity-level-value" class="text-sm font-semibold text-purple-400">...</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Notable Badges -->
+                        <div id="card-notable-badges" class="hidden mt-3 pt-3 border-t border-gray-600">
+                            <h5 class="text-xs font-semibold text-gray-300 mb-2">Notable Badges</h5>
+                            <div id="card-notable-badges-list" class="flex flex-wrap gap-1"></div>
+                        </div>
+                    </div>
+
                     <div id="card-ban-info" class="ban-info hidden">
                         <h4><i class="fas fa-ban mr-1"></i> Banned User</h4>
                         <p id="ban-reason">Reason not available</p>
@@ -1017,7 +1110,7 @@
                     <div class="card-actions">
                         <button class="card-btn secondary" id="view-profile-btn">
                             <i class="fas fa-user"></i>
-                            <span>View Full Profile</span>
+                            <span>Full Profile</span>
                         </button>
                         
                         <div id="mark-poi-container">
@@ -1054,6 +1147,80 @@
             </div>
         </div>
     </main>
+
+    <!-- Floating Action Button -->
+    <div id="fab-container" class="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
+        <div id="fab-actions"
+            class="flex flex-col items-end gap-3 transition-all duration-300 ease-in-out transform scale-90 opacity-0 -translate-y-4 pointer-events-none">
+            <!-- Deep Search Button -->
+            <button id="deep-search-btn"
+                class="custom-button bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 w-44">
+                <i class="fas fa-search-plus"></i>
+                <span>Deep Search</span>
+            </button>
+            
+            <!-- Physics Controls -->
+            <div id="physics-controls" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44 space-y-2">
+                <div class="legend-title mb-1">Physics Controls</div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Charge</span><span id="charge-value">-350</span></label>
+                    <input type="range" id="charge-slider" min="-1000" max="0" value="-350" class="w-full">
+                </div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Link Distance</span><span id="distance-value">80</span></label>
+                    <input type="range" id="distance-slider" min="10" max="300" value="80" class="w-full">
+                </div>
+                <div>
+                    <label class="toggle-label text-xs"><span>Gravity</span><span id="gravity-value">0.1</span></label>
+                    <input type="range" id="gravity-slider" min="0" max="1" step="0.05" value="0.1" class="w-full">
+                </div>
+            </div>
+
+            <!-- Filter Legend -->
+            <div id="filter-legend" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44">
+                <div class="legend-title mb-2">Filter by Type</div>
+                <label class="toggle-label">
+                    <span>Staff</span>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="staff" checked>
+                    <span class="toggle-switch"></span>
+                </label>
+                <label class="toggle-label">
+                    <span>Banned/Terminated</span>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="banned" checked>
+                    <span class="toggle-switch"></span>
+                </label>
+                <label class="toggle-label">
+                    <span>New Account (&lt;90d)</span>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="new" checked>
+                    <span class="toggle-switch"></span>
+                </label>
+                <label class="toggle-label">
+                    <span>Normal User</span>
+                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="normal" checked>
+                    <span class="toggle-switch"></span>
+                </label>
+            </div>
+
+            <!-- Former Friends Toggle -->
+            <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
+                <span class="text-xs font-semibold text-gray-300">Show Former Friends</span>
+                <label for="former-friends-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" value="" id="former-friends-toggle" class="sr-only peer" checked>
+                    <div
+                        class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                </label>
+            </div>
+            
+
+        </div>
+
+        <!-- Main FAB Button -->
+        <button id="fab-main-btn"
+            class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+            <i class="fas fa-cog text-xl"></i>
+        </button>
+    </div>
 
     <!-- Lookup Modal -->
     <div id="lookup-modal" class="modal-overlay">
@@ -1137,86 +1304,30 @@
     </div>
 
 
-    <!-- Floating Action Button -->
-    <div id="fab-container" class="fixed bottom-6 right-6 z-30 flex flex-col items-center gap-3">
-        <div id="fab-actions"
-            class="flex flex-col items-center gap-3 transition-all duration-300 ease-in-out transform scale-90 opacity-0 -translate-y-4 pointer-events-none">
-            <!-- Deep Search Button -->
-            <button id="deep-search-btn"
-                class="custom-button bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 w-44">
-                <i class="fas fa-search-plus"></i>
-                <span>Deep Search</span>
-            </button>
-            
-            <!-- NEW: Physics Controls -->
-            <div id="physics-controls" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44 space-y-2">
-                <div class="legend-title mb-1">Physics Controls</div>
-                <div>
-                    <label class="toggle-label text-xs"><span>Charge</span><span id="charge-value">-350</span></label>
-                    <input type="range" id="charge-slider" min="-1000" max="0" value="-350" class="w-full">
-                </div>
-                <div>
-                    <label class="toggle-label text-xs"><span>Link Distance</span><span id="distance-value">80</span></label>
-                    <input type="range" id="distance-slider" min="10" max="300" value="80" class="w-full">
-                </div>
-                <div>
-                    <label class="toggle-label text-xs"><span>Gravity</span><span id="gravity-value">0.1</span></label>
-                    <input type="range" id="gravity-slider" min="0" max="1" step="0.05" value="0.1" class="w-full">
-                </div>
-            </div>
 
 
-            <!-- Filter Legend -->
-            <div id="filter-legend" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44">
-                <div class="legend-title mb-2">Filter by Type</div>
-                <label class="toggle-label">
-                    <span>Staff</span>
-                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="staff" checked>
-                    <span class="toggle-switch"></span>
-                </label>
-                <label class="toggle-label">
-                    <span>Banned/Terminated</span>
-                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="banned" checked>
-                    <span class="toggle-switch"></span>
-                </label>
-                <label class="toggle-label">
-                    <span>New Account (&lt;90d)</span>
-                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="new" checked>
-                    <span class="toggle-switch"></span>
-                </label>
-                <label class="toggle-label">
-                    <span>Normal User</span>
-                    <input type="checkbox" class="filter-checkbox sr-only peer" data-filter="normal" checked>
-                    <span class="toggle-switch"></span>
-                </label>
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content profile-modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white">Full Profile</h3>
+                <button id="close-profile-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-
-            <!-- Former Friends Toggle -->
-            <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
-                <span class="text-xs font-semibold text-gray-300">Show Former Friends</span>
-                <label for="former-friends-toggle" class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" id="former-friends-toggle" class="sr-only peer" checked>
-                    <div
-                        class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
-                    </div>
-                </label>
+            <div id="profile-modal-content">
+                <!-- Profile content will be loaded here -->
             </div>
-            
-            <!-- Shared Groups Toggle -->
-            <div class="flex items-center justify-between gap-2 bg-[#1f222c] p-2 rounded-lg shadow-lg w-44">
-                <span class="text-xs font-semibold text-gray-300">Show Shared Groups</span>
-                <label for="shared-groups-toggle" class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" value="" id="shared-groups-toggle" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+            <div class="flex gap-3 mt-6 pt-4 border-t border-gray-700">
+                <button id="open-lookup-btn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                    <i class="fas fa-external-link-alt mr-2"></i>
+                    Open Full Lookup
+                </button>
+                <button id="close-profile-modal-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors">
+                    Close
+                </button>
             </div>
         </div>
-
-        <!-- Main FAB Button -->
-        <button id="fab-main-btn"
-            class="w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
-            <i class="fas fa-cog text-xl"></i>
-        </button>
     </div>
 
     <!-- Loading Modal -->
@@ -1252,7 +1363,7 @@
             const fabMainBtn = document.getElementById('fab-main-btn');
             const deepSearchBtn = document.getElementById('deep-search-btn');
             const formerFriendsToggle = document.getElementById('former-friends-toggle');
-            const sharedGroupsToggle = document.getElementById('shared-groups-toggle');
+
             const nodeSearch = document.getElementById('node-search');
             const searchResultsCount = document.getElementById('search-results-count');
             const nodeDetailCard = document.getElementById('node-detail-card');
@@ -1325,19 +1436,36 @@
             userInput.addEventListener('keydown', e => e.key === 'Enter' && (e.preventDefault(), addSeedUser()));
             userInput.addEventListener('input', updateAddButtonState);
             generateGraphBtn.addEventListener('click', () => generateGraph(false));
-            fabMainBtn.addEventListener('click', () => fabContainer.classList.toggle('open'));
+            fabMainBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fabContainer.classList.toggle('open');
+            });
             deepSearchBtn.addEventListener('click', () => (fabContainer.classList.remove('open'), generateGraph(true)));
             chargeSlider.addEventListener('input', updatePhysics);
             distanceSlider.addEventListener('input', updatePhysics);
             gravitySlider.addEventListener('input', updatePhysics);
             document.addEventListener('change', e => e.target.classList.contains('filter-checkbox') && filterNodes());
             formerFriendsToggle.addEventListener('change', toggleFormerFriends);
+
             nodeSearch.addEventListener('input', e => (currentSearchTerm = e.target.value.trim().toLowerCase(), applySearchHighlight()));
             closeCardBtn.addEventListener('click', hideNodeCard);
             addToNetworkBtn.addEventListener('click', addSelectedNodeToNetwork);
-            viewProfileBtn.addEventListener('click', () => selectedNode && showLookupModal(selectedNode.name || selectedNode.id));
+            viewProfileBtn.addEventListener('click', () => {
+                if (selectedNode) {
+                    showProfileModal(selectedNode.id);
+                }
+            });
             lookupModal.addEventListener('click', e => e.target === lookupModal && lookupModal.classList.remove('flex'));
-            document.addEventListener('click', e => !nodeDetailCard.contains(e.target) && !e.target.closest('.node') && hideNodeCard());
+            document.addEventListener('click', e => {
+                // Close node detail card when clicking outside
+                if (!nodeDetailCard.contains(e.target) && !e.target.closest('.node')) {
+                    hideNodeCard();
+                }
+                // Close FAB when clicking outside
+                if (!fabContainer.contains(e.target)) {
+                    fabContainer.classList.remove('open');
+                }
+            });
             userTagsContainer.addEventListener('click', e => {
                 if (e.target.closest('.remove-btn')) {
                     const username = e.target.closest('.user-tag').dataset.username;
@@ -1355,6 +1483,16 @@
             poiModal.addEventListener('click', e => e.target === poiModal && poiModal.classList.remove('flex'));
             poiDetailsCloseBtn.addEventListener('click', () => poiDetailsModal.classList.remove('flex'));
             poiDetailsModal.addEventListener('click', e => e.target === poiDetailsModal && poiDetailsModal.classList.remove('flex'));
+            
+            // Profile modal listeners
+            document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('close-profile-modal-btn').addEventListener('click', () => document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('profile-modal').addEventListener('click', e => e.target === document.getElementById('profile-modal') && document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('open-lookup-btn').addEventListener('click', () => {
+                if (selectedNode) {
+                    window.open(`lookup.html?lookup=${selectedNode.id}`, '_blank');
+                }
+            });
             
             // Auth listeners
             loginBtn.addEventListener('click', () => showLoginModal());
@@ -1455,9 +1593,7 @@
                 svg.selectAll(".link.former").style("display", formerFriendsToggle.checked ? "inline" : "none");
             }
             
-            function toggleSharedGroups() {
-                svg.selectAll(".shared-group-indicator").style("display", sharedGroupsToggle.checked ? "inline" : "none");
-            }
+
 
             function applySearchHighlight() {
                 const allNodes = svg.selectAll('.node');
@@ -1502,6 +1638,7 @@
             async function showNodeCard(nodeData) {
                 selectedNode = nodeData;
 
+                // Set basic info immediately
                 document.getElementById('card-name').textContent = nodeData.displayName || nodeData.name || 'Unknown';
                 document.getElementById('card-username').textContent = `@${nodeData.name || 'unknown'}`;
                 document.getElementById('card-id').textContent = `ID: ${nodeData.id}`;
@@ -1511,10 +1648,51 @@
                 avatar.src = nodeData.avatarUrl || 'https://placehold.co/60x60/1f222c/FFFFFF?text=?';
                 avatar.className = `card-avatar ${getNodeType(nodeData)}`;
                 
+                // Clear and set loading state for dynamic content
                 const cardFriends = document.getElementById('card-friends');
                 const cardAge = document.getElementById('card-age');
                 cardFriends.textContent = '...';
                 cardAge.textContent = '...';
+
+                // Clear all enhanced account status containers and hide them
+                const accountSettingsContainer = document.getElementById('card-account-settings');
+                const activityStatsContainer = document.getElementById('card-activity-stats');
+                const notableBadgesContainer = document.getElementById('card-notable-badges');
+                const loadingBar = document.getElementById('card-loading-bar');
+                const loadingProgress = document.getElementById('card-loading-progress');
+                
+                // Hide all containers initially and clear values
+                accountSettingsContainer.classList.add('hidden');
+                if (activityStatsContainer) activityStatsContainer.classList.add('hidden');
+                if (notableBadgesContainer) notableBadgesContainer.classList.add('hidden');
+                
+                // Clear and reset all icons to default state
+                const inventoryIcon = document.getElementById('card-inventory-icon');
+                const verifiedIcon = document.getElementById('card-verified-icon');
+                if (inventoryIcon) inventoryIcon.className = 'fas fa-question text-gray-400 block mb-1';
+                if (verifiedIcon) verifiedIcon.className = 'fas fa-question text-gray-400 block mb-1';
+                
+                // Clear activity stats
+                if (document.getElementById('card-followers')) document.getElementById('card-followers').textContent = '...';
+                if (document.getElementById('card-following')) document.getElementById('card-following').textContent = '...';
+                if (document.getElementById('card-badges')) document.getElementById('card-badges').textContent = '...';
+                if (document.getElementById('card-places')) document.getElementById('card-places').textContent = '...';
+                if (document.getElementById('card-activity-level-value')) document.getElementById('card-activity-level-value').textContent = '...';
+                if (document.getElementById('card-activity-level')) document.getElementById('card-activity-level').classList.add('hidden');
+
+                
+                // Clear notable badges
+                if (document.getElementById('card-notable-badges-list')) document.getElementById('card-notable-badges-list').innerHTML = '';
+                
+                // Show loading bar and start progress
+                loadingBar.classList.remove('hidden');
+                loadingProgress.style.width = '10%';
+                
+                // Add subtle blur effect to content (but not buttons)
+                const cardContent = nodeDetailCard.querySelector('.card-header');
+                const cardStats = nodeDetailCard.querySelector('.card-stats');
+                if (cardContent) cardContent.style.filter = 'blur(0.5px)';
+                if (cardStats) cardStats.style.filter = 'blur(0.5px)';
 
                 const banInfo = document.getElementById('card-ban-info');
                 banInfo.classList.toggle('hidden', !(nodeData.isBanned && nodeData.banReason));
@@ -1529,18 +1707,174 @@
                 updatePOIButtonUI();
                 nodeDetailCard.classList.add('show');
 
-                // Asynchronously fetch full details
+
+
+                // Asynchronously fetch full details with progress updates
+                if (loadingProgress) loadingProgress.style.width = '30%';
+                
                 const fullDetails = await getNodeDetails(nodeData.id);
+                
+                if (loadingProgress) loadingProgress.style.width = '70%';
+                
                 if (selectedNode && selectedNode.id === nodeData.id) { // Check if card is still open for this node
                     Object.assign(nodeData, fullDetails); // Update original node data
                     cardFriends.textContent = fullDetails.friendCount ?? 'N/A';
-                    if (fullDetails.created) {
+                    
+                    // Use the enhanced age category from the worker if available
+                    if (fullDetails.ageCategory) {
+                        cardAge.textContent = fullDetails.ageCategory;
+                    } else if (fullDetails.created) {
+                        // Fallback to local calculation if worker data not available
                         const ageMs = Date.now() - new Date(fullDetails.created).getTime();
                         const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
-                        cardAge.textContent = ageDays < 365 ? `${ageDays}d` : `${Math.floor(ageDays / 365)}y`;
+                        const years = Math.floor(ageDays / 365);
+                        const months = Math.floor((ageDays % 365) / 30);
+                        
+                        if (years > 0) {
+                            if (months > 0) {
+                                cardAge.textContent = `${years}y ${months}m`;
+                            } else {
+                                cardAge.textContent = `${years}y`;
+                            }
+                        } else if (ageDays > 30) {
+                            cardAge.textContent = `${months}m`;
+                        } else {
+                            cardAge.textContent = `${ageDays}d`;
+                        }
                     } else {
                         cardAge.textContent = 'N/A';
                     }
+
+                    // Remove loading effects
+                    const cardContent = nodeDetailCard.querySelector('.card-header');
+                    const cardStats = nodeDetailCard.querySelector('.card-stats');
+                    if (cardContent) cardContent.style.filter = 'none';
+                    if (cardStats) cardStats.style.filter = 'none';
+                    
+                    // Hide loading bar
+                    const loadingBar = document.getElementById('card-loading-bar');
+                    if (loadingBar) loadingBar.classList.add('hidden');
+                    
+                    // Update enhanced account settings if available
+                    console.log('Updating account settings with fullDetails:', fullDetails);
+                    const accountSettingsContainer = document.getElementById('card-account-settings');
+                    const activityStatsContainer = document.getElementById('card-activity-stats');
+                    const notableBadgesContainer = document.getElementById('card-notable-badges');
+                    
+                    let hasAccountData = false;
+                    
+                    // Update basic account status icons (inventory and verification only)
+                    console.log('Checking basic account status:', {
+                        inventoryHidden: fullDetails.inventoryHidden,
+                        hasVerifiedBadge: fullDetails.hasVerifiedBadge
+                    });
+                    
+                    if (fullDetails.inventoryHidden !== undefined || fullDetails.hasVerifiedBadge !== undefined) {
+                        hasAccountData = true;
+                        console.log('Has basic account data, updating icons');
+
+                        // Update inventory icon
+                        const inventoryIcon = document.getElementById('card-inventory-icon');
+                        if (fullDetails.inventoryHidden !== undefined && fullDetails.inventoryHidden !== null) {
+                            if (fullDetails.inventoryHidden === false) {
+                                inventoryIcon.className = 'fas fa-eye text-green-400 block mb-1';
+                                console.log('Set inventory icon to eye (visible)');
+                            } else {
+                                inventoryIcon.className = 'fas fa-eye-slash text-red-400 block mb-1';
+                                console.log('Set inventory icon to eye-slash (hidden)');
+                            }
+                        } else {
+                            inventoryIcon.className = 'fas fa-question-circle text-gray-400 block mb-1';
+                            console.log('Set inventory icon to question (unknown)');
+                        }
+
+                        // Update verified icon
+                        const verifiedIcon = document.getElementById('card-verified-icon');
+                        if (fullDetails.hasVerifiedBadge !== undefined) {
+                            if (fullDetails.hasVerifiedBadge) {
+                                verifiedIcon.className = 'fas fa-check-circle text-green-400 block mb-1';
+                                console.log('Set verified icon to check-circle (verified)');
+                            } else {
+                                verifiedIcon.className = 'fas fa-user text-gray-400 block mb-1';
+                                console.log('Set verified icon to user (not verified)');
+                            }
+                        } else {
+                            verifiedIcon.className = 'fas fa-question-circle text-gray-400 block mb-1';
+                            console.log('Set verified icon to question (unknown)');
+                        }
+                    } else {
+                        console.log('No basic account data found');
+                    }
+                    
+
+                    
+                    // Update activity statistics
+                    console.log('Checking activity stats:', {
+                        followersCount: fullDetails.followersCount,
+                        followingCount: fullDetails.followingCount,
+                        badgeCount: fullDetails.badgeCount,
+                        placeCount: fullDetails.placeCount,
+                        activityLevel: fullDetails.activityLevel
+                    });
+                    
+                    if (fullDetails.followersCount !== undefined || fullDetails.followingCount !== undefined || 
+                        fullDetails.badgeCount !== undefined || fullDetails.placeCount !== undefined) {
+                        hasAccountData = true;
+                        console.log('Has activity stats data, updating display');
+                        
+                        document.getElementById('card-followers').textContent = fullDetails.followersCount !== undefined ? fullDetails.followersCount.toLocaleString() : '?';
+                        document.getElementById('card-following').textContent = fullDetails.followingCount !== undefined ? fullDetails.followingCount.toLocaleString() : '?';
+                        document.getElementById('card-badges').textContent = fullDetails.badgeCount ?? '?';
+                        document.getElementById('card-places').textContent = fullDetails.placeCount ?? '?';
+                        
+                        // Show activity level if available
+                        if (fullDetails.activityLevel) {
+                            document.getElementById('card-activity-level-value').textContent = fullDetails.activityLevel;
+                            document.getElementById('card-activity-level').classList.remove('hidden');
+                        }
+
+                        
+                        activityStatsContainer.classList.remove('hidden');
+                        console.log('Showed activity stats container');
+                    } else {
+                        console.log('No activity stats data found');
+                    }
+                    
+                    // Update notable badges
+                    console.log('Checking notable badges:', fullDetails.notableBadges);
+                    
+                    if (fullDetails.notableBadges && fullDetails.notableBadges.length > 0) {
+                        hasAccountData = true;
+                        console.log(`Has ${fullDetails.notableBadges.length} notable badges, updating display`);
+                        
+                        const badgesList = document.getElementById('card-notable-badges-list');
+                        badgesList.innerHTML = fullDetails.notableBadges.map(badge => 
+                            `<span class="inline-block bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded text-xs mr-1 mb-1" title="${badge.description || ''}">${badge.name}</span>`
+                        ).join('');
+                        
+                        notableBadgesContainer.classList.remove('hidden');
+                        console.log('Showed notable badges container');
+                    } else {
+                        console.log('No notable badges found');
+                    }
+                    
+                    // Complete loading progress
+                    if (loadingProgress) loadingProgress.style.width = '100%';
+                    
+                    // Show/hide the entire account settings container
+                    console.log('Final hasAccountData status:', hasAccountData);
+                    if (hasAccountData) {
+                        accountSettingsContainer.classList.remove('hidden');
+                        console.log('Showed account settings container');
+                    } else {
+                        accountSettingsContainer.classList.add('hidden');
+                        console.log('Hid account settings container - no data available');
+                    }
+                    
+                    // Hide loading bar after a brief delay
+                    setTimeout(() => {
+                        if (loadingBar) loadingBar.classList.add('hidden');
+                    }, 500);
                 }
             }
 
@@ -1550,10 +1884,27 @@
                 }
                 try {
                     // Using the DATA_WORKER's lookup endpoint
+                    console.log(`Fetching enhanced details for user ${userId}`);
                     const response = await fetch(`${DATA_WORKER_URL}?lookup=${userId}`);
                     if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
+                    console.log(`Enhanced data received for user ${userId}:`, data);
+                    
                     if (data.success && data.profile) {
+                        console.log(`Profile data for user ${userId}:`, data.profile);
+                        console.log(`Enhanced fields check:`, {
+                            isPremium: data.profile.isPremium,
+                            inventoryHidden: data.profile.inventoryHidden,
+                            hasVerifiedBadge: data.profile.hasVerifiedBadge,
+                            canTrade: data.profile.canTrade,
+                            canMessage: data.profile.canMessage,
+                            followersCount: data.profile.followersCount,
+                            followingCount: data.profile.followingCount,
+                            badgeCount: data.profile.badgeCount,
+                            placeCount: data.profile.placeCount,
+                            notableBadges: data.profile.notableBadges
+                        });
+                        
                         nodeDetailCache.set(userId, data.profile);
                         return data.profile;
                     }
@@ -1661,6 +2012,8 @@
                     if (data.nodes && data.links) {
                         renderGraph(data);
                         showNotification('Graph generated successfully!', 'success');
+                        
+
                     } else {
                         throw new Error(data.error || 'No graph data returned.');
                     }
@@ -1724,7 +2077,11 @@
                     .attr("class", d => `node ${getNodeType(d)} ${seedUsers.has(d.name) || seedUsers.has(d.id.toString()) ? 'seed-user' : ''}`)
                     .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended))
                     .on('mouseover', function (event, d) {
-                        tooltip.style("opacity", 1).html(`<p class="font-bold text-sm">${d.displayName||d.name}</p><p class="text-xs text-gray-400">@${d.name||d.id}</p>`);
+                        let tooltipContent = `<p class="font-bold text-sm">${d.displayName||d.name}</p><p class="text-xs text-gray-400">@${d.name||d.id}</p>`;
+                        
+
+                        
+                        tooltip.style("opacity", 1).html(tooltipContent);
                         const connected = new Set([d.id, ...links.flatMap(l => l.source.id === d.id ? [l.target.id] : l.target.id === d.id ? [l.source.id] : [])]);
                         nodeGroup.style('opacity', n => connected.has(n.id) ? 1.0 : 0.2);
                         link.style('stroke-opacity', l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.1);
@@ -1743,7 +2100,6 @@
                 nodeGroup.append("image").attr("href", d => d.avatarUrl || 'https://placehold.co/30x30/1f222c/FFFFFF?text=?').attr("x", -12).attr("y", -12).attr("width", 24).attr("height", 24).attr("clip-path", "circle(12px)");
                 nodeGroup.each(function(d) { 
                     if (d.isPOI) addPOIVisual(d3.select(this)); 
-                    if (d.hasSharedGroups) addSharedGroupIndicator(d3.select(this));
                 });
 
                 simulation.on("tick", () => {
@@ -1766,9 +2122,7 @@
                 icon.append("path").attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z").attr("fill", "white").attr("transform", "translate(0, 10)");
             }
             
-            function addSharedGroupIndicator(nodeElement) {
-                nodeElement.append("circle").attr("class", "shared-group-indicator").attr("cx", -10).attr("cy", -10).attr("r", 6).attr("fill", "#3b82f6").attr("stroke", "#121315").attr("stroke-width", 2).style("display", sharedGroupsToggle.checked ? "inline" : "none");
-            }
+
 
             // --- POI Functions ---
             function handleMarkPOI() { if (!currentUser) return showLoginModal(handleMarkPOI); poiTargetNode = selectedNode; poiModal.classList.add('flex'); poiReasonInput.focus(); }
@@ -1944,6 +2298,151 @@
                 showNotification('You have been logged out.', 'info'); 
             }
 
+            // --- Profile Modal ---
+            async function showProfileModal(userId) {
+                const profileModal = document.getElementById('profile-modal');
+                const profileModalContent = document.getElementById('profile-modal-content');
+                
+                profileModal.classList.add('flex');
+                profileModalContent.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Loading profile...</p></div>`;
+                
+                try {
+                    // Get the enhanced details we already have
+                    const fullDetails = await getNodeDetails(userId);
+                    
+                    if (fullDetails && selectedNode) {
+                        renderProfileInModal(selectedNode, fullDetails);
+                    } else {
+                        profileModalContent.innerHTML = `<div class="text-center p-8 text-red-400"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p>Failed to load profile data</p></div>`;
+                    }
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    profileModalContent.innerHTML = `<div class="text-center p-8 text-red-400"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p>Error loading profile</p></div>`;
+                }
+            }
+
+            function renderProfileInModal(nodeData, fullDetails) {
+                const profileModalContent = document.getElementById('profile-modal-content');
+                
+                const createdDate = fullDetails.created ? new Date(fullDetails.created).toLocaleDateString() : 'Unknown';
+                const accountAge = fullDetails.created ? calculateAccountAge(fullDetails.created) : 'Unknown';
+                
+                const banInfoHtml = fullDetails.isBanned ? 
+                    `<div class="bg-red-900/20 border border-red-800 rounded-lg p-4"><div class="flex items-center gap-3 mb-2"><i class="fas fa-ban text-red-400 text-xl"></i><span class="font-semibold text-red-300">Account Banned</span></div><div class="text-sm"><p class="text-gray-300">This account has been banned from Roblox.</p></div></div>` :
+                    `<div class="bg-green-900/20 border border-green-800 rounded-lg p-4"><div class="flex items-center gap-3"><i class="fas fa-check-circle text-green-400 text-xl"></i><span class="font-semibold text-green-300">Account Active</span></div></div>`;
+
+                profileModalContent.innerHTML = `
+                    <div class="bg-[#15171c] p-6 rounded-lg shadow-lg ${nodeData.isPOI ? 'poi-profile-container' : ''}">
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                            <img src="${fullDetails.avatarUrl || nodeData.avatar}" alt="User Avatar" class="w-24 h-24 rounded-full border-4 border-gray-700">
+                            <div class="sm:ml-6 mt-4 sm:mt-0">
+                                <h2 class="text-2xl font-bold">${nodeData.displayName || nodeData.name}</h2>
+                                <p class="text-gray-400">@${nodeData.name}</p>
+                                <p class="text-sm text-gray-500 mt-1">ID: ${nodeData.id}</p>
+                                ${fullDetails.accountType ? `<p class="text-xs text-blue-400 mt-1"><i class="fas fa-tag mr-1"></i>${fullDetails.accountType}</p>` : ''}
+                            </div>
+                        </div>
+                        
+                        ${nodeData.isPOI ? `<div class="poi-alert-card mt-4 p-4 rounded-lg"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-2xl mr-3"></i><div><h4 class="text-lg font-bold text-red-300">Person of Interest</h4><p class="text-sm text-gray-300">This user has been flagged by SDIS.</p></div></div></div>` : ''}
+                        
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-2">About</h4>
+                            <p class="text-gray-300 text-sm">${fullDetails.description || 'No bio available.'}</p>
+                        </div>
+                        
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-3">Stats</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div class="stat-card text-center">
+                                    <p class="text-xs text-gray-400">Join Date</p>
+                                    <p class="font-bold text-sm">${createdDate}</p>
+                                </div>
+                                <div class="stat-card text-center">
+                                    <p class="text-xs text-gray-400">Account Age</p>
+                                    <p class="font-bold text-sm">${accountAge}</p>
+                                </div>
+                                <div class="stat-card text-center">
+                                    <p class="text-xs text-gray-400">Friends</p>
+                                    <p class="font-bold text-sm">${fullDetails.friendCount ?? 'N/A'}</p>
+                                </div>
+                                ${fullDetails.followersCount !== undefined ? `<div class="stat-card text-center"><p class="text-xs text-gray-400">Followers</p><p class="font-bold text-sm">${fullDetails.followersCount.toLocaleString()}</p></div>` : ''}
+                                ${fullDetails.followingCount !== undefined ? `<div class="stat-card text-center"><p class="text-xs text-gray-400">Following</p><p class="font-bold text-sm">${fullDetails.followingCount.toLocaleString()}</p></div>` : ''}
+                                ${fullDetails.badgeCount !== undefined ? `<div class="stat-card text-center"><p class="text-xs text-gray-400">Badges</p><p class="font-bold text-sm">${fullDetails.badgeCount}</p></div>` : ''}
+                                ${fullDetails.placeCount !== undefined ? `<div class="stat-card text-center"><p class="text-xs text-gray-400">Places</p><p class="font-bold text-sm">${fullDetails.placeCount}</p></div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-3">Account Status</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="stat-card flex items-center gap-2">
+                                    <i class="fas ${fullDetails.inventoryHidden === false ? 'fa-eye text-green-400' : fullDetails.inventoryHidden === true ? 'fa-eye-slash text-red-400' : 'fa-question-circle text-gray-400'}"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Inventory</p>
+                                        <p class="font-semibold text-xs">${fullDetails.inventoryHidden === false ? 'Visible' : fullDetails.inventoryHidden === true ? 'Hidden' : 'Unknown'}</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card flex items-center gap-2">
+                                    <i class="fas ${fullDetails.hasVerifiedBadge ? 'fa-check-circle text-green-400' : 'fa-user text-gray-400'}"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-400">Verification</p>
+                                        <p class="font-semibold text-xs">${fullDetails.hasVerifiedBadge ? 'Verified' : 'Not Verified'}</p>
+                                    </div>
+                                </div>
+                                ${fullDetails.activityLevel ? `<div class="stat-card flex items-center gap-2"><i class="fas fa-chart-line text-purple-400"></i><div><p class="text-xs text-gray-400">Activity</p><p class="font-semibold text-xs">${fullDetails.activityLevel}</p></div></div>` : ''}
+                            </div>
+                        </div>
+                        
+                        ${fullDetails.notableBadges && fullDetails.notableBadges.length > 0 ? `
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-3">Notable Badges</h4>
+                            <div class="flex flex-wrap gap-2">
+                                ${fullDetails.notableBadges.map(badge => `
+                                    <span class="inline-block bg-yellow-600/20 text-yellow-300 px-3 py-1 rounded-full text-xs font-medium border border-yellow-600/30" title="${badge.description || ''}">
+                                        ${badge.name}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>` : ''}
+                        
+                        ${fullDetails.groups && fullDetails.groups.length > 0 ? `
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-3">Groups (${fullDetails.groups.length})</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                                ${fullDetails.groups.slice(0, 6).map(group => `
+                                    <div class="stat-card flex items-center gap-2 p-2">
+                                        <i class="fas fa-users text-blue-400 text-sm"></i>
+                                        <div class="flex-grow min-w-0">
+                                            <p class="font-semibold text-xs truncate">${group.name}</p>
+                                            <p class="text-xs text-gray-400">${group.role || 'Member'}</p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${fullDetails.groups.length > 6 ? `<p class="text-xs text-gray-400 mt-2 text-center">And ${fullDetails.groups.length - 6} more groups...</p>` : ''}
+                        </div>` : ''}
+                        
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <h4 class="font-bold text-lg mb-2">Ban Status</h4>
+                            ${banInfoHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            function calculateAccountAge(createdDate) {
+                const created = new Date(createdDate);
+                const now = new Date();
+                const diffTime = Math.abs(now - created);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 30) return `${diffDays}d`;
+                if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo`;
+                const years = Math.floor(diffDays / 365);
+                const months = Math.floor((diffDays % 365) / 30);
+                return months > 0 ? `${years}y ${months}mo` : `${years}y`;
+            }
+
             // --- Lookup Modal ---
             async function showLookupModal(query) {
                 lookupModal.classList.add('flex');
@@ -1985,6 +2484,8 @@
                     </div>`;
                 lookupModalContentTarget.innerHTML = contentHTML;
             }
+
+
 
             // --- Initial Load ---
             checkAuth();

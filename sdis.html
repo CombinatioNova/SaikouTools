@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+    <title>SDIS | Department of Institutional Security</title>
+    <meta name="description" content="Secure Department of Institutional Security administration panel for ban management and oversight." />
+    <link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png"
+        onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #0a0b0d;
+            color: white;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #1a1d29 0%, #0f1419 100%);
+        }
+
+        .card {
+            background: linear-gradient(135deg, #1f222c 0%, #15171c 100%);
+            border: 1px solid #353a4a;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-field {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-active {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-banned {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-pending {
+            background-color: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .table-container {
+            background: #1f222c;
+            border-radius: 0.75rem;
+            border: 1px solid #353a4a;
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #2d3748;
+            padding: 1rem;
+            border-bottom: 1px solid #353a4a;
+        }
+
+        .table-row {
+            padding: 1.25rem;
+            border-bottom: 1px solid #353a4a;
+            transition: background-color 0.2s ease;
+        }
+
+        .table-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1f222c 0%, #15171c 100%);
+            border: 1px solid #353a4a;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            z-index: 100;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .loading-spinner {
+            border: 2px solid #353a4a;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .avatar-placeholder {
+            background: linear-gradient(135deg, #374151, #1f2937);
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .security-header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border: 1px solid #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .audit-log {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            background: #0f1419;
+            border: 1px solid #353a4a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .audit-entry {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #353a4a;
+        }
+
+        .audit-entry:last-child {
+            border-bottom: none;
+        }
+
+        .audit-timestamp {
+            color: #6b7280;
+        }
+
+        .audit-action {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .audit-user {
+            color: #10b981;
+        }
+
+        .audit-target {
+            color: #f59e0b;
+        }
+
+        .poi-indicator {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 2px solid #0a0b0d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
+        }
+
+        .poi-border {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+        }
+
+
+
+        /* Fixed loading spinner that doesn't expand buttons */
+        .loading-spinner-inline {
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Horizontal progress bar for filtering */
+        .progress-bar-container {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background-color: #353a4a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+            animation: progress-slide 1.5s ease-in-out infinite;
+            width: 30%;
+        }
+
+        @keyframes progress-slide {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(250%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Loading overlay for ban list */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 20, 25, 0.8);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 0.75rem;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .profile-modal-content {
+            background-color: #121315;
+            max-width: 900px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1f222c 0%, #15171c 100%);
+            border: 1px solid #353a4a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .clickable-username {
+            color: #3b82f6;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .clickable-username:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        /* Custom button style matching netvis/lookup */
+        .custom-button {
+            font-weight: bold;
+            border-radius: 0.5rem;
+            color: #121315;
+            background-color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            opacity: 1;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .custom-button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        .custom-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal styles matching netvis/lookup */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.flex {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1f222c 0%, #15171c 100%);
+            border: 1px solid #353a4a;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="container mx-auto px-4 md:px-0">
+        <nav class="max-w-7xl mx-auto my-4 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+            <a class="flex items-center" href="/index.html">
+                <span class="text-white font-bold text-xl">[SDIS] Department of Institutional Security</span>
+            </a>
+            <div>
+                <!-- Logged Out View -->
+                <div id="login-container">
+                    <button id="login-btn" class="custom-button !bg-blue-600 !text-white !px-4 !py-2 text-sm">
+                        <i class="fas fa-sign-in-alt mr-2"></i>SDIS Login
+                    </button>
+                </div>
+                <!-- Logged In View -->
+                <div id="user-status-container" class="hidden flex items-center gap-3">
+                    <div class="text-right">
+                        <div id="user-status-name" class="text-white font-semibold text-sm"></div>
+                        <div id="user-status-role" class="text-gray-400 text-xs"></div>
+                    </div>
+                    <img id="user-status-avatar" src="" alt="User Avatar" class="w-12 h-12 rounded-full border-2 border-blue-500 mx-3">
+                    <button id="logout-btn" class="custom-button !bg-red-600 !text-white !px-3 !py-1.5 text-xs">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Authentication Section -->
+        <div id="auth-section" class="max-w-md mx-auto">
+            <div class="card p-8 text-center">
+                <div class="mb-6">
+                    <i class="fas fa-lock text-4xl text-blue-400 mb-4"></i>
+                    <h2 class="text-2xl font-bold mb-2">SDIS Authentication</h2>
+                    <p class="text-gray-400">Enter your security clearance code</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <input type="password" id="auth-code" class="input-field w-full" 
+                           placeholder="Security Code" autocomplete="off">
+                    <button id="auth-submit" class="btn-primary w-full">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Authenticate
+                    </button>
+                </div>
+                
+                <div id="auth-error" class="mt-4 text-red-400 text-sm hidden"></div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard" class="hidden">
+            <!-- Dashboard Title -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold">SDIS Administration</h1>
+                <p class="text-gray-400">Department of Institutional Security</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Bans</p>
+                            <p id="total-bans" class="text-2xl font-bold">-</p>
+                        </div>
+                        <i class="fas fa-ban text-red-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Active Today</p>
+                            <p id="bans-today" class="text-2xl font-bold">-</p>
+                        </div>
+                        <i class="fas fa-calendar-day text-yellow-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">This Week</p>
+                            <p id="bans-week" class="text-2xl font-bold">-</p>
+                        </div>
+                        <i class="fas fa-chart-line text-green-400 text-2xl"></i>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">System Status</p>
+                            <p id="system-status" class="text-lg font-bold text-green-400">ONLINE</p>
+                        </div>
+                        <i class="fas fa-server text-blue-400 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4 mb-8">
+                <button id="issue-ban-btn" class="btn-danger">
+                    <i class="fas fa-gavel mr-2"></i>
+                    Issue Ban
+                </button>
+                <button id="revoke-ban-btn" class="btn-success">
+                    <i class="fas fa-undo mr-2"></i>
+                    Revoke Ban
+                </button>
+                <button id="refresh-data-btn" class="btn-primary">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Refresh Data
+                </button>
+                <button id="view-audit-btn" class="btn-primary">
+                    <i class="fas fa-clipboard-list mr-2"></i>
+                    Audit Log
+                </button>
+            </div>
+
+            <!-- Ban List -->
+            <div class="card">
+                <div class="table-header">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-bold">Active Bans</h3>
+                        <div class="flex items-center gap-4">
+                            <input type="text" id="search-bans" class="input-field" 
+                                   placeholder="Search users...">
+                            <select id="filter-type" class="input-field">
+                                <option value="">All Types</option>
+                                <option value="permban">Permanent</option>
+                                <option value="tempban">Temporary</option>
+                                <option value="warning">Warning</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="ban-list-container" class="relative min-h-[400px]">
+                    <div id="ban-list" class="min-h-[400px]">
+                        <div class="flex items-center justify-center h-64">
+                            <div class="loading-spinner"></div>
+                            <span class="ml-3 text-gray-400">Loading ban data...</span>
+                        </div>
+                    </div>
+                    <div id="ban-list-loading" class="loading-overlay hidden">
+                        <div class="text-center">
+                            <div class="progress-bar-container w-64">
+                                <div class="progress-bar"></div>
+                            </div>
+                            <p class="text-gray-300 mt-2">Filtering bans...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div id="pagination-container" class="hidden mt-6 flex items-center justify-between">
+                    <div class="text-sm text-gray-400">
+                        Showing <span id="showing-range">1-30</span> of <span id="total-count">0</span> bans
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="prev-page" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-chevron-left mr-1"></i>Previous
+                        </button>
+                        <div id="page-numbers" class="flex items-center gap-1">
+                            <!-- Page numbers will be inserted here -->
+                        </div>
+                        <button id="next-page" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issue Ban Modal -->
+    <div id="issue-ban-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Issue Ban</h3>
+                <button id="close-issue-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="issue-ban-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Target User</label>
+                    <input type="text" id="ban-username" class="input-field w-full" 
+                           placeholder="Enter Roblox username" required>
+                    <div id="user-preview" class="hidden mt-4 p-4 bg-gray-800 rounded-lg border border-gray-600">
+                        <div class="flex items-center gap-4">
+                            <img id="preview-avatar" src="" alt="User Avatar" class="w-20 h-20 rounded-full border-2 border-gray-500 p-1">
+                            <div>
+                                <h4 id="preview-display-name" class="font-bold text-white"></h4>
+                                <p id="preview-username" class="text-gray-400 text-sm"></p>
+                                <p id="preview-account-age" class="text-gray-500 text-xs"></p>
+                            </div>
+                        </div>
+                        <p id="preview-description" class="text-gray-300 text-sm mt-3 italic"></p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Ban Type</label>
+                    <select id="ban-type" class="input-field w-full" required>
+                        <option value="">Select ban type</option>
+                        <option value="permban">Permanent Ban</option>
+                        <option value="tempban">Temporary Ban</option>
+                        <option value="warning">Warning</option>
+                    </select>
+                </div>
+                
+                <div id="duration-field" class="hidden">
+                    <label class="block text-sm font-semibold mb-2">Duration (days)</label>
+                    <input type="number" id="ban-duration" class="input-field w-full" 
+                           placeholder="Number of days" min="1" max="365">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Reason</label>
+                    <textarea id="ban-reason" class="input-field w-full h-24" 
+                              placeholder="Detailed reason for this action..." required></textarea>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="btn-danger flex-1">
+                        <i class="fas fa-gavel mr-2"></i>
+                        Issue Ban
+                    </button>
+                    <button type="button" id="cancel-issue" class="btn-primary flex-1">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Revoke Ban Modal -->
+    <div id="revoke-ban-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Revoke Ban</h3>
+                <button id="close-revoke-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="revoke-ban-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Target User</label>
+                    <input type="text" id="revoke-username" class="input-field w-full" 
+                           placeholder="Username or User ID" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Revocation Reason</label>
+                    <textarea id="revoke-reason" class="input-field w-full h-24" 
+                              placeholder="Reason for revoking this ban..." required></textarea>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="btn-success flex-1">
+                        <i class="fas fa-undo mr-2"></i>
+                        Revoke Ban
+                    </button>
+                    <button type="button" id="cancel-revoke" class="btn-primary flex-1">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audit Log Modal -->
+    <div id="audit-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Audit Log</h3>
+                <button id="close-audit-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex gap-4">
+                    <select id="audit-filter" class="input-field">
+                        <option value="">All Actions</option>
+                        <option value="BAN_ISSUED">Bans Issued</option>
+                        <option value="BAN_REVOKED">Bans Revoked</option>
+                        <option value="POI_MARKED">POI Marked</option>
+                        <option value="POI_UNMARKED">POI Unmarked</option>
+                        <option value="LOGIN_SUCCESS">Successful Logins</option>
+                        <option value="LOGIN_FAILED">Failed Logins</option>
+                        <option value="LOGIN_BLOCKED_VPN">Blocked VPN Attempts</option>
+                    </select>
+                    <input type="date" id="audit-date" class="input-field">
+                    <button id="refresh-audit" class="btn-primary">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div id="audit-log" class="audit-log">
+                <div class="flex items-center justify-center h-32">
+                    <div class="loading-spinner"></div>
+                    <span class="ml-3 text-gray-400">Loading audit log...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- POI Reason Modal -->
+    <div id="poi-reason-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Mark as Person of Interest</h3>
+                <button id="close-poi-reason-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <p class="text-gray-300 mb-2">User: <span id="poi-target-username" class="text-white font-semibold"></span></p>
+                <p class="text-gray-400 text-sm">This will flag the user for special attention in future investigations.</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Reason for POI Status</label>
+                <textarea id="poi-reason-input" class="input-field w-full h-24" 
+                          placeholder="Enter detailed reason for marking this user as a Person of Interest..." required></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button id="poi-reason-cancel" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">
+                    Cancel
+                </button>
+                <button id="poi-reason-submit" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Mark as POI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SDIS Login Modal -->
+    <div id="sdis-login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">SDIS Authentication</h3>
+            <div class="mb-4">
+                <input type="password" id="sdis-code-phrase" class="input-field w-full" 
+                       placeholder="Enter security clearance code" autocomplete="off">
+            </div>
+            <div class="flex gap-3">
+                <button id="sdis-login-cancel-btn" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                <button id="sdis-login-submit-btn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">Authenticate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white">Full Profile</h3>
+                <button id="close-profile-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="profile-modal-content">
+                <!-- Profile content will be loaded here -->
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button id="open-lookup-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                    Open Full Lookup
+                </button>
+                <button id="close-profile-modal-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Configuration
+        const SDIS_WORKER_URL = 'https://sdis-admin.saikoudevelopment.workers.dev';
+        const AUTH_WORKER_URL = 'https://sdis-admin.saikoudevelopment.workers.dev/auth';
+        
+        // Global state
+        let currentUser = null;
+        let authToken = null;
+        let banData = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalBans = 0;
+
+        // DOM Elements
+        const authSection = document.getElementById('auth-section');
+        const dashboard = document.getElementById('dashboard');
+        const authCode = document.getElementById('auth-code');
+        const authSubmit = document.getElementById('auth-submit');
+        const authError = document.getElementById('auth-error');
+        
+        // New header auth elements
+        const loginContainer = document.getElementById('login-container');
+        const loginBtn = document.getElementById('login-btn');
+        const userStatusContainer = document.getElementById('user-status-container');
+        const userStatusName = document.getElementById('user-status-name');
+        const userStatusRole = document.getElementById('user-status-role');
+        const userStatusAvatar = document.getElementById('user-status-avatar');
+        const logoutBtn = document.getElementById('logout-btn');
+        const sdisLoginModal = document.getElementById('sdis-login-modal');
+        const sdisCodePhraseInput = document.getElementById('sdis-code-phrase');
+        const sdisLoginSubmitBtn = document.getElementById('sdis-login-submit-btn');
+        const sdisLoginCancelBtn = document.getElementById('sdis-login-cancel-btn');
+        
+        // POI modal elements
+        const poiReasonModal = document.getElementById('poi-reason-modal');
+        const poiTargetUsername = document.getElementById('poi-target-username');
+        const poiReasonInput = document.getElementById('poi-reason-input');
+        const poiReasonSubmit = document.getElementById('poi-reason-submit');
+        const poiReasonCancel = document.getElementById('poi-reason-cancel');
+        const closePoiReasonModal = document.getElementById('close-poi-reason-modal');
+        
+        // POI state
+        let poiTargetUserId = null;
+        let afterLoginCallback = null;
+        
+        // Profile modal state
+        let currentProfileUserId = null;
+        
+        // Create fallback avatar using canvas (no CORS issues)
+        function createFallbackAvatar(imgElement, initial) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Get the size from the image element's computed style or use default
+            const computedStyle = window.getComputedStyle(imgElement);
+            const width = parseInt(computedStyle.width) || 150;
+            const height = parseInt(computedStyle.height) || 150;
+            const size = Math.max(width, height);
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background
+            ctx.fillStyle = '#1f222c';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Text
+            ctx.fillStyle = '#ffffff';
+            const fontSize = Math.floor(size * 0.4); // 40% of the size
+            ctx.font = `bold ${fontSize}px Montserrat, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(initial, size / 2, size / 2);
+            
+            // Convert to data URL and set as src
+            imgElement.src = canvas.toDataURL('image/png');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            checkExistingAuth();
+        });
+
+        function setupEventListeners() {
+            // Old authentication (keep for backward compatibility)
+            if (authSubmit) authSubmit.addEventListener('click', handleAuth);
+            if (authCode) authCode.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleAuth();
+            });
+            
+            // New header authentication
+            loginBtn.addEventListener('click', () => showLoginModal());
+            logoutBtn.addEventListener('click', handleLogout);
+            sdisLoginCancelBtn.addEventListener('click', () => {
+                sdisLoginModal.classList.remove('flex');
+                afterLoginCallback = null;
+            });
+            sdisLoginSubmitBtn.addEventListener('click', handleLogin);
+            sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
+            
+            // POI modal listeners
+            poiReasonCancel.addEventListener('click', () => poiReasonModal.classList.remove('flex'));
+            closePoiReasonModal.addEventListener('click', () => poiReasonModal.classList.remove('flex'));
+            poiReasonSubmit.addEventListener('click', handleSubmitPOI);
+            
+            // Profile modal listeners
+            document.getElementById('close-profile-modal').addEventListener('click', () => document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('close-profile-modal-btn').addEventListener('click', () => document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('profile-modal').addEventListener('click', e => e.target === document.getElementById('profile-modal') && document.getElementById('profile-modal').classList.remove('flex'));
+            document.getElementById('open-lookup-btn').addEventListener('click', () => {
+                if (currentProfileUserId) {
+                    window.open(`lookup.html?lookup=${currentProfileUserId}`, '_blank');
+                }
+            });
+            
+            // Dashboard actions
+            document.getElementById('issue-ban-btn').addEventListener('click', () => showModal('issue-ban-modal'));
+            document.getElementById('revoke-ban-btn').addEventListener('click', () => showModal('revoke-ban-modal'));
+            document.getElementById('refresh-data-btn').addEventListener('click', loadBanData);
+            document.getElementById('view-audit-btn').addEventListener('click', () => showModal('audit-modal'));
+            
+            // Modal controls
+            document.getElementById('close-issue-modal').addEventListener('click', () => hideModal('issue-ban-modal'));
+            document.getElementById('close-revoke-modal').addEventListener('click', () => hideModal('revoke-ban-modal'));
+            document.getElementById('close-audit-modal').addEventListener('click', () => hideModal('audit-modal'));
+            document.getElementById('cancel-issue').addEventListener('click', () => hideModal('issue-ban-modal'));
+            document.getElementById('cancel-revoke').addEventListener('click', () => hideModal('revoke-ban-modal'));
+            
+            // Forms
+            document.getElementById('issue-ban-form').addEventListener('submit', handleIssueBan);
+            document.getElementById('revoke-ban-form').addEventListener('submit', handleRevokeBan);
+            
+            // User lookup functionality
+            document.getElementById('ban-username').addEventListener('blur', handleUserLookup);
+            document.getElementById('ban-username').addEventListener('keydown', (e) => {
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    handleUserLookup();
+                }
+            });
+            
+            // Ban type change
+            document.getElementById('ban-type').addEventListener('change', (e) => {
+                const durationField = document.getElementById('duration-field');
+                if (e.target.value === 'tempban') {
+                    durationField.classList.remove('hidden');
+                } else {
+                    durationField.classList.add('hidden');
+                }
+            });
+            
+            // Search and filter
+            document.getElementById('search-bans').addEventListener('input', filterBans);
+            document.getElementById('filter-type').addEventListener('change', filterBans);
+            
+            // Audit log
+            document.getElementById('refresh-audit').addEventListener('click', () => {
+                const filter = document.getElementById('audit-filter').value;
+                const date = document.getElementById('audit-date').value;
+                loadAuditLog(filter, date);
+            });
+        }
+
+        async function handleAuth() {
+            const codePhrase = authCode.value.trim();
+            if (!codePhrase) return;
+            
+            authSubmit.disabled = true;
+            authSubmit.innerHTML = '<div class="loading-spinner-inline mr-2"></div> Authenticating...';
+            authError.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${AUTH_WORKER_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codePhrase })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.token && data.user) {
+                    currentUser = data.user;
+                    authToken = data.token;
+                    localStorage.setItem('sdis_token', authToken);
+                    localStorage.setItem('sdis_user', JSON.stringify(currentUser));
+                    
+                    showDashboard();
+                    showNotification('Authentication successful', 'success');
+                } else {
+                    authError.textContent = data.error || 'Invalid security code';
+                    authError.classList.remove('hidden');
+                }
+            } catch (error) {
+                authError.textContent = 'Authentication failed. Please try again.';
+                authError.classList.remove('hidden');
+            }
+            
+            authSubmit.disabled = false;
+            authSubmit.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i> Authenticate';
+        }
+
+        function checkExistingAuth() {
+            const token = localStorage.getItem('sdis_token');
+            const user = localStorage.getItem('sdis_user');
+            
+            if (token && user) {
+                authToken = token;
+                currentUser = JSON.parse(user);
+                showDashboard();
+            } else {
+                // Show login interface
+                updateAuthUI();
+            }
+        }
+
+        function showDashboard() {
+            if (authSection) authSection.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            
+            // Update header auth UI
+            updateAuthUI();
+            
+            loadBanData();
+            loadAuditLog();
+        }
+        
+        function updateAuthUI() {
+            const isAuth = !!currentUser;
+            loginContainer.classList.toggle('hidden', isAuth);
+            userStatusContainer.classList.toggle('hidden', !isAuth);
+            
+            if (isAuth) {
+                // Use the correct property names from the authentication response
+                const displayName = currentUser.displayName || currentUser.username || 'Agent';
+                const role = currentUser.sdisRole || 'SDIS Operative';
+                
+                console.log('SDIS: Updating auth UI with:', { displayName, role, currentUser });
+                
+                userStatusName.textContent = displayName;
+                userStatusRole.textContent = role;
+                
+                // Use the actual avatar URL from the response (same approach as lookup.html)
+                userStatusAvatar.src = currentUser.avatarUrl || 'https://placehold.co/48x48/1f222c/FFFFFF?text=?';
+                userStatusAvatar.onerror = function() {
+                    this.src = 'https://placehold.co/48x48/1f222c/FFFFFF?text=?';
+                };
+            }
+        }
+        
+        function showLoginModal(callback) {
+            afterLoginCallback = callback;
+            sdisLoginModal.classList.add('flex');
+            sdisCodePhraseInput.focus();
+        }
+        
+        async function handleLogin() {
+            const codePhrase = sdisCodePhraseInput.value.trim();
+            if (!codePhrase) return;
+            
+            sdisLoginSubmitBtn.disabled = true;
+            sdisLoginSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...`;
+            
+            try {
+                const response = await fetch(`${AUTH_WORKER_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codePhrase })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.token && data.user) {
+                    currentUser = data.user;
+                    authToken = data.token;
+                    localStorage.setItem('sdis_token', authToken);
+                    localStorage.setItem('sdis_user', JSON.stringify(currentUser));
+                    
+                    console.log('SDIS: Authentication successful, user data:', currentUser);
+                    updateAuthUI();
+                    sdisLoginModal.classList.remove('flex');
+                    sdisCodePhraseInput.value = '';
+                    showNotification('Login successful!', 'success');
+                    
+                    // Show dashboard if not already shown
+                    if (dashboard.classList.contains('hidden')) {
+                        showDashboard();
+                    }
+                    
+                    // Execute callback if provided
+                    if (afterLoginCallback) {
+                        afterLoginCallback();
+                        afterLoginCallback = null;
+                    }
+                } else {
+                    showNotification(data.error || 'Invalid security code', 'error');
+                }
+            } catch (error) {
+                showNotification('Authentication failed. Please try again.', 'error');
+            }
+            
+            sdisLoginSubmitBtn.disabled = false;
+            sdisLoginSubmitBtn.innerHTML = 'Authenticate';
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('sdis_token');
+            localStorage.removeItem('sdis_user');
+            currentUser = null;
+            authToken = null;
+            
+            updateAuthUI();
+            dashboard.classList.add('hidden');
+            if (authSection) {
+                authSection.classList.remove('hidden');
+                authCode.value = '';
+            }
+            
+            showNotification('Logged out successfully', 'info');
+            
+            showNotification('Logged out successfully', 'success');
+        }
+
+        async function loadBanData(page = 1, search = '', filter = '') {
+            // Build URL with parameters
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: '30'
+            });
+            
+            if (search) params.set('search', search);
+            if (filter) params.set('filter', filter);
+            
+            const url = `${SDIS_WORKER_URL}/bans?${params.toString()}`;
+            console.log('Loading ban data from:', url);
+            console.log('Auth token:', authToken ? 'Present' : 'Missing');
+            
+            try {
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    banData = data.bans;
+                    currentPage = data.pagination.page;
+                    totalPages = data.pagination.totalPages;
+                    totalBans = data.pagination.total;
+                    
+                    updateStats(data.stats); // Use server-calculated stats
+                    renderBanList(banData);
+                    renderPagination();
+                    
+                    // Update filter info
+                    updateFilterInfo(data.filteredStats, data.pagination);
+                    
+                    if (data.note) {
+                        showNotification(data.note, 'warning');
+                    }
+                } else {
+                    showNotification('Failed to load ban data: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error loading ban data:', error);
+                showNotification('Error loading ban data: ' + error.message, 'error');
+            } finally {
+                // Hide loading overlay
+                const loadingOverlay = document.getElementById('ban-list-loading');
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateStats(stats) {
+            // Use server-calculated stats
+            if (stats) {
+                document.getElementById('total-bans').textContent = stats.total.toLocaleString();
+                document.getElementById('bans-today').textContent = stats.today.toLocaleString();
+                document.getElementById('bans-week').textContent = stats.thisWeek.toLocaleString();
+            } else {
+                // Fallback
+                document.getElementById('total-bans').textContent = totalBans.toLocaleString();
+                document.getElementById('bans-today').textContent = '-';
+                document.getElementById('bans-week').textContent = '-';
+            }
+        }
+
+        function renderBanList(bans) {
+            const container = document.getElementById('ban-list');
+            
+            if (bans.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400">No bans found</div>';
+                return;
+            }
+            
+            // Add section headers
+            let html = `
+                <div class="table-header">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center font-semibold text-sm text-gray-300">
+                        <div class="flex items-center gap-3">
+                            <span class="w-10"></span>
+                            <span>User</span>
+                        </div>
+                        <div>Status</div>
+                        <div>Reason</div>
+                        <div>Moderator</div>
+                        <div>Date</div>
+                        <div>Actions</div>
+                    </div>
+                </div>
+            `;
+            
+            html += bans.map(ban => {
+                const avatarUrl = `${SDIS_WORKER_URL}${ban.avatarUrl}`;
+                return `
+                <div class="table-row">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="relative p-1">
+                                <img src="${avatarUrl}" 
+                                     alt="${ban.RobloxUsername}" 
+                                     class="w-12 h-12 rounded-full border-2 ${ban.isPOI ? 'poi-border' : 'border-gray-600'}"
+                                     onerror="createFallbackAvatar(this, '${ban.RobloxUsername.charAt(0).toUpperCase()}')">
+                                ${ban.isPOI ? '<div class="poi-indicator"><i class="fas fa-exclamation"></i></div>' : ''}
+                            </div>
+                            <div>
+                                <p class="font-semibold clickable-username" onclick="showProfileModal(${ban.RobloxID})">${ban.RobloxUsername}</p>
+                                <p class="text-xs text-gray-400">ID: ${ban.RobloxID}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="status-badge ${getBanTypeClass(ban)}">
+                                ${getBanTypeLabel(ban)}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-300" title="${ban.Reason}">${ban.Reason.length > 50 ? ban.Reason.substring(0, 50) + '...' : ban.Reason}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400">${ban.Moderator}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-400">${new Date(ban.Date).toLocaleDateString()}</p>
+                            <p class="text-xs text-gray-500">${getTimeAgo(ban.Date)}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn-success text-xs px-3 py-1" onclick="quickRevoke('${ban.RobloxUsername}')">
+                                <i class="fas fa-undo mr-1"></i>
+                                Revoke
+                            </button>
+                            ${ban.isPOI ? 
+                                `<button class="btn-danger text-xs px-2 py-1" onclick="removePOI('${ban.RobloxID}', '${ban.RobloxUsername}')" title="Remove POI Status">
+                                    <i class="fas fa-user-times mr-1"></i>
+                                    POI
+                                </button>` :
+                                `<button class="btn-primary text-xs px-2 py-1" onclick="markAsPOI('${ban.RobloxID}', '${ban.RobloxUsername}')" title="Mark as Person of Interest">
+                                    <i class="fas fa-user-plus mr-1"></i>
+                                    POI
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        function filterBans() {
+            const search = document.getElementById('search-bans').value.trim();
+            const type = document.getElementById('filter-type').value;
+            
+            // Show loading overlay
+            const loadingOverlay = document.getElementById('ban-list-loading');
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('hidden');
+            }
+            
+            // Reset to page 1 when filtering
+            currentPage = 1;
+            
+            // Load data with server-side filtering
+            loadBanData(1, search, type);
+        }
+
+        async function handleIssueBan(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('ban-username').value.trim();
+            const type = document.getElementById('ban-type').value;
+            const duration = document.getElementById('ban-duration').value;
+            const reason = document.getElementById('ban-reason').value.trim();
+            
+            if (!username || !type || !reason) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading-spinner-inline mr-2"></div> Submitting...';
+            
+            try {
+                console.log('Submitting ban for:', username);
+                
+                // Add timeout to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                
+                // Send the username directly - the worker will handle conversion
+                const response = await fetch(`${SDIS_WORKER_URL}/ban/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: username, // Send username, worker will convert
+                        reason,
+                        duration: type === 'tempban' ? `${duration} days` : 'permanent'
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                console.log('Ban response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Ban response data:', data);
+                
+                if (data.success) {
+                    showNotification(`Ban submitted successfully via ${data.source || 'Saikou API'}`, 'success');
+                    hideModal('issue-ban-modal');
+                    document.getElementById('issue-ban-form').reset();
+                    // Reset user preview
+                    document.getElementById('user-preview').classList.add('hidden');
+                    loadBanData();
+                } else {
+                    showNotification(data.error || 'Failed to submit ban', 'error');
+                }
+            } catch (error) {
+                console.error('Ban submission error:', error);
+                if (error.name === 'AbortError') {
+                    showNotification('Ban submission timed out. Please try again.', 'error');
+                } else {
+                    showNotification('Error submitting ban: ' + error.message, 'error');
+                }
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-gavel mr-2"></i> Issue Ban';
+        }
+
+        async function handleRevokeBan(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('revoke-username').value.trim();
+            const reason = document.getElementById('revoke-reason').value.trim();
+            
+            if (!username || !reason) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading-spinner-inline mr-2"></div> Submitting...';
+            
+            try {
+                // Send the username directly - the worker will handle conversion
+                const response = await fetch(`${SDIS_WORKER_URL}/unban/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ userId: username, reason }) // Send username, worker will convert
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`Unban submitted successfully via ${data.source}`, 'success');
+                    hideModal('revoke-ban-modal');
+                    document.getElementById('revoke-ban-form').reset();
+                    loadBanData();
+                } else {
+                    showNotification(data.error || 'Failed to submit unban', 'error');
+                }
+            } catch (error) {
+                showNotification('Error submitting unban', 'error');
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Revoke Ban';
+        }
+
+        function quickRevoke(username) {
+            document.getElementById('revoke-username').value = username;
+            showModal('revoke-ban-modal');
+        }
+
+        function markAsPOI(userId, username) {
+            // Check authentication first
+            if (!currentUser) {
+                return showLoginModal(() => markAsPOI(userId, username));
+            }
+            
+            // Show POI reason modal
+            poiTargetUserId = userId;
+            poiTargetUsername.textContent = username;
+            poiReasonInput.value = '';
+            poiReasonModal.classList.add('flex');
+            poiReasonInput.focus();
+        }
+        
+        async function handleSubmitPOI() {
+            const reason = poiReasonInput.value.trim();
+            if (!reason) {
+                showNotification('Please enter a reason for POI status', 'error');
+                return;
+            }
+            
+            poiReasonSubmit.disabled = true;
+            poiReasonSubmit.innerHTML = '<div class="loading-spinner-inline mr-2"></div> Submitting...';
+            
+            try {
+                const response = await fetch(`${SDIS_WORKER_URL}/poi/${poiTargetUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        userId: poiTargetUserId,
+                        reason: reason
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`${poiTargetUsername.textContent} marked as POI successfully`, 'success');
+                    poiReasonModal.classList.remove('flex');
+                    loadBanData(); // Refresh the ban list to show updated POI status
+                } else {
+                    showNotification(data.error || 'Failed to mark user as POI', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking user as POI:', error);
+                showNotification('Error marking user as POI', 'error');
+            }
+            
+            poiReasonSubmit.disabled = false;
+            poiReasonSubmit.innerHTML = '<i class="fas fa-user-plus mr-2"></i> Mark as POI';
+        }
+
+        // Profile Modal Functions
+        async function showProfileModal(userId) {
+            currentProfileUserId = userId;
+            const profileModal = document.getElementById('profile-modal');
+            const profileModalContent = document.getElementById('profile-modal-content');
+            
+            profileModal.classList.add('flex');
+            profileModalContent.innerHTML = `
+                <div class="text-center p-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                    <p class="mt-4 text-gray-400">Loading profile...</p>
+                </div>
+            `;
+            
+            try {
+                // Use the new user ID lookup endpoint
+                const response = await fetch(`${SDIS_WORKER_URL}/user/id/${userId}`);
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    renderProfileInModal(data.user);
+                } else {
+                    profileModalContent.innerHTML = `
+                        <div class="text-center p-8 text-red-400">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                            <p>Failed to load profile data</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                profileModalContent.innerHTML = `
+                    <div class="text-center p-8 text-red-400">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>Error loading profile</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderProfileInModal(profile) {
+            const profileModalContent = document.getElementById('profile-modal-content');
+            
+            const createdDate = profile.created ? new Date(profile.created).toLocaleDateString() : 'Unknown';
+            const avatarUrl = `${SDIS_WORKER_URL}${profile.avatarUrl}`;
+            
+            profileModalContent.innerHTML = `
+                <div class="bg-[#15171c] p-6 rounded-lg shadow-lg">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                        <div class="flex-shrink-0 mb-4 sm:mb-0 sm:mr-6">
+                            <img src="${avatarUrl}" 
+                                 alt="${profile.name}" 
+                                 class="w-24 h-24 rounded-full border-4 border-gray-600 shadow-lg"
+                                 onerror="createFallbackAvatar(this, '${profile.name.charAt(0).toUpperCase()}')">
+                        </div>
+                        <div class="flex-grow">
+                            <div class="mb-4">
+                                <h2 class="text-2xl font-bold">${profile.displayName || profile.name}</h2>
+                                <p class="text-gray-400">@${profile.name}</p>
+                                <p class="text-sm text-gray-500 mt-1">ID: ${profile.id}</p>
+                                <a href="lookup.html?lookup=${profile.id}" target="_blank" class="text-blue-400 hover:underline text-sm mt-1 inline-block">
+                                    Open in New Tab <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 border-t border-gray-700 pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">About</h3>
+                            <p class="text-gray-300 text-sm whitespace-pre-wrap">${profile.description || 'No bio available.'}</p>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Account Info</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="stat-card !p-3">
+                                    <p class="text-xs text-gray-400">Created</p>
+                                    <p class="font-bold">${createdDate}</p>
+                                </div>
+                                <div class="stat-card !p-3">
+                                    <p class="text-xs text-gray-400">User ID</p>
+                                    <p class="font-bold">${profile.id}</p>
+                                </div>
+                                <div class="stat-card !p-3">
+                                    <p class="text-xs text-gray-400">Account Age</p>
+                                    <p class="font-bold">${profile.accountAge || 'Unknown'}</p>
+                                </div>
+                                <div class="stat-card !p-3">
+                                    <p class="text-xs text-gray-400">Status</p>
+                                    <p class="font-bold ${profile.isBanned ? 'text-red-400' : 'text-green-400'}">
+                                        ${profile.isBanned ? 'Banned' : 'Active'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function removePOI(userId, username) {
+            // Check authentication first
+            if (!currentUser) {
+                return showLoginModal(() => removePOI(userId, username));
+            }
+            
+            if (!confirm(`Remove POI status from ${username}?\n\nThis will remove their Person of Interest flag.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SDIS_WORKER_URL}/poi/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`POI status removed from ${username}`, 'success');
+                    loadBanData(); // Refresh the ban list to show updated POI status
+                } else {
+                    showNotification(data.error || 'Failed to remove POI status', 'error');
+                }
+            } catch (error) {
+                console.error('Error removing POI status:', error);
+                showNotification('Error removing POI status', 'error');
+            }
+        }
+
+        async function loadAuditLog(filter = '', date = '') {
+            const auditLog = document.getElementById('audit-log');
+            auditLog.innerHTML = '<div class="flex items-center justify-center h-32"><div class="loading-spinner"></div><span class="ml-3 text-gray-400">Loading audit log...</span></div>';
+            
+            try {
+                // Build URL with filters
+                const params = new URLSearchParams({
+                    limit: '100'
+                });
+                
+                if (filter) params.set('filter', filter);
+                if (date) params.set('date', date);
+                
+                const response = await fetch(`${SDIS_WORKER_URL}/audit?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderAuditLog(data.logs);
+                } else {
+                    auditLog.innerHTML = '<div class="text-center text-red-400">Failed to load audit log: ' + (data.error || 'Unknown error') + '</div>';
+                }
+            } catch (error) {
+                console.error('Audit log error:', error);
+                auditLog.innerHTML = '<div class="text-center text-red-400">Error loading audit log</div>';
+            }
+        }
+
+        function renderAuditLog(logs) {
+            const container = document.getElementById('audit-log');
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400">No audit entries found</div>';
+                return;
+            }
+            
+            const html = logs.map(log => {
+                const details = log.details || {};
+                let detailsText = '';
+                
+                // Format details based on action type
+                switch (log.action) {
+                    case 'POI_MARKED':
+                        detailsText = `Target: ${details.targetUsername || details.targetUserId} - Reason: ${details.reason || 'No reason provided'}`;
+                        break;
+                    case 'POI_UNMARKED':
+                        detailsText = `Target: ${details.targetUserId}`;
+                        break;
+                    case 'BAN_ISSUED':
+                        detailsText = `Target: ${details.targetUserId} - Type: ${details.banType || 'unknown'} - Duration: ${details.duration || 'permanent'} - Reason: ${details.reason || 'No reason'}`;
+                        break;
+                    case 'BAN_REVOKED':
+                        detailsText = `Target: ${details.targetUserId} - Reason: ${details.reason || 'No reason'}`;
+                        break;
+                    case 'LOGIN_SUCCESS':
+                        detailsText = `IP: ${log.ipAddress} - User Agent: ${details.userAgent || 'unknown'}`;
+                        break;
+                    case 'LOGIN_FAILED':
+                        detailsText = `IP: ${log.ipAddress} - Error: ${details.error || 'unknown'} - User Agent: ${details.userAgent || 'unknown'}`;
+                        break;
+                    case 'LOGIN_BLOCKED_VPN':
+                        detailsText = `IP: ${log.ipAddress} - Reason: ${details.reason || 'VPN detected'}`;
+                        break;
+                    default:
+                        detailsText = JSON.stringify(details);
+                }
+                
+                return `
+                    <div class="audit-entry">
+                        <span class="audit-timestamp">[${new Date(log.timestamp).toLocaleString()}]</span>
+                        <span class="audit-action">${log.action}</span>
+                        by <span class="audit-user">${log.user}</span>
+                        ${detailsText ? `<br><span class="text-gray-400 text-sm ml-4">${detailsText}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Utility functions for smooth UI
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+
+
+
+
+        // Check system health on load
+        async function checkSystemHealth() {
+            try {
+                const response = await fetch(`${SDIS_WORKER_URL}/health`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('system-status').textContent = 'ONLINE';
+                    document.getElementById('system-status').className = 'text-lg font-bold text-green-400';
+                } else {
+                    document.getElementById('system-status').textContent = 'ERROR';
+                    document.getElementById('system-status').className = 'text-lg font-bold text-red-400';
+                }
+            } catch (error) {
+                document.getElementById('system-status').textContent = 'OFFLINE';
+                document.getElementById('system-status').className = 'text-lg font-bold text-red-400';
+            }
+        }
+
+        // Helper functions for ban display
+        function getBanTypeClass(ban) {
+            // Use the normalized banType from the server
+            if (ban.banType === 'tempban' || ban.isTemporary) return 'status-pending';
+            return 'status-banned';
+        }
+
+        function getBanTypeLabel(ban) {
+            // Use the normalized banType from the server
+            if (ban.banType === 'tempban' || ban.isTemporary) return 'TEMPORARY';
+            return 'PERMANENT';
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return '1 day ago';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+            return `${Math.floor(diffDays / 365)} years ago`;
+        }
+
+        // User lookup functionality
+        async function handleUserLookup() {
+            const username = document.getElementById('ban-username').value.trim();
+            const userPreview = document.getElementById('user-preview');
+            
+            if (!username) {
+                userPreview.classList.add('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${SDIS_WORKER_URL}/user/${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (data.success && data.user) {
+                    // Show user preview
+                    const avatarImg = document.getElementById('preview-avatar');
+                    avatarImg.src = `${SDIS_WORKER_URL}${data.user.avatarUrl}`;
+                    avatarImg.onerror = function() {
+                        // Create a canvas-based fallback avatar
+                        createFallbackAvatar(this, data.user.name.charAt(0).toUpperCase());
+                    };
+                    
+                    document.getElementById('preview-display-name').textContent = data.user.displayName || data.user.name;
+                    document.getElementById('preview-username').textContent = `@${data.user.name}`;
+                    document.getElementById('preview-account-age').textContent = `Account Age: ${data.user.accountAge || 'Unknown'}`;
+                    document.getElementById('preview-description').textContent = data.user.description || 'No description available';
+                    
+                    userPreview.classList.remove('hidden');
+                    
+                    // Expand modal slightly
+                    const modal = document.querySelector('#issue-ban-modal .modal-content');
+                    modal.style.maxWidth = '700px';
+                    
+                } else {
+                    userPreview.classList.add('hidden');
+                    if (username.length > 2) { // Only show error for meaningful input
+                        showNotification(data.error || 'User not found', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error looking up user:', error);
+                userPreview.classList.add('hidden');
+                showNotification('Error looking up user', 'error');
+            }
+        }
+
+        // Pagination functions
+        function renderPagination() {
+            const paginationContainer = document.getElementById('pagination-container');
+            const prevBtn = document.getElementById('prev-page');
+            const nextBtn = document.getElementById('next-page');
+            const pageNumbers = document.getElementById('page-numbers');
+            const showingRange = document.getElementById('showing-range');
+            const totalCount = document.getElementById('total-count');
+            
+            // Show pagination container
+            paginationContainer.classList.remove('hidden');
+            
+            // Update showing range
+            const start = (currentPage - 1) * 30 + 1;
+            const end = Math.min(currentPage * 30, totalBans);
+            showingRange.textContent = `${start}-${end}`;
+            totalCount.textContent = totalBans.toLocaleString();
+            
+            // Update prev/next buttons
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+            
+            // Generate page numbers
+            let pageNumbersHtml = '';
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're near the end
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page
+            if (startPage > 1) {
+                pageNumbersHtml += `<button class="page-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm" data-page="1">1</button>`;
+                if (startPage > 2) {
+                    pageNumbersHtml += `<span class="px-2 text-gray-400">...</span>`;
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPage;
+                pageNumbersHtml += `<button class="page-btn px-3 py-1 ${isActive ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'} text-white rounded text-sm" data-page="${i}">${i}</button>`;
+            }
+            
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pageNumbersHtml += `<span class="px-2 text-gray-400">...</span>`;
+                }
+                pageNumbersHtml += `<button class="page-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm" data-page="${totalPages}">${totalPages}</button>`;
+            }
+            
+            pageNumbers.innerHTML = pageNumbersHtml;
+            
+            // Add event listeners to page buttons
+            document.querySelectorAll('.page-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const page = parseInt(btn.dataset.page);
+                    if (page !== currentPage) {
+                        const filters = getCurrentFilters();
+                        loadBanData(page, filters.search, filters.filter);
+                    }
+                });
+            });
+        }
+
+        // Helper function to get current filters
+        function getCurrentFilters() {
+            return {
+                search: document.getElementById('search-bans').value.trim(),
+                filter: document.getElementById('filter-type').value
+            };
+        }
+
+        // Update filter info display
+        function updateFilterInfo(filteredStats, pagination) {
+            if (pagination.searchTerm || pagination.filterType) {
+                const filterInfo = document.getElementById('filter-info') || createFilterInfo();
+                let filterText = 'Filtered: ';
+                
+                if (pagination.searchTerm) {
+                    filterText += `"${pagination.searchTerm}"`;
+                }
+                
+                if (pagination.filterType) {
+                    if (pagination.searchTerm) filterText += ' + ';
+                    filterText += `${pagination.filterType === 'tempban' ? 'Temporary' : 'Permanent'} bans`;
+                }
+                
+                filterText += ` (${filteredStats.total} results)`;
+                filterInfo.textContent = filterText;
+                filterInfo.classList.remove('hidden');
+            } else {
+                const filterInfo = document.getElementById('filter-info');
+                if (filterInfo) filterInfo.classList.add('hidden');
+            }
+        }
+
+        function createFilterInfo() {
+            const filterInfo = document.createElement('div');
+            filterInfo.id = 'filter-info';
+            filterInfo.className = 'text-sm text-blue-400 mb-2 hidden';
+            
+            const banListContainer = document.getElementById('ban-list').parentElement;
+            banListContainer.insertBefore(filterInfo, document.getElementById('ban-list'));
+            
+            return filterInfo;
+        }
+
+        // Add pagination event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    const filters = getCurrentFilters();
+                    loadBanData(currentPage - 1, filters.search, filters.filter);
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    const filters = getCurrentFilters();
+                    loadBanData(currentPage + 1, filters.search, filters.filter);
+                }
+            });
+        });
+
+        // Auto-refresh system health every 30 seconds
+        setInterval(checkSystemHealth, 30000);
+    </script>
+</body>
+
+</html>
