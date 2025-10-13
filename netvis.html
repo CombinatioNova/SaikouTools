@@ -1159,6 +1159,19 @@
                 <span>Deep Search</span>
             </button>
             
+            <!-- Export/Import Buttons -->
+            <button id="export-map-btn"
+                class="custom-button bg-purple-500 hover:bg-purple-600 flex items-center justify-center gap-2 w-44">
+                <i class="fas fa-file-export"></i>
+                <span>Export Map</span>
+            </button>
+            <button id="import-map-btn"
+                class="custom-button bg-indigo-500 hover:bg-indigo-600 flex items-center justify-center gap-2 w-44">
+                <i class="fas fa-file-import"></i>
+                <span>Import Map</span>
+            </button>
+            <input type="file" id="import-file-input" class="hidden" accept=".json" />
+            
             <!-- Physics Controls -->
             <div id="physics-controls" class="bg-[#1f222c] p-3 rounded-lg shadow-lg w-44 space-y-2">
                 <div class="legend-title mb-1">Physics Controls</div>
@@ -1363,6 +1376,9 @@
             const fabMainBtn = document.getElementById('fab-main-btn');
             const deepSearchBtn = document.getElementById('deep-search-btn');
             const formerFriendsToggle = document.getElementById('former-friends-toggle');
+            const exportMapBtn = document.getElementById('export-map-btn');
+            const importMapBtn = document.getElementById('import-map-btn');
+            const importFileInput = document.getElementById('import-file-input');
 
             const nodeSearch = document.getElementById('node-search');
             const searchResultsCount = document.getElementById('search-results-count');
@@ -1424,6 +1440,7 @@
             let poiTargetNode = null;
             const nodeDetailCache = new Map();
             const MAX_USERS = 10;
+            let currentGraphData = { nodes: [], links: [], formerLinks: [] };
 
             // --- Auth State ---
             let authToken = localStorage.getItem('sdis_token');
@@ -1446,6 +1463,9 @@
             gravitySlider.addEventListener('input', updatePhysics);
             document.addEventListener('change', e => e.target.classList.contains('filter-checkbox') && filterNodes());
             formerFriendsToggle.addEventListener('change', toggleFormerFriends);
+            exportMapBtn.addEventListener('click', handleExportMap);
+            importMapBtn.addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', handleImportMap);
 
             nodeSearch.addEventListener('input', e => (currentSearchTerm = e.target.value.trim().toLowerCase(), applySearchHighlight()));
             closeCardBtn.addEventListener('click', hideNodeCard);
@@ -2010,6 +2030,7 @@
                     await new Promise(resolve => setTimeout(resolve, 200));
                     
                     if (data.nodes && data.links) {
+                        currentGraphData = data; // Store data for export
                         renderGraph(data);
                         showNotification('Graph generated successfully!', 'success');
                         
@@ -2038,6 +2059,7 @@
             }
 
             function renderGraph({ nodes, links, formerLinks = [] }) {
+                currentGraphData = { nodes, links, formerLinks }; // Also store it here for imported maps
                 // Filter out removed users (userId === -1)
                 nodes = nodes.filter(node => node.id !== -1);
                 links = links.filter(link => {
@@ -2088,10 +2110,10 @@
                         d3.select(this).raise();
                     })
                     .on('mousemove', event => {
-    const graphContainer = document.getElementById('graph-container');
-    const [x, y] = d3.pointer(event, graphContainer);
-    tooltip.style("left", (x + 15) + "px").style("top", (y + 15) + "px");
-})
+                        const graphContainer = document.getElementById('graph-container');
+                        const [x, y] = d3.pointer(event, graphContainer);
+                        tooltip.style("left", (x + 15) + "px").style("top", (y + 15) + "px");
+                    })
                     .on('mouseout', () => (tooltip.style("opacity", 0), nodeGroup.style('opacity', 1), link.style('stroke-opacity', 0.6), applySearchHighlight()))
                     .on('click', (event, d) => (event.stopPropagation(), showNodeCard(d)));
 
@@ -2120,6 +2142,59 @@
                 nodeElement.append("circle").attr("class", "poi-indicator").attr("cx", 10).attr("cy", -10).attr("r", 8).attr("fill", "#ef4444").attr("stroke", "#121315").attr("stroke-width", 2);
                 const icon = nodeElement.append("g").attr("class", "poi-icon").attr("transform", "translate(10, -10) scale(0.4)");
                 icon.append("path").attr("d", "M-1.3,1.45 C-1.3,1.45 -1.3,1.45 -1.3,1.45 C-1.3,0.65 -0.68,0.03 -0.01,0.03 C0.67,0.03 1.28,0.65 1.28,1.45 C1.28,1.45 1.28,1.45 1.28,1.45 C1.28,2.25 0.67,2.87 -0.01,2.87 C-0.68,2.87 -1.3,2.25 -1.3,1.45 Z M-1.63,-19.78 C-1.63,-19.78 -1.63,-19.78 -1.63,-19.78 C-1.63,-20.5 -1.04,-21.1 -0.27,-21.1 C0.49,-21.1 1.08,-20.5 1.08,-19.78 C1.08,-19.78 1.08,-19.78 1.08,-19.78 L1.08,-6.4 C1.08,-5.68 0.49,-5.08 -0.27,-5.08 C-1.04,-5.08 -1.63,-5.68 -1.63,-6.4 C-1.63,-6.4 -1.63,-6.4 -1.63,-6.4 Z").attr("fill", "white").attr("transform", "translate(0, 10)");
+            }
+
+            // --- Export/Import Functions ---
+            function handleExportMap() {
+                if (!currentGraphData || currentGraphData.nodes.length === 0) {
+                    return showNotification('No graph data to export.', 'warning');
+                }
+                const exportData = {
+                    ...currentGraphData,
+                    seedUsers: Array.from(seedUsers)
+                };
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `netvis-map-${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('Map exported successfully!', 'success');
+            }
+
+            function handleImportMap(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!data.nodes || !data.links) {
+                            throw new Error('Invalid map file format.');
+                        }
+                        // Restore seed users from the imported file
+                        if (data.seedUsers && Array.isArray(data.seedUsers)) {
+                            seedUsers = new Set(data.seedUsers);
+                        } else {
+                           seedUsers.clear(); // Clear seed users if not present in file
+                        }
+                        updateUI(); // Render the user tags from the restored set
+                        placeholder.style.display = 'none';
+                        svg.selectAll("*").remove();
+                        renderGraph(data); // Render the graph, which will style nodes based on the restored set
+                        showNotification('Map imported successfully!', 'success');
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        showNotification(`Error importing map: ${error.message}`, 'error');
+                    } finally {
+                        importFileInput.value = ''; // Reset file input
+                    }
+                };
+                reader.readAsText(file);
             }
             
 
@@ -2495,4 +2570,3 @@
 </body>
 
 </html>
-
