@@ -191,6 +191,87 @@
             border: 1px solid rgba(220, 38, 38, 0.3);
             box-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
         }
+
+        /* --- Ring Indicator Styling --- */
+        .ring-indicator {
+            background-color: #ef4444;
+            color: white;
+            border: 2px solid #1f222c;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .ring-indicator:hover {
+            background-color: #dc2626;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+        }
+
+        .ring-details-btn:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* --- Ring Details Modal Styling --- */
+        .modal-content.max-w-2xl {
+            max-width: 42rem;
+        }
+
+        #ring-members-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #ring-members-list::-webkit-scrollbar-track {
+            background: rgba(75, 85, 99, 0.3);
+            border-radius: 3px;
+        }
+
+        #ring-members-list::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+
+        #ring-members-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.7);
+        }
+
+        /* Form Validation Styles */
+        .form-field-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3) !important;
+        }
+
+        .form-field-success {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .validation-message {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            transition: all 0.2s ease;
+        }
+
+        .validation-message.error {
+            color: #fca5a5;
+        }
+
+        .validation-message.success {
+            color: #6ee7b7;
+        }
+
+        .char-counter {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        .char-counter.warning {
+            color: #fbbf24;
+        }
+
+        .char-counter.error {
+            color: #fca5a5;
+        }
     </style>
 </head>
 
@@ -327,6 +408,154 @@
         </div>
     </div>
 
+    <!-- Ring Selection Modal -->
+    <div id="ring-selection-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="ring-selection-title" class="text-lg font-bold mb-4 text-white">Select Ring</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Available Rings</label>
+                <div id="ring-selection-list" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- Ring options will be populated here -->
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button id="ring-selection-cancel-btn"
+                    class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                <button id="ring-selection-submit-btn"
+                    class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Ring Modal -->
+    <div id="create-ring-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold mb-4 text-white">Create New Ring</h3>
+            <div class="mb-4">
+                <label for="ring-name" class="block text-sm font-medium text-gray-300 mb-2">Ring Name</label>
+                <input type="text" id="ring-name" class="w-full" placeholder="Enter ring name..." maxlength="50">
+                <div id="ring-name-error" class="text-red-400 text-xs mt-1 hidden"></div>
+                <div class="text-xs text-gray-500 mt-1">3-50 characters, letters, numbers, spaces, hyphens, underscores, and periods only</div>
+            </div>
+            <div class="mb-4">
+                <label for="ring-description" class="block text-sm font-medium text-gray-300 mb-2">Description (Optional)</label>
+                <textarea id="ring-description"
+                    class="w-full bg-[#1f222c] border border-gray-600 text-white rounded px-3 py-2" rows="3"
+                    placeholder="Describe this ring..." maxlength="200"></textarea>
+                <div id="ring-description-error" class="text-red-400 text-xs mt-1 hidden"></div>
+                <div class="text-xs text-gray-500 mt-1"><span id="description-char-count">0</span>/200 characters</div>
+            </div>
+            <div class="mb-4">
+                <label class="flex items-center gap-2 text-sm text-gray-300">
+                    <input type="checkbox" id="add-current-user" checked class="rounded">
+                    Add current user to this ring
+                </label>
+            </div>
+            <div class="flex gap-3">
+                <button id="create-ring-cancel-btn"
+                    class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors">Cancel</button>
+                <button id="create-ring-submit-btn"
+                    class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors">Create Ring</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ring Details Modal -->
+    <div id="ring-details-modal" class="modal-overlay">
+        <div class="modal-content max-w-4xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="ring-details-title" class="text-lg font-bold text-white">Ring Details</h3>
+                <button id="ring-details-close-btn" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Ring Info -->
+                <div class="bg-red-900/20 border border-red-700/40 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 id="ring-details-name" class="font-semibold text-red-200 text-lg">Ring Name</h4>
+                        <div class="flex items-center gap-2">
+                            <span id="ring-details-member-count" class="text-xs text-red-400 bg-red-800/30 px-2 py-1 rounded">0 members</span>
+                            <span id="ring-details-status" class="text-xs text-green-400 bg-green-800/30 px-2 py-1 rounded">Active</span>
+                        </div>
+                    </div>
+                    <p id="ring-details-description" class="text-sm text-gray-300 mb-3">Ring description will appear here</p>
+
+                    <!-- Ring Metadata -->
+                    <div class="grid grid-cols-2 gap-4 text-xs text-gray-400 pt-3 border-t border-red-700/30">
+                        <div>
+                            <span class="block font-semibold">Created By:</span>
+                            <span id="ring-details-created-by">Unknown</span>
+                        </div>
+                        <div>
+                            <span class="block font-semibold">Created Date:</span>
+                            <span id="ring-details-created-date">Unknown</span>
+                        </div>
+                        <div>
+                            <span class="block font-semibold">Last Updated:</span>
+                            <span id="ring-details-updated-date">Unknown</span>
+                        </div>
+                        <div>
+                            <span class="block font-semibold">Ring ID:</span>
+                            <span id="ring-details-id" class="font-mono">Unknown</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ring Statistics -->
+                <div class="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+                    <h5 class="font-semibold text-white mb-3">Ring Statistics</h5>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-gray-700/30 rounded p-3">
+                            <div id="ring-stats-total-members" class="text-xl font-bold text-white">0</div>
+                            <div class="text-xs text-gray-400">Total Members</div>
+                        </div>
+                        <div class="bg-gray-700/30 rounded p-3">
+                            <div id="ring-stats-active-members" class="text-xl font-bold text-green-400">0</div>
+                            <div class="text-xs text-gray-400">Active Members</div>
+                        </div>
+                        <div class="bg-gray-700/30 rounded p-3">
+                            <div id="ring-stats-recent-activity" class="text-xl font-bold text-blue-400">0</div>
+                            <div class="text-xs text-gray-400">Recent Activity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Ring Members List -->
+                <div class="bg-gray-800/30 border border-gray-700 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h5 class="font-semibold text-white">Ring Members</h5>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="member-search" placeholder="Search members..." 
+                                   class="text-xs bg-gray-700 border border-gray-600 text-white rounded px-2 py-1 w-32">
+                            <button id="refresh-members-btn" class="text-gray-400 hover:text-white transition-colors text-xs">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Member Cards Grid -->
+                    <div id="ring-members-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                        <!-- Members will be populated here with enhanced cards -->
+                    </div>
+
+                    <div id="ring-members-pagination" class="flex items-center justify-between mt-4 pt-3 border-t border-gray-700">
+                        <span id="ring-members-info" class="text-xs text-gray-400">Showing 0 of 0 members</span>
+                        <div class="flex items-center gap-2">
+                            <button id="ring-members-prev" class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded disabled:opacity-50">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <button id="ring-members-next" class="text-xs px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded disabled:opacity-50">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>/div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
@@ -373,6 +602,17 @@
             let currentUser = null; // Will be populated from localStorage
             let afterLoginCallback = null;
 
+            // Ring validation constants (matching server-side)
+            const RING_VALIDATION = {
+                NAME_MIN_LENGTH: 3,
+                NAME_MAX_LENGTH: 50,
+                DESCRIPTION_MAX_LENGTH: 200,
+                MAX_MEMBERS_PER_RING: 100,
+                MAX_RINGS_PER_SYSTEM: 1000,
+                VALID_NAME_PATTERN: /^[a-zA-Z0-9\s\-_.]+$/,
+                DEFAULT_COLOR: '#ef4444'
+            };
+
             const handleSearch = async (queryOverride) => {
                 const query = queryOverride || searchInput.value.trim();
                 if (!query) return;
@@ -392,7 +632,30 @@
                     currentLookupData = data;
                     fullFriendsList = data.friends || [];
                     currentFriendsPage = 1;
-                    renderProfile(data);
+                    
+                    // Fetch ring data for the user
+                    try {
+                        const ringResponse = await fetch(`${AUTH_WORKER_URL}/rings`, {
+    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+});
+                        if (ringResponse.ok) {
+                            const ringData = await ringResponse.json();
+                            if (ringData.success && ringData.rings) {
+                                // Filter rings that contain the current user
+                                const userRings = ringData.rings.filter(ring => {
+                                    return ring.members && ring.members.some(member => 
+                                        member.userId === data.profile.id || member.id === data.profile.id
+                                    );
+                                });
+                                currentLookupData.rings = userRings;
+                            }
+                        }
+                    } catch (ringError) {
+                        console.warn('Failed to fetch ring data:', ringError);
+                        currentLookupData.rings = [];
+                    }
+                    
+                    renderProfile(currentLookupData);
 
                 } catch (error) {
                     console.error('Lookup Error:', error);
@@ -449,6 +712,24 @@
                 if (e.target.closest('#action-mark-poi')) handleMarkPOI();
                 if (e.target.closest('#action-unmark-poi')) handleUnmarkPOI();
                 if (e.target.closest('#action-view-poi')) handleViewPOI();
+                
+                // Handle ring management actions
+                if (e.target.closest('#action-add-to-ring')) handleAddToRing();
+                if (e.target.closest('#action-remove-from-ring')) handleRemoveFromRing();
+                if (e.target.closest('#action-create-ring')) handleCreateRing();
+                
+                // Handle ring details button
+                if (e.target.closest('.ring-details-btn')) {
+                    const ringId = e.target.closest('.ring-details-btn').dataset.ringId;
+                    if (ringId) handleViewRingDetails(ringId);
+                }
+                
+                // Handle ring member navigation
+                if (e.target.closest('.ring-member-link')) {
+                    e.preventDefault();
+                    const username = e.target.closest('.ring-member-link').dataset.username;
+                    if (username) handleSearch(username);
+                }
 
                 if (e.target.closest('#action-share-profile')) {
                     e.preventDefault();
@@ -478,6 +759,73 @@
             sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
             loginBtn.addEventListener('click', () => showLoginModal());
             logoutBtn.addEventListener('click', handleLogout);
+
+            // Ring modal event listeners
+            const ringSelectionModal = document.getElementById('ring-selection-modal');
+            const ringSelectionCancelBtn = document.getElementById('ring-selection-cancel-btn');
+            const ringSelectionSubmitBtn = document.getElementById('ring-selection-submit-btn');
+            const createRingModal = document.getElementById('create-ring-modal');
+            const createRingCancelBtn = document.getElementById('create-ring-cancel-btn');
+            const createRingSubmitBtn = document.getElementById('create-ring-submit-btn');
+            const ringNameInput = document.getElementById('ring-name');
+            const ringDescriptionInput = document.getElementById('ring-description');
+            const addCurrentUserCheckbox = document.getElementById('add-current-user');
+            const ringNameError = document.getElementById('ring-name-error');
+            const ringDescriptionError = document.getElementById('ring-description-error');
+            const descriptionCharCount = document.getElementById('description-char-count');
+
+            ringSelectionCancelBtn.addEventListener('click', () => ringSelectionModal.classList.remove('flex'));
+            ringSelectionSubmitBtn.addEventListener('click', handleRingSelectionSubmit);
+            createRingCancelBtn.addEventListener('click', () => createRingModal.classList.remove('flex'));
+            createRingSubmitBtn.addEventListener('click', handleCreateRingSubmit);
+
+            // Real-time validation listeners
+            ringNameInput.addEventListener('input', () => {
+                const nameValidation = validateRingName(ringNameInput.value);
+                if (ringNameInput.value.trim()) {
+                    if (!nameValidation.isValid) {
+                        showFieldError(ringNameInput, ringNameError, nameValidation.error);
+                    } else {
+                        showFieldSuccess(ringNameInput, ringNameError);
+                    }
+                } else {
+                    clearFieldValidation(ringNameInput, ringNameError);
+                }
+                validateRingForm();
+            });
+
+            ringDescriptionInput.addEventListener('input', () => {
+                updateDescriptionCharCount();
+                const descriptionValidation = validateRingDescription(ringDescriptionInput.value);
+                if (ringDescriptionInput.value.trim()) {
+                    if (!descriptionValidation.isValid) {
+                        showFieldError(ringDescriptionInput, ringDescriptionError, descriptionValidation.error);
+                    } else {
+                        showFieldSuccess(ringDescriptionInput, ringDescriptionError);
+                    }
+                } else {
+                    clearFieldValidation(ringDescriptionInput, ringDescriptionError);
+                }
+                validateRingForm();
+            });
+
+            // Validate on blur for better UX
+            ringNameInput.addEventListener('blur', validateRingForm);
+            ringDescriptionInput.addEventListener('blur', validateRingForm);
+
+            // Ring details modal event listeners
+            const ringDetailsModal = document.getElementById('ring-details-modal');
+            const ringDetailsCloseBtn = document.getElementById('ring-details-close-btn');
+            const memberSearchInput = document.getElementById('member-search');
+            const refreshMembersBtn = document.getElementById('refresh-members-btn');
+            const ringMembersPrevBtn = document.getElementById('ring-members-prev');
+            const ringMembersNextBtn = document.getElementById('ring-members-next');
+
+            ringDetailsCloseBtn.addEventListener('click', () => ringDetailsModal.classList.remove('flex'));
+            memberSearchInput.addEventListener('input', handleMemberSearch);
+            refreshMembersBtn.addEventListener('click', () => loadRingDetails(currentRingId, true));
+            ringMembersPrevBtn.addEventListener('click', () => changeMembersPage(-1));
+            ringMembersNextBtn.addEventListener('click', () => changeMembersPage(1));
 
             const setLoadingState = () => {
                 resultContainer.innerHTML = `<div class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div><p class="mt-4 text-gray-400">Fetching user data...</p></div>`;
@@ -590,6 +938,9 @@
                             <button id="actions-menu-btn" class="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-700"><i class="fas fa-ellipsis-v"></i></button>
                             <div id="actions-menu-dropdown" class="actions-menu hidden bg-[#1f222c] border border-gray-700 rounded-lg shadow-xl w-48 text-sm">
                                 <a href="#" id="action-share-profile" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-share-alt w-4"></i><span>Share Profile</span></a><hr class="border-gray-700 my-1">
+                                <a href="#" id="action-add-to-ring" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-300"><i class="fas fa-link w-4"></i><span>Add to Ring</span></a>
+                                <a href="#" id="action-remove-from-ring" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400"><i class="fas fa-unlink w-4"></i><span>Remove from Ring</span></a>
+                                <a href="#" id="action-create-ring" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-300"><i class="fas fa-plus-circle w-4"></i><span>Create New Ring</span></a><hr class="border-gray-700 my-1">
                                 <a href="#" id="action-mark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-exclamation-triangle w-4"></i><span>Mark as POI</span></a>
                                 <a href="#" id="action-unmark-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700 text-red-400"><i class="fas fa-times w-4"></i><span>Unmark POI</span></a>
                                 <a href="#" id="action-view-poi" class="flex items-center gap-3 px-4 py-2 hover:bg-gray-700"><i class="fas fa-info-circle w-4"></i><span>View POI Details</span></a>
@@ -601,11 +952,15 @@
                             <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
                             ${profile.groupRole ? `<div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg" style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};"><i class="fas fa-shield-alt mr-2"></i><span>${profile.groupRole}</span></div>` : ''}
                             <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-                                <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
+                                <div class="relative">
+                                    <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
+                                    ${data.rings && data.rings.length > 0 ? `<div class="absolute -top-2 -right-2 flex flex-wrap gap-1">${data.rings.slice(0, 3).map((ring, index) => `<div class="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg" title="Ring: ${ring.name}" style="z-index: ${10 - index}; margin-left: ${index * -8}px;"><i class="fas fa-link"></i></div>`).join('')}${data.rings.length > 3 ? `<div class="bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg font-bold" title="${data.rings.length - 3} more rings" style="margin-left: -8px;">+${data.rings.length - 3}</div>` : ''}</div>` : ''}
+                                </div>
                                 <div class="sm:ml-6 mt-4 sm:mt-0"><h2 class="text-3xl font-bold">${profile.displayName}</h2><p class="text-gray-400">@${profile.name}</p><a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">View on Roblox <i class="fas fa-external-link-alt ml-1"></i></a></div>
                             </div>
                             ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm"><div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span id="poi-card-marked-by" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span id="poi-card-date" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Reason:</strong><p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p></div></div></div></div></div>` : ''}
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">About</h3><p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p></div>
+                            ${data.rings && data.rings.length > 0 ? `<div class="mt-6 border-t border-red-700/30 pt-6 bg-red-900/10 p-4 rounded-lg"><h3 class="font-bold text-lg mb-4 text-red-300"><i class="fas fa-link mr-2"></i>Exploiter Rings (${data.rings.length})</h3><div class="space-y-3">${data.rings.map(ring => `<div class="bg-red-900/20 border border-red-700/40 rounded-lg p-4"><div class="flex items-center justify-between mb-2"><h4 class="font-semibold text-red-200">${ring.name}</h4><span class="text-xs text-red-400 bg-red-800/30 px-2 py-1 rounded">${ring.members ? ring.members.length : 0} members</span></div>${ring.description ? `<p class="text-sm text-gray-300 mb-3">${ring.description}</p>` : ''}${ring.members && ring.members.length > 0 ? `<div class="mb-3"><p class="text-xs text-gray-400 mb-2">Other Members:</p><div class="flex flex-wrap gap-2">${ring.members.filter(m => m.userId !== profile.id).slice(0, 5).map(member => `<a href="#" class="ring-member-link text-red-300 hover:text-red-200 text-xs bg-red-800/30 px-2 py-1 rounded transition-colors" data-username="${member.username || member.name}" title="View ${member.username || member.name}'s profile">${member.username || member.name}</a>`).join('')}${ring.members.filter(m => m.userId !== profile.id).length > 5 ? `<span class="text-xs text-gray-400 bg-red-800/20 px-2 py-1 rounded">+${ring.members.filter(m => m.userId !== profile.id).length - 5} more</span>` : ''}</div></div>` : ''}<div class="flex items-center gap-4 text-xs text-gray-400"><span><i class="fas fa-user mr-1"></i>Created by: ${ring.createdBy || ring.addedBy || 'Unknown'}</span><span><i class="fas fa-calendar mr-1"></i>${ring.createdAt ? new Date(ring.createdAt).toLocaleDateString() : ring.addedAt ? new Date(ring.addedAt).toLocaleDateString() : 'Unknown date'}</span></div><div class="mt-3 pt-3 border-t border-red-700/30"><button class="ring-details-btn text-red-300 hover:text-red-200 text-sm font-medium transition-colors" data-ring-id="${ring.id}"><i class="fas fa-eye mr-1"></i>View Ring Details</button></div></div>`).join('')}</div></div>` : ''}
                             <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Stats</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div><div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"><div class="stat-card"><p class="text-sm text-gray-400">Account Age</p><p class="font-bold text-lg">${accountAge}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Badges</p><p class="font-bold text-lg">${profile.badgeCount ?? 0}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Activity Level</p><p class="font-bold text-lg">${profile.activityLevel || 'Unknown'}</p></div></div></div>
                             ${profile.notableBadges && profile.notableBadges.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Notable Badges</h3><div class="flex flex-wrap gap-2">${profile.notableBadges.map(badge => `<span class="inline-block bg-yellow-600/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-medium border border-yellow-600/30" title="${badge.description || ''}">${badge.name}</span>`).join('')}</div></div>` : ''}
                             ${profile.groups && profile.groups.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Groups (${profile.groups.length})</h3><div id="groups-container"><div id="groups-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">${profile.groups.slice(0, 6).map(g => `<div class="stat-card flex items-center gap-3"><div class="flex-shrink-0"><i class="fas fa-users text-blue-400 text-xl"></i></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm truncate">${g.name}</p><p class="text-xs text-gray-400">${g.role || 'Member'}</p></div></div>`).join('')}</div>${profile.groups.length > 6 ? `<div class="text-center mt-4"><button id="show-more-groups-btn" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">Show ${profile.groups.length - 6} More Groups</button></div>` : ''}</div></div>` : ''}
@@ -621,6 +976,106 @@
                 updateAuthUI();
                 updateMetaTags(profile);
             };
+
+            // ===== CLIENT-SIDE VALIDATION FUNCTIONS =====
+
+            function validateRingName(name) {
+                const trimmed = name.trim();
+                
+                if (!trimmed) {
+                    return { isValid: false, error: 'Ring name is required' };
+                }
+                
+                if (trimmed.length < RING_VALIDATION.NAME_MIN_LENGTH) {
+                    return { isValid: false, error: `Ring name must be at least ${RING_VALIDATION.NAME_MIN_LENGTH} characters` };
+                }
+                
+                if (trimmed.length > RING_VALIDATION.NAME_MAX_LENGTH) {
+                    return { isValid: false, error: `Ring name must be no more than ${RING_VALIDATION.NAME_MAX_LENGTH} characters` };
+                }
+                
+                if (!RING_VALIDATION.VALID_NAME_PATTERN.test(trimmed)) {
+                    return { isValid: false, error: 'Ring name contains invalid characters. Only letters, numbers, spaces, hyphens, underscores, and periods are allowed' };
+                }
+                
+                return { isValid: true };
+            }
+
+            function validateRingDescription(description) {
+                const trimmed = description.trim();
+                
+                if (trimmed.length > RING_VALIDATION.DESCRIPTION_MAX_LENGTH) {
+                    return { isValid: false, error: `Description must be no more than ${RING_VALIDATION.DESCRIPTION_MAX_LENGTH} characters` };
+                }
+                
+                return { isValid: true };
+            }
+
+            function showFieldError(field, errorElement, message) {
+                field.classList.add('form-field-error');
+                field.classList.remove('form-field-success');
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+
+            function showFieldSuccess(field, errorElement) {
+                field.classList.add('form-field-success');
+                field.classList.remove('form-field-error');
+                errorElement.classList.add('hidden');
+            }
+
+            function clearFieldValidation(field, errorElement) {
+                field.classList.remove('form-field-error', 'form-field-success');
+                errorElement.classList.add('hidden');
+            }
+
+            function validateRingForm() {
+                const name = ringNameInput.value;
+                const description = ringDescriptionInput.value;
+                let isValid = true;
+
+                // Validate name
+                const nameValidation = validateRingName(name);
+                if (!nameValidation.isValid) {
+                    showFieldError(ringNameInput, ringNameError, nameValidation.error);
+                    isValid = false;
+                } else {
+                    showFieldSuccess(ringNameInput, ringNameError);
+                }
+
+                // Validate description
+                const descriptionValidation = validateRingDescription(description);
+                if (!descriptionValidation.isValid) {
+                    showFieldError(ringDescriptionInput, ringDescriptionError, descriptionValidation.error);
+                    isValid = false;
+                } else {
+                    showFieldSuccess(ringDescriptionInput, ringDescriptionError);
+                }
+
+                // Update submit button state
+                createRingSubmitBtn.disabled = !isValid;
+                createRingSubmitBtn.style.opacity = isValid ? '1' : '0.5';
+
+                return isValid;
+            }
+
+            function updateDescriptionCharCount() {
+                const count = ringDescriptionInput.value.length;
+                const maxLength = RING_VALIDATION.DESCRIPTION_MAX_LENGTH;
+                descriptionCharCount.textContent = count;
+                
+                const charCountElement = descriptionCharCount.parentElement;
+                charCountElement.classList.remove('char-counter', 'warning', 'error');
+                charCountElement.classList.add('char-counter');
+                
+                if (count > maxLength * 0.9) {
+                    charCountElement.classList.add('warning');
+                }
+                if (count > maxLength) {
+                    charCountElement.classList.add('error');
+                }
+            }
+
             <!-- --- Auth Functions --- -->
             function updateAuthUI() {
                 const isAuth = !!currentUser;
@@ -630,12 +1085,22 @@
                 const markPoi = document.getElementById('action-mark-poi');
                 const unmarkPoi = document.getElementById('action-unmark-poi');
                 const viewPoi = document.getElementById('action-view-poi');
+                const addToRing = document.getElementById('action-add-to-ring');
+                const removeFromRing = document.getElementById('action-remove-from-ring');
+                const createRing = document.getElementById('action-create-ring');
 
                 if (markPoi && unmarkPoi && viewPoi) {
                     const isPOI = currentLookupData?.profile?.isPOI;
                     markPoi.style.display = isAuth && !isPOI ? 'flex' : 'none';
                     unmarkPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
                     viewPoi.style.display = isAuth && isPOI ? 'flex' : 'none';
+                }
+
+                if (addToRing && removeFromRing && createRing) {
+                    const userInRings = currentLookupData?.rings?.length > 0;
+                    addToRing.style.display = isAuth ? 'flex' : 'none';
+                    removeFromRing.style.display = isAuth && userInRings ? 'flex' : 'none';
+                    createRing.style.display = isAuth ? 'flex' : 'none';
                 }
 
                 if (isAuth) {
@@ -719,6 +1184,460 @@
             function handleMarkPOI() { if (!currentUser) return showLoginModal(handleMarkPOI); poiModal.classList.add('flex'); poiReasonInput.focus(); }
             function handleUnmarkPOI() { if (!currentUser) return showLoginModal(handleUnmarkPOI); unmarkPOI(); }
             function handleViewPOI() { if (!currentUser) return showLoginModal(handleViewPOI); fetchAndShowPOIDetails(currentLookupData.profile.id); }
+            
+            function handleViewRingDetails(ringId) {
+                loadRingDetails(ringId);
+            }
+            
+            function handleAddToRing() {
+                if (!currentUser) return showLoginModal(handleAddToRing);
+                showRingSelectionModal('add');
+            }
+            
+            function handleRemoveFromRing() {
+                if (!currentUser) return showLoginModal(handleRemoveFromRing);
+                showRingSelectionModal('remove');
+            }
+            
+            function handleCreateRing() {
+                if (!currentUser) return showLoginModal(handleCreateRing);
+                showCreateRingModal();
+            }
+
+            // Ring details functionality
+            let currentRingId = null;
+            let currentRingMembers = [];
+            let filteredRingMembers = [];
+            let currentMembersPage = 1;
+            const membersPerPage = 10;
+
+            async function loadRingDetails(ringId, forceRefresh = false) {
+                currentRingId = ringId;
+                const modal = document.getElementById('ring-details-modal');
+                
+                try {
+                    // Show loading state
+                    document.getElementById('ring-details-title').textContent = 'Loading Ring Details...';
+                    modal.classList.add('flex');
+                    
+                    // Fetch detailed ring information
+                    const response = await fetch(`${AUTH_WORKER_URL}/rings/${ringId}`, {
+                        headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to fetch ring details');
+                    
+                    const result = await response.json();
+                    if (!result.success) throw new Error(result.error || 'Failed to load ring details');
+                    
+                    const ring = result.ring;
+                    currentRingMembers = ring.members || [];
+                    filteredRingMembers = [...currentRingMembers];
+                    currentMembersPage = 1;
+                    
+                    // Populate ring information
+                    document.getElementById('ring-details-title').textContent = 'Ring Details';
+                    document.getElementById('ring-details-name').textContent = ring.name;
+                    document.getElementById('ring-details-description').textContent = ring.description || 'No description provided';
+                    document.getElementById('ring-details-member-count').textContent = `${ring.members?.length || 0} members`;
+                    document.getElementById('ring-details-status').textContent = ring.isActive ? 'Active' : 'Inactive';
+                    document.getElementById('ring-details-created-by').textContent = ring.createdBy || 'Unknown';
+                    document.getElementById('ring-details-created-date').textContent = ring.createdAt ? new Date(ring.createdAt).toLocaleDateString() : 'Unknown';
+                    document.getElementById('ring-details-updated-date').textContent = ring.updatedAt ? new Date(ring.updatedAt).toLocaleDateString() : 'Unknown';
+                    document.getElementById('ring-details-id').textContent = ring.id;
+                    
+                    // Update statistics
+                    const totalMembers = ring.members?.length || 0;
+                    const activeMembers = ring.members?.filter(m => m.isActive !== false).length || 0;
+                    const recentActivity = ring.recentActivityCount || 0;
+                    
+                    document.getElementById('ring-stats-total-members').textContent = totalMembers;
+                    document.getElementById('ring-stats-active-members').textContent = activeMembers;
+                    document.getElementById('ring-stats-recent-activity').textContent = recentActivity;
+                    
+                    // Update status styling
+                    const statusEl = document.getElementById('ring-details-status');
+                    statusEl.className = ring.isActive 
+                        ? 'text-xs text-green-400 bg-green-800/30 px-2 py-1 rounded'
+                        : 'text-xs text-red-400 bg-red-800/30 px-2 py-1 rounded';
+                    
+                    // Render members list
+                    renderRingMembers();
+                    
+                } catch (error) {
+                    console.error('Error loading ring details:', error);
+                    showNotification(`Error loading ring details: ${error.message}`, 'error');
+                    modal.classList.remove('flex');
+                }
+            }
+
+            async function renderRingMembers() {
+                const membersList = document.getElementById('ring-members-list');
+                const membersInfo = document.getElementById('ring-members-info');
+                const prevBtn = document.getElementById('ring-members-prev');
+                const nextBtn = document.getElementById('ring-members-next');
+
+                const totalMembers = filteredRingMembers.length;
+                const totalPages = Math.ceil(totalMembers / membersPerPage);
+                const startIndex = (currentMembersPage - 1) * membersPerPage;
+                const endIndex = Math.min(startIndex + membersPerPage, totalMembers);
+                const pageMembers = filteredRingMembers.slice(startIndex, endIndex);
+
+                // Show loading state first
+                membersList.innerHTML = pageMembers.map(() => `
+                    <div class="bg-gray-700/40 border border-gray-600 rounded-lg p-4 animate-pulse">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-16 h-16 bg-gray-600 rounded-full mb-3"></div>
+                            <div class="w-20 h-4 bg-gray-600 rounded mb-2"></div>
+                            <div class="w-16 h-3 bg-gray-600 rounded mb-3"></div>
+                            <div class="flex gap-2">
+                                <div class="w-12 h-6 bg-gray-600 rounded"></div>
+                                <div class="w-12 h-6 bg-gray-600 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Try to load Roblox avatars (will fallback if CORS fails)
+                if (typeof loadRobloxAvatarsBatch === 'function') {
+                    try {
+                        await loadRobloxAvatarsBatch(pageMembers);
+                    } catch (error) {
+                        console.warn('Avatar loading failed, using fallbacks:', error);
+                    }
+                }
+
+                // Render enhanced member cards
+                membersList.innerHTML = pageMembers.map((member, index) => {
+                    const username = member.username || member.name;
+                    const displayName = member.displayName || username;
+                    const avatarInitial = displayName.charAt(0).toUpperCase();
+
+                    // Try to get cached avatar, fallback to member's existing avatarUrl or placeholder
+                    let avatarUrl = member.avatarUrl || `https://placehold.co/80x80/1f222c/FFFFFF?text=${avatarInitial}`;
+                    if (typeof avatarCache !== 'undefined' && avatarCache.has(member.userId)) {
+                        avatarUrl = avatarCache.get(member.userId);
+                    }
+
+                    return `
+                    <div class="bg-gray-700/40 border border-gray-600 rounded-lg p-4 hover:bg-gray-700/60 transition-all duration-200 hover:border-gray-500">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="relative mb-3">
+                                <img src="${avatarUrl}" 
+                                     alt="${displayName}'s avatar" 
+                                     class="w-16 h-16 rounded-full border-3 border-gray-500 hover:border-gray-400 transition-colors"
+                                     onerror="this.src='https://placehold.co/80x80/1f222c/FFFFFF?text=${avatarInitial}'">
+                                ${member.isActive === false ? '<div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"><i class="fas fa-ban"></i></div>' : ''}
+                            </div>
+                            <div class="w-full">
+                                <div class="font-medium text-white hover:text-red-300 transition-colors mb-1">
+                                    ${displayName}
+                                </div>
+                                <div class="text-xs text-gray-400 mb-2">
+                                    @${username}
+                                </div>
+                                <div class="text-xs text-gray-500 mb-3 leading-relaxed">
+                                    <div>ID: ${member.userId}</div>
+                                    <div>Added: ${member.addedAt ? new Date(member.addedAt).toLocaleDateString() : 'Unknown'}</div>
+                                    ${member.addedBy ? `<div>By: ${member.addedBy}</div>` : ''}
+                                </div>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button class="member-view-btn text-blue-400 hover:text-blue-300 text-xs px-2 py-1 bg-blue-900/30 hover:bg-blue-900/50 rounded transition-colors" 
+                                            data-username="${username}"
+                                            title="View Profile">
+                                        <i class="fas fa-eye mr-1"></i>View
+                                    </button>
+                                    ${authToken ? `<button class="member-remove-btn text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-red-900/30 hover:bg-red-900/50 rounded transition-colors" 
+                                                           data-user-id="${member.userId}"
+                                                           data-username="${username}"
+                                                           title="Remove from Ring">
+                                        <i class="fas fa-times mr-1"></i>Remove
+                                    </button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Add event listeners to the new buttons - using direct function calls
+                const viewButtons = membersList.querySelectorAll('.member-view-btn');
+                const removeButtons = membersList.querySelectorAll('.member-remove-btn');
+
+                viewButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const username = btn.dataset.username;
+                        console.log('View button clicked for:', username);
+                        handleSearch(username);
+                    });
+                });
+
+                removeButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const userId = btn.dataset.userId;
+                        const username = btn.dataset.username;
+                        console.log('Remove button clicked for:', username, userId);
+                        removeMemberFromRing(userId);
+                    });
+                });
+
+                // Update pagination info
+                membersInfo.textContent = totalMembers > 0 
+                    ? `Showing ${startIndex + 1}-${endIndex} of ${totalMembers} members`
+                    : 'No members found';
+
+                // Update pagination buttons
+                prevBtn.disabled = currentMembersPage <= 1;
+                nextBtn.disabled = currentMembersPage >= totalPages;
+            }
+
+            function handleMemberSearch() {
+                const searchTerm = document.getElementById('member-search').value.toLowerCase().trim();
+                
+                if (!searchTerm) {
+                    filteredRingMembers = [...currentRingMembers];
+                } else {
+                    filteredRingMembers = currentRingMembers.filter(member => {
+                        const username = (member.username || member.name || '').toLowerCase();
+                        const displayName = (member.displayName || '').toLowerCase();
+                        const userId = (member.userId || '').toString();
+                        
+                        return username.includes(searchTerm) || 
+                               displayName.includes(searchTerm) || 
+                               userId.includes(searchTerm);
+                    });
+                }
+                
+                currentMembersPage = 1;
+                renderRingMembers();
+            }
+
+            function changeMembersPage(direction) {
+                const totalPages = Math.ceil(filteredRingMembers.length / membersPerPage);
+                const newPage = currentMembersPage + direction;
+                
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentMembersPage = newPage;
+                    renderRingMembers();
+                }
+            }
+
+            async function removeMemberFromRing(userId) {
+                if (!authToken) {
+                    showNotification('Authentication required', 'error');
+                    return;
+                }
+                
+                if (!confirm('Are you sure you want to remove this member from the ring?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${AUTH_WORKER_URL}/rings/${currentRingId}/members`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            userIds: [userId]
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('Member removed from ring', 'success');
+                        // Refresh the ring details
+                        loadRingDetails(currentRingId, true);
+                        // Also refresh the main profile if it's the same user
+                        if (currentLookupData?.profile?.id == userId) {
+                            handleSearch(currentLookupData.profile.id.toString());
+                        }
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showNotification(`Error removing member: ${error.message}`, 'error');
+                }
+            }
+
+            let currentRingAction = null;
+            let availableRings = [];
+
+            async function showRingSelectionModal(action) {
+                currentRingAction = action;
+                const modal = document.getElementById('ring-selection-modal');
+                const title = document.getElementById('ring-selection-title');
+                const list = document.getElementById('ring-selection-list');
+                
+                title.textContent = action === 'add' ? 'Add to Ring' : 'Remove from Ring';
+                
+                // Fetch available rings
+                try {
+                    const response = await fetch(`${AUTH_WORKER_URL}/rings`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        availableRings = result.rings || [];
+                        
+                        if (action === 'remove') {
+                            // Filter to only rings the user is in
+                            availableRings = availableRings.filter(ring => 
+                                currentLookupData.rings?.some(userRing => userRing.id === ring.id)
+                            );
+                        }
+                        
+                        if (availableRings.length === 0) {
+                            list.innerHTML = `<p class="text-gray-400 text-sm">${action === 'add' ? 'No rings available. Create a new ring first.' : 'User is not in any rings.'}</p>`;
+                        } else {
+                            list.innerHTML = availableRings.map(ring => `
+                                <label class="flex items-center gap-3 p-3 bg-gray-700/30 rounded cursor-pointer hover:bg-gray-700/50">
+                                    <input type="radio" name="selected-ring" value="${ring.id}" class="text-red-500">
+                                    <div class="flex-grow">
+                                        <p class="font-medium text-white">${ring.name}</p>
+                                        <p class="text-xs text-gray-400">${ring.members ? ring.members.length : 0} members</p>
+                                    </div>
+                                </label>
+                            `).join('');
+                        }
+                    } else {
+                        list.innerHTML = '<p class="text-red-400 text-sm">Failed to load rings.</p>';
+                    }
+                } catch (error) {
+                    list.innerHTML = '<p class="text-red-400 text-sm">Error loading rings.</p>';
+                }
+                
+                modal.classList.add('flex');
+            }
+
+            function showCreateRingModal() {
+                const modal = document.getElementById('create-ring-modal');
+                
+                // Reset form values
+                document.getElementById('ring-name').value = '';
+                document.getElementById('ring-description').value = '';
+                document.getElementById('add-current-user').checked = true;
+                
+                // Reset validation state
+                clearFieldValidation(ringNameInput, ringNameError);
+                clearFieldValidation(ringDescriptionInput, ringDescriptionError);
+                
+                // Reset character count
+                updateDescriptionCharCount();
+                
+                // Disable submit button initially
+                createRingSubmitBtn.disabled = true;
+                createRingSubmitBtn.style.opacity = '0.5';
+                
+                modal.classList.add('flex');
+                ringNameInput.focus();
+            }
+
+            async function handleRingSelectionSubmit() {
+                const selectedRing = document.querySelector('input[name="selected-ring"]:checked');
+                if (!selectedRing) {
+                    showNotification('Please select a ring', 'error');
+                    return;
+                }
+                
+                const ringId = selectedRing.value;
+                const userData = currentLookupData.profile;
+                
+                try {
+                    const endpoint = currentRingAction === 'add' 
+                        ? `${AUTH_WORKER_URL}/rings/${ringId}/members`
+                        : `${AUTH_WORKER_URL}/rings/${ringId}/members`;
+                    
+                    const method = currentRingAction === 'add' ? 'POST' : 'DELETE';
+                    
+                    const response = await fetch(endpoint, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            members: [{
+                                userId: userData.id,
+                                username: userData.name,
+                                avatarUrl: userData.avatarUrl,
+                                displayName: userData.displayName || userData.name
+                            }]
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification(`User ${currentRingAction === 'add' ? 'added to' : 'removed from'} ring`, 'success');
+                        document.getElementById('ring-selection-modal').classList.remove('flex');
+                        // Refresh the profile to show updated ring membership
+                        handleSearch(userData.id.toString());
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                }
+            }
+
+            async function handleCreateRingSubmit() {
+                const name = document.getElementById('ring-name').value.trim();
+                const description = document.getElementById('ring-description').value.trim();
+                const addCurrentUser = document.getElementById('add-current-user').checked;
+                
+                // Perform comprehensive client-side validation
+                if (!validateRingForm()) {
+                    showNotification('Please fix the validation errors before submitting', 'error');
+                    return;
+                }
+
+                // Disable submit button during request
+                createRingSubmitBtn.disabled = true;
+                createRingSubmitBtn.textContent = 'Creating...';
+                createRingSubmitBtn.style.opacity = '0.7';
+                
+                try {
+                    const userData = currentLookupData.profile;
+                    const response = await fetch(`${AUTH_WORKER_URL}/rings`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            description: description,
+                            initialMembers: addCurrentUser ? [{
+                                userId: userData.id,
+                                username: userData.name,
+                                avatarUrl: userData.avatarUrl
+                            }] : []
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('Ring created successfully', 'success');
+                        document.getElementById('create-ring-modal').classList.remove('flex');
+                        // Refresh the profile to show updated ring membership
+                        handleSearch(userData.id.toString());
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'error');
+                } finally {
+                    // Re-enable submit button
+                    createRingSubmitBtn.disabled = false;
+                    createRingSubmitBtn.textContent = 'Create Ring';
+                    createRingSubmitBtn.style.opacity = '1';
+                }
+            }
 
             async function handleSubmitPOI() {
                 const reason = poiReasonInput.value.trim();
@@ -857,7 +1776,121 @@
             }
             checkAuth();
         });
-    </script>
+    
+            // ===== ROBLOX AVATAR CACHING SYSTEM (CORS-SAFE) =====
+
+            // Avatar cache with localStorage backup
+            let avatarCache = new Map();
+            const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+            const CACHE_KEY_PREFIX = 'roblox_avatar_';
+
+            // Load cached avatars from localStorage on startup
+            function loadAvatarCacheFromStorage() {
+                try {
+                    const keys = Object.keys(localStorage).filter(key => key.startsWith(CACHE_KEY_PREFIX));
+                    keys.forEach(key => {
+                        const cached = JSON.parse(localStorage.getItem(key));
+                        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+                            const userId = key.replace(CACHE_KEY_PREFIX, '');
+                            avatarCache.set(userId, cached.url);
+                        } else {
+                            localStorage.removeItem(key); // Clean expired cache
+                        }
+                    });
+                    console.log(`Loaded ${avatarCache.size} cached avatars from storage`);
+                } catch (error) {
+                    console.warn('Failed to load avatar cache:', error);
+                }
+            }
+
+            // Save avatar to cache and localStorage
+            function cacheAvatar(userId, avatarUrl) {
+                avatarCache.set(userId, avatarUrl);
+                try {
+                    localStorage.setItem(CACHE_KEY_PREFIX + userId, JSON.stringify({
+                        url: avatarUrl,
+                        timestamp: Date.now()
+                    }));
+                } catch (error) {
+                    console.warn('Failed to save avatar to localStorage:', error);
+                }
+            }
+
+            // CORS-safe Roblox avatar fetching using proxy
+            async function getRobloxAvatarSafe(userId, username) {
+                // Check cache first
+                if (avatarCache.has(userId)) {
+                    return avatarCache.get(userId);
+                }
+
+                try {
+                    // Use allorigins.win as CORS proxy
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`)}`;
+
+                    const response = await fetch(proxyUrl);
+
+                    if (!response.ok) {
+                        throw new Error('Proxy request failed');
+                    }
+
+                    const data = await response.json();
+                    const robloxData = JSON.parse(data.contents);
+
+                    if (robloxData.data && robloxData.data.length > 0 && robloxData.data[0].imageUrl) {
+                        const avatarUrl = robloxData.data[0].imageUrl;
+                        cacheAvatar(userId, avatarUrl);
+                        console.log(`Successfully loaded avatar for ${username}: ${avatarUrl}`);
+                        return avatarUrl;
+                    }
+
+                } catch (error) {
+                    console.warn(`Failed to fetch Roblox avatar for ${username} (${userId}):`, error);
+                }
+
+                // Fallback to placeholder
+                const fallbackUrl = `https://placehold.co/150x150/1f222c/FFFFFF?text=${(username || '?').charAt(0).toUpperCase()}`;
+                cacheAvatar(userId, fallbackUrl);
+                console.log(`Using fallback avatar for ${username}`);
+                return fallbackUrl;
+            }
+
+            // Batch load avatars with better error handling
+            async function loadRobloxAvatarsBatch(members) {
+                const uncachedMembers = members.filter(member => !avatarCache.has(member.userId));
+
+                if (uncachedMembers.length === 0) {
+                    console.log('All avatars already cached');
+                    return;
+                }
+
+                console.log(`Loading ${uncachedMembers.length} uncached avatars...`);
+
+                // Process one at a time to avoid overwhelming the proxy service
+                for (const member of uncachedMembers) {
+                    try {
+                        await getRobloxAvatarSafe(member.userId, member.username || member.name);
+                        // Small delay between requests
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    } catch (error) {
+                        console.warn(`Failed to load avatar for ${member.username}:`, error);
+                        // Cache a fallback
+                        const fallbackUrl = `https://placehold.co/150x150/1f222c/FFFFFF?text=${(member.username || member.name || '?').charAt(0).toUpperCase()}`;
+                        cacheAvatar(member.userId, fallbackUrl);
+                    }
+                }
+
+                console.log(`Avatar loading complete. Cache now has ${avatarCache.size} entries.`);
+            }
+
+            // Initialize avatar cache on page load
+            loadAvatarCacheFromStorage();
+
+            // Make functions available globally for debugging
+            window.avatarCache = avatarCache;
+            window.getRobloxAvatarSafe = getRobloxAvatarSafe;
+            window.loadRobloxAvatarsBatch = loadRobloxAvatarsBatch;
+
+</script>
 </body>
 
 </html>
