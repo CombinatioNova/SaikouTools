@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+    <title>Saikou | Ring Manager</title>
+    <meta name="description" content="A tool for SDIS to manage exploiter rings." />
+    <link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png"
+        onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        :root {
+            --color-bg: #121315;
+            --color-surface: #15171c;
+            --color-card: #1f222c;
+            --color-border: #353a4a;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #9ca3af;
+            --color-accent: #7f89ff;
+            --color-danger: #ef4444;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-primary);
+        }
+
+        input,
+        select,
+        textarea {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.25rem; /* Increased horizontal padding */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(127, 137, 255, 0.2);
+        }
+        
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .custom-button {
+            font-weight: bold;
+            border-radius: 0.5rem;
+            color: var(--color-bg);
+            background-color: var(--color-text-primary);
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .custom-button:hover:not(:disabled) {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .custom-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-text-primary);
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            color: var(--color-text-primary);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-border);
+            color: var(--color-text-primary);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .modal-overlay.flex {
+            display: flex;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            color: var(--color-accent);
+            background-color: rgba(127, 137, 255, 0.1);
+            border-bottom-color: var(--color-accent);
+        }
+        .tab-btn:hover:not(.active) {
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        .role-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .role-tag:hover {
+            filter: brightness(1.2);
+        }
+        .role-tag i {
+            font-size: 0.625rem;
+            margin-left: 0.375rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900">
+    <!-- Header -->
+    <header class="container mx-auto px-4 md:px-0">
+        <nav class="max-w-7xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+            <a class="flex items-center" href="#">
+                <span class="text-white font-bold text-xl">SDIS Ring Management</span>
+            </a>
+            <!-- Auth UI Container -->
+            <div>
+                <!-- Logged Out View -->
+                <div id="login-container">
+                    <button id="login-btn" class="custom-button !bg-blue-600 !text-white !px-4 !py-2 text-sm">
+                        <i class="fas fa-sign-in-alt mr-2"></i>SDIS Login
+                    </button>
+                </div>
+                <!-- Logged In View -->
+                <div id="user-status-container" class="hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p id="user-status-name" class="font-bold text-sm text-white">User Name</p>
+                            <p id="user-status-role" class="text-xs text-gray-400">SDIS Operative</p>
+                        </div>
+                        <img id="user-status-avatar" src="" alt="User Avatar"
+                            class="w-10 h-10 rounded-full border-2 border-blue-500">
+                        <button id="logout-btn" class="custom-button !bg-red-600 !text-white !px-3 !py-1.5 text-xs">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold">Exploiter Rings</h1>
+                    <p class="mt-2 text-lg text-gray-400">Manage and track groups of bad actors.</p>
+                </div>
+                <button id="create-ring-btn" class="custom-button btn-primary mt-4 md:mt-0" disabled>
+                    <i class="fas fa-plus mr-2"></i>Create New Ring
+                </button>
+            </div>
+
+            <!-- Rings Display -->
+            <div id="rings-container">
+                <!-- Loading State -->
+                <div id="loading-state" class="text-center p-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                    <p class="mt-4 text-gray-400">Loading rings...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden text-center p-12 bg-gray-800/20 rounded-lg">
+                    <i class="fas fa-circle-notch text-5xl text-gray-600 mb-4"></i>
+                    <h2 class="text-xl font-bold">No Rings Found</h2>
+                    <p class="text-gray-400 mt-2">Create a new ring to start tracking exploiter groups.</p>
+                </div>
+                
+                <!-- Rings Grid -->
+                <div id="rings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Ring cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center bg-[#0c0d0e] mt-20 py-12">
+        <div class="container mx-auto px-4">
+            <p class="text-sm text-gray-500"> &copy; 2025, Saikou. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+
+    <!-- Login Modal -->
+    <div id="sdis-login-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md rounded-lg p-6">
+            <h3 class="text-lg font-bold mb-4 text-white">SDIS Authentication</h3>
+            <p class="text-sm text-gray-400 mb-4">Please enter your assigned code phrase to access protected actions.</p>
+            <div class="mb-4">
+                <label for="sdis-code-phrase" class="block text-sm font-medium text-gray-300 mb-2">Code Phrase</label>
+                <input type="password" id="sdis-code-phrase" class="w-full" placeholder="Enter your code phrase...">
+            </div>
+            <div class="flex gap-3">
+                <button id="sdis-login-cancel-btn" class="flex-1 custom-button btn-secondary">Cancel</button>
+                <button id="sdis-login-submit-btn" class="flex-1 custom-button btn-primary">Authenticate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ring Details/Edit Modal -->
+    <div id="ring-details-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-4xl rounded-lg p-6 max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between mb-4 pb-4 border-b border-gray-700">
+                <div>
+                     <h2 id="modal-ring-name" class="text-2xl font-bold">Ring Details</h2>
+                     <p id="modal-ring-id" class="text-xs text-gray-500 font-mono"></p>
+                </div>
+                <button id="details-modal-close-btn" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times text-2xl"></i></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-grow overflow-y-auto pr-2">
+                 <!-- Tabs -->
+                <div class="border-b border-gray-700 mb-4">
+                    <nav id="modal-tabs" class="flex -mb-px space-x-4">
+                        <button class="tab-btn active" data-tab="settings">
+                            <i class="fas fa-cog mr-2"></i>Settings
+                        </button>
+                        <button class="tab-btn" data-tab="members">
+                            <i class="fas fa-users mr-2"></i>Members
+                        </button>
+                        <button class="tab-btn" data-tab="notes">
+                            <i class="fas fa-sticky-note mr-2"></i>Notes
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div id="tab-content-container">
+                    <!-- Settings Tab -->
+                    <div id="tab-settings" class="tab-content active space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="modal-edit-name" class="block text-sm font-medium text-gray-300 mb-2">Ring Name</label>
+                                <input type="text" id="modal-edit-name" class="w-full" placeholder="Ring Name">
+                            </div>
+                            <div>
+                                <label for="modal-edit-status" class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                                <select id="modal-edit-status" class="w-full">
+                                    <option>Active</option>
+                                    <option>Unknown</option>
+                                    <option>Dormant</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="modal-edit-description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                            <textarea id="modal-edit-description" rows="3" class="w-full" placeholder="A brief description of the ring..."></textarea>
+                        </div>
+                         <div class="flex justify-end pt-4 border-t border-gray-700">
+                             <button id="save-ring-changes-btn" class="custom-button btn-primary"><i class="fas fa-save mr-2"></i>Save Changes</button>
+                         </div>
+                         <div class="pt-4 border-t border-gray-700">
+                             <h4 class="text-lg font-bold text-red-400">Danger Zone</h4>
+                             <div class="flex justify-between items-center mt-2 p-4 border border-red-500/30 rounded-lg bg-red-500/10">
+                                 <div>
+                                     <p class="font-semibold">Delete this ring</p>
+                                     <p class="text-sm text-gray-400">This action cannot be undone.</p>
+                                 </div>
+                                 <button id="delete-ring-btn" class="custom-button btn-danger">Delete Ring</button>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- Members Tab -->
+                    <div id="tab-members" class="tab-content space-y-4">
+                        <div>
+                            <h4 class="font-semibold mb-2">Add New Member</h4>
+                            <div class="flex gap-2">
+                                <input type="text" id="add-member-input" class="flex-grow" placeholder="Enter Roblox Username or ID">
+                                <button id="add-member-btn" class="custom-button btn-primary">Add</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-2">Current Members (<span id="member-count">0</span>)</h4>
+                            <div id="members-list" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                <!-- Member items will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes Tab -->
+                    <div id="tab-notes" class="tab-content space-y-4">
+                        <div>
+                            <h4 class="font-semibold mb-2">Add New Note</h4>
+                            <textarea id="add-note-textarea" rows="3" class="w-full" placeholder="Add a timestamped note..."></textarea>
+                            <div class="text-right mt-2">
+                                <button id="add-note-btn" class="custom-button btn-primary">Add Note</button>
+                            </div>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold mb-2">Notes Log</h4>
+                            <div id="notes-list" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                                <!-- Note items will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md rounded-lg p-6">
+            <h3 class="text-lg font-bold mb-2 text-white">Confirm Action</h3>
+            <p id="confirmation-message" class="text-sm text-gray-400 mb-6">Are you sure?</p>
+            <div class="flex gap-3">
+                <button id="confirmation-cancel-btn" class="flex-1 custom-button btn-secondary">Cancel</button>
+                <button id="confirmation-confirm-btn" class="flex-1 custom-button btn-danger">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Role Modal -->
+    <div id="edit-role-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md rounded-lg p-6">
+            <h3 class="text-lg font-bold mb-4 text-white">Edit Member Role</h3>
+            <div id="edit-role-member-info" class="flex items-center gap-3 mb-4 p-3 bg-gray-900/50 rounded-lg">
+                <!-- Member info will be populated here -->
+            </div>
+            <div id="role-options-container" class="space-y-2">
+                <!-- Role options will be populated here -->
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button id="edit-role-cancel-btn" class="flex-1 custom-button btn-secondary">Cancel</button>
+                <button id="edit-role-save-btn" class="flex-1 custom-button btn-primary">Save Role</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm transition-transform duration-300 translate-x-full">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const AUTH_WORKER_URL = 'https://sdis-authenticator.saikoudevelopment.workers.dev';
+            const DATA_WORKER_URL = 'https://saikou-ban-proxy.saikoudevelopment.workers.dev'; // For Roblox user lookups
+
+            // --- DOM Elements ---
+            const createRingBtn = document.getElementById('create-ring-btn');
+            const ringsContainer = document.getElementById('rings-container');
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const ringsGrid = document.getElementById('rings-grid');
+            
+            // Details Modal Elements
+            const detailsModal = document.getElementById('ring-details-modal');
+            const detailsModalCloseBtn = document.getElementById('details-modal-close-btn');
+            const modalRingName = document.getElementById('modal-ring-name');
+            const modalRingId = document.getElementById('modal-ring-id');
+            const modalEditName = document.getElementById('modal-edit-name');
+            const modalEditStatus = document.getElementById('modal-edit-status');
+            const modalEditDescription = document.getElementById('modal-edit-description');
+            const saveRingChangesBtn = document.getElementById('save-ring-changes-btn');
+            const deleteRingBtn = document.getElementById('delete-ring-btn');
+            const addMemberInput = document.getElementById('add-member-input');
+            const addMemberBtn = document.getElementById('add-member-btn');
+            const memberCountSpan = document.getElementById('member-count');
+            const membersList = document.getElementById('members-list');
+            const addNoteTextarea = document.getElementById('add-note-textarea');
+            const addNoteBtn = document.getElementById('add-note-btn');
+            const notesList = document.getElementById('notes-list');
+
+            // Auth Elements
+            const loginContainer = document.getElementById('login-container');
+            const loginBtn = document.getElementById('login-btn');
+            const userStatusContainer = document.getElementById('user-status-container');
+            const userStatusName = document.getElementById('user-status-name');
+            const userStatusRole = document.getElementById('user-status-role');
+            const userStatusAvatar = document.getElementById('user-status-avatar');
+            const logoutBtn = document.getElementById('logout-btn');
+            const sdisLoginModal = document.getElementById('sdis-login-modal');
+            const sdisCodePhraseInput = document.getElementById('sdis-code-phrase');
+            const sdisLoginSubmitBtn = document.getElementById('sdis-login-submit-btn');
+            const sdisLoginCancelBtn = document.getElementById('sdis-login-cancel-btn');
+            
+            // Confirmation Modal Elements
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const confirmationMessage = document.getElementById('confirmation-message');
+            const confirmationCancelBtn = document.getElementById('confirmation-cancel-btn');
+            const confirmationConfirmBtn = document.getElementById('confirmation-confirm-btn');
+            
+            // Edit Role Modal Elements
+            const editRoleModal = document.getElementById('edit-role-modal');
+            const editRoleMemberInfo = document.getElementById('edit-role-member-info');
+            const roleOptionsContainer = document.getElementById('role-options-container');
+            const editRoleCancelBtn = document.getElementById('edit-role-cancel-btn');
+            const editRoleSaveBtn = document.getElementById('edit-role-save-btn');
+
+
+            // --- State ---
+            let authToken = localStorage.getItem('sdis_token');
+            let currentUser = null;
+            let afterLoginCallback = null;
+            let currentEditingRingId = null;
+            let onConfirmCallback = null;
+            const avatarCache = {}; // Cache for member avatars
+            const VALID_MEMBER_ROLES = ['Member', 'Leader', 'Figurehead', 'Alt', 'Smurf', 'Associate'];
+            const roleColors = {
+                'Leader': 'bg-red-500/80 text-white',
+                'Figurehead': 'bg-purple-500/80 text-white',
+                'Alt': 'bg-yellow-500/80 text-black',
+                'Smurf': 'bg-blue-500/80 text-white',
+                'Associate': 'bg-green-500/80 text-white',
+                'Member': 'bg-gray-500/80 text-white'
+            };
+
+            // --- Auth Functions ---
+            const updateAuthUI = () => {
+                const isAuth = !!currentUser;
+                loginContainer.classList.toggle('hidden', isAuth);
+                userStatusContainer.classList.toggle('hidden', !isAuth);
+                createRingBtn.disabled = !isAuth;
+
+                if (isAuth) {
+                    userStatusName.textContent = currentUser.displayName || currentUser.username;
+                    userStatusAvatar.src = currentUser.avatarUrl || 'https://placehold.co/40x40/1f222c/FFFFFF?text=?';
+                    userStatusRole.textContent = currentUser.sdisRole || 'SDIS Operative';
+                }
+            };
+
+            const showLoginModal = (callback) => {
+                afterLoginCallback = callback;
+                sdisLoginModal.classList.add('flex', 'show');
+                sdisCodePhraseInput.focus();
+            };
+
+            const checkAuth = () => {
+                authToken = localStorage.getItem('sdis_token');
+                const storedUser = localStorage.getItem('sdis_user');
+                if (authToken && storedUser) {
+                    try {
+                         currentUser = JSON.parse(storedUser);
+                    } catch (e) {
+                        handleLogout();
+                    }
+                } else {
+                    currentUser = null;
+                }
+                updateAuthUI();
+                if (currentUser) {
+                    loadRings();
+                } else {
+                    loadingState.innerHTML = `<p class="text-gray-400">Please log in to manage rings.</p>`;
+                }
+            };
+            
+            const handleLogin = async () => {
+                const codePhrase = sdisCodePhraseInput.value.trim();
+                if (!codePhrase) return;
+                sdisLoginSubmitBtn.disabled = true;
+                sdisLoginSubmitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...`;
+                try {
+                    const response = await fetch(`${AUTH_WORKER_URL}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ codePhrase })
+                    });
+                    const result = await response.json();
+                    if (result.success && result.token && result.user) {
+                        authToken = result.token;
+                        currentUser = result.user;
+                        localStorage.setItem('sdis_token', authToken);
+                        localStorage.setItem('sdis_user', JSON.stringify(currentUser));
+                        updateAuthUI();
+                        sdisLoginModal.classList.remove('show');
+                        setTimeout(() => sdisLoginModal.classList.remove('flex'), 300);
+                        sdisCodePhraseInput.value = '';
+                        showToast('Login successful!', 'success');
+                        if (typeof afterLoginCallback === 'function') {
+                            afterLoginCallback();
+                        } else {
+                            loadRings();
+                        }
+                        afterLoginCallback = null;
+                    } else { throw new Error(result.error || 'Login failed'); }
+                } catch (error) { showToast(`Error: ${error.message}`, 'error');
+                } finally { sdisLoginSubmitBtn.disabled = false; sdisLoginSubmitBtn.textContent = 'Authenticate'; }
+            };
+
+            const handleLogout = () => {
+                authToken = null;
+                currentUser = null;
+                localStorage.removeItem('sdis_token');
+                localStorage.removeItem('sdis_user');
+                updateAuthUI();
+                ringsGrid.innerHTML = '';
+                emptyState.classList.add('hidden');
+                loadingState.innerHTML = `<p class="text-gray-400">Please log in to manage rings.</p>`;
+                showToast('You have been logged out.', 'info');
+            };
+
+            // Event Listeners for Auth
+            loginBtn.addEventListener('click', () => showLoginModal());
+            logoutBtn.addEventListener('click', handleLogout);
+            sdisLoginCancelBtn.addEventListener('click', () => {
+                 sdisLoginModal.classList.remove('show');
+                 setTimeout(() => sdisLoginModal.classList.remove('flex'), 300);
+            });
+            sdisLoginSubmitBtn.addEventListener('click', handleLogin);
+            sdisCodePhraseInput.addEventListener('keydown', e => e.key === 'Enter' && handleLogin());
+
+            // --- Toast Notification ---
+            const showToast = (message, type = 'info') => {
+                const toast = document.getElementById('toast');
+                const colors = { success: 'bg-green-600', error: 'bg-red-600', info: 'bg-blue-600' };
+                const icons = { success: 'fa-check-circle', error: 'fa-times-circle', info: 'fa-info-circle' };
+                toast.className = `fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm transition-transform duration-300 translate-x-full ${colors[type]}`;
+                toast.innerHTML = `<i class="fas ${icons[type]} mr-2"></i><span>${message}</span>`;
+                setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(calc(100% + 1.25rem))';
+                }, 3000);
+            };
+
+            // --- API Functions ---
+            const apiRequest = async (endpoint, options = {}) => {
+                if (!authToken) {
+                    showLoginModal(() => apiRequest(endpoint, options));
+                    throw new Error('Authentication required');
+                }
+                const response = await fetch(`${AUTH_WORKER_URL}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                        ...options.headers,
+                    },
+                });
+                if (response.status === 401) {
+                    handleLogout();
+                    throw new Error('Session expired. Please log in again.');
+                }
+                const data = await response.json();
+                 if (!response.ok) {
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                }
+                return data;
+            };
+
+            const loadRings = async () => {
+                loadingState.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                ringsGrid.innerHTML = '';
+                try {
+                    const data = await apiRequest('/rings');
+                    if (data.success && data.rings) {
+                        renderRings(data.rings);
+                    } else {
+                        throw new Error('Failed to load rings data.');
+                    }
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    loadingState.innerHTML = `<p class="text-red-400">${error.message}</p>`;
+                }
+            };
+            
+            const renderRings = (rings) => {
+                loadingState.classList.add('hidden');
+                if (rings.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                ringsGrid.innerHTML = rings.map(ring => {
+                    const statusClasses = {
+                        Active: 'bg-green-500/20 text-green-300 border-green-500/30',
+                        Unknown: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+                        Dormant: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+                    };
+                    const statusText = ring.status || 'Unknown';
+                    const statusClass = statusClasses[statusText];
+
+                    return `
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-5 flex flex-col justify-between transition-all duration-200 hover:border-accent hover:shadow-lg hover:shadow-accent/10">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="text-lg font-bold truncate pr-2">${ring.name}</h3>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
+                            </div>
+                            <p class="text-sm text-gray-400 mb-4 h-10 overflow-hidden">${ring.description || 'No description provided.'}</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center text-sm text-gray-400 mb-4 pt-4 border-t border-gray-700">
+                                <span><i class="fas fa-users mr-1"></i> ${ring.members?.length || 0} Members</span>
+                                <span><i class="fas fa-calendar-alt mr-1"></i> ${new Date(ring.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <button class="details-btn custom-button w-full btn-secondary !bg-gray-700" data-ring-id="${ring.id}">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+                
+                document.querySelectorAll('.details-btn').forEach(btn => {
+                    btn.addEventListener('click', () => showDetailsModal(btn.dataset.ringId));
+                });
+            };
+            
+            // --- Avatar Fetching Function with Caching and new Proxy ---
+            const getMemberAvatars = async (memberIds) => {
+                if (!memberIds || memberIds.length === 0) {
+                    return new Map();
+                }
+                const avatarMap = new Map();
+                const idsToFetch = [];
+
+                // Check cache first
+                memberIds.forEach(id => {
+                    if (avatarCache[id]) {
+                        avatarMap.set(id, avatarCache[id]);
+                    } else {
+                        idsToFetch.push(id);
+                    }
+                });
+
+                if (idsToFetch.length > 0) {
+                    try {
+                        const robloxUrl = `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${idsToFetch.join(',')}&size=48x48&format=Png&isCircular=true`;
+                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(robloxUrl)}`;
+
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) throw new Error('Failed to fetch avatars via proxy');
+                        
+                        const data = await response.json();
+
+                        data.data.forEach(avatar => {
+                            avatarMap.set(avatar.targetId, avatar.imageUrl);
+                            avatarCache[avatar.targetId] = avatar.imageUrl; // Store in cache
+                        });
+                    } catch (error) {
+                        console.error("Avatar fetch error:", error);
+                    }
+                }
+                
+                // Set placeholders for any failed fetches
+                memberIds.forEach(id => {
+                    if (!avatarMap.has(id)) {
+                        const placeholder = `https://placehold.co/48x48/1f222c/FFFFFF?text=?`;
+                        avatarMap.set(id, placeholder);
+                        avatarCache[id] = placeholder; // Cache placeholder to avoid re-fetching failed ones
+                    }
+                });
+                return avatarMap;
+            };
+
+
+            // --- Modal Logic ---
+            const showConfirmationModal = (message, callback) => {
+                confirmationMessage.textContent = message;
+                onConfirmCallback = callback;
+                confirmationModal.classList.add('flex', 'show');
+            };
+
+            const hideConfirmationModal = () => {
+                confirmationModal.classList.remove('show');
+                setTimeout(() => confirmationModal.classList.remove('flex'), 300);
+                onConfirmCallback = null;
+            };
+            
+            confirmationCancelBtn.addEventListener('click', hideConfirmationModal);
+            confirmationConfirmBtn.addEventListener('click', () => {
+                if (typeof onConfirmCallback === 'function') {
+                    onConfirmCallback();
+                }
+                hideConfirmationModal();
+            });
+
+            const showDetailsModal = async (ringId) => {
+                currentEditingRingId = ringId;
+                detailsModal.classList.add('flex', 'show');
+                
+                modalRingName.textContent = 'Loading...';
+                modalRingId.textContent = '';
+                document.getElementById('tab-content-container').style.opacity = '0.5';
+                
+                try {
+                    const data = await apiRequest(`/rings/${ringId}`);
+                    if (!data.success) throw new Error(data.error);
+                    const ring = data.ring;
+                    
+                    modalRingName.textContent = ring.name;
+                    modalRingId.textContent = ring.id;
+                    modalEditName.value = ring.name;
+                    modalEditStatus.value = ring.status || 'Unknown';
+                    modalEditDescription.value = ring.description || '';
+                    
+                    await renderMembers(ring.members);
+                    renderNotes(ring.notes);
+                    document.getElementById('tab-content-container').style.opacity = '1';
+
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    closeDetailsModal();
+                }
+            };
+            
+            const closeDetailsModal = () => {
+                detailsModal.classList.remove('show');
+                setTimeout(() => detailsModal.classList.remove('flex'), 300);
+                currentEditingRingId = null;
+            };
+
+            const renderMembers = async (members) => {
+                memberCountSpan.textContent = members?.length || 0;
+                if (!members || members.length === 0) {
+                    membersList.innerHTML = `<p class="text-sm text-gray-500 text-center">No members in this ring.</p>`;
+                    return;
+                }
+                
+                membersList.innerHTML = members.map(() => `
+                    <div class="flex items-center justify-between bg-gray-700/50 p-2 rounded animate-pulse">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-600"></div>
+                            <div>
+                                <div class="h-4 w-32 bg-gray-600 rounded mb-1"></div>
+                                <div class="h-3 w-24 bg-gray-600 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 bg-gray-600 rounded"></div>
+                    </div>
+                `).join('');
+
+                const memberIds = members.map(m => m.userId);
+                const avatarMap = await getMemberAvatars(memberIds);
+
+                membersList.innerHTML = members.map(m => {
+                    const currentRole = m.role || 'Member';
+                    const roleClass = roleColors[currentRole] || roleColors['Member'];
+
+                    return `
+                    <div class="flex items-center justify-between bg-gray-700/50 p-2 rounded">
+                        <div class="flex items-center gap-3 flex-grow">
+                             <img src="${avatarMap.get(m.userId)}" alt="${m.username}'s avatar" class="w-10 h-10 rounded-full bg-gray-800">
+                            <div class="flex-grow">
+                                <a href="lookup.html?lookup=${m.userId}" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline hover:text-accent transition-colors">${m.username}</a>
+                                <p class="text-xs text-gray-400">ID: ${m.userId}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="role-tag ${roleClass}" data-user-id="${m.userId}" data-username="${m.username}" data-role="${currentRole}" data-avatar="${avatarMap.get(m.userId)}">
+                                ${currentRole} <i class="fas fa-pen"></i>
+                            </div>
+                            <button class="remove-member-btn custom-button btn-danger !px-2 !py-1 text-xs" data-user-id="${m.userId}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            };
+
+            const renderNotes = (notes) => {
+                 if (!notes || notes.length === 0) {
+                    notesList.innerHTML = `<p class="text-sm text-gray-500 text-center">No notes for this ring yet.</p>`;
+                    return;
+                }
+                notesList.innerHTML = notes.map(note => `
+                <div class="bg-gray-700/50 p-3 rounded relative">
+                     <button class="delete-note-btn absolute top-2 right-2 text-gray-500 hover:text-red-400 transition-colors" data-note-id="${note.noteId}" title="Delete Note">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <p class="text-sm mb-2 pr-6">${note.text}</p>
+                    <div class="text-xs text-gray-400 flex justify-between">
+                        <span>By: ${note.addedBy.username}</span>
+                        <span>${new Date(note.timestamp).toLocaleString()}</span>
+                    </div>
+                </div>
+                `).join('');
+            };
+
+            const handleSaveChanges = async () => {
+                if(!currentEditingRingId) return;
+                const name = modalEditName.value;
+                const description = modalEditDescription.value;
+                const status = modalEditStatus.value;
+                
+                saveRingChangesBtn.disabled = true;
+                saveRingChangesBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Saving...`;
+
+                try {
+                    await apiRequest(`/rings/${currentEditingRingId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ name, description, status })
+                    });
+
+                    showToast('Ring updated successfully', 'success');
+                    closeDetailsModal();
+                    loadRings();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                } finally {
+                    saveRingChangesBtn.disabled = false;
+                    saveRingChangesBtn.innerHTML = `<i class="fas fa-save mr-2"></i>Save Changes`;
+                }
+            };
+            
+            const handleDeleteRing = async () => {
+                if (!currentEditingRingId) return;
+                showConfirmationModal('Are you sure you want to permanently delete this ring? This cannot be undone.', async () => {
+                    try {
+                        await apiRequest(`/rings/${currentEditingRingId}`, { method: 'DELETE' });
+                        showToast('Ring deleted successfully', 'success');
+                        closeDetailsModal();
+                        loadRings();
+                    } catch(error) {
+                        showToast(error.message, 'error');
+                    }
+                });
+            };
+
+            const addMember = async () => {
+                const query = addMemberInput.value.trim();
+                if(!query || !currentEditingRingId) return;
+
+                addMemberBtn.disabled = true;
+                addMemberBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+                
+                try {
+                    const userRes = await fetch(`${DATA_WORKER_URL}?lookup=${encodeURIComponent(query)}`);
+                    if(!userRes.ok) throw new Error("Could not find Roblox user.");
+                    const userData = await userRes.json();
+                    if(!userData.success || !userData.profile) throw new Error(userData.error || "Roblox user not found.");
+                    
+                    const member = { userId: userData.profile.id, username: userData.profile.name };
+
+                    const data = await apiRequest(`/rings/${currentEditingRingId}/members`, {
+                        method: 'POST',
+                        body: JSON.stringify({ members: [member] })
+                    });
+                    await renderMembers(data.updatedRing.members);
+                    showToast('Member added successfully', 'success');
+                    addMemberInput.value = '';
+                } catch(error) {
+                     showToast(error.message, 'error');
+                } finally {
+                     addMemberBtn.disabled = false;
+                     addMemberBtn.textContent = 'Add';
+                }
+            };
+
+            const removeMember = async (userId) => {
+                 if(!userId || !currentEditingRingId) return;
+                 try {
+                     const data = await apiRequest(`/rings/${currentEditingRingId}/members`, {
+                         method: 'DELETE',
+                         body: JSON.stringify({ userIds: [parseInt(userId)] })
+                     });
+                     await renderMembers(data.updatedRing.members);
+                     showToast('Member removed successfully', 'success');
+                 } catch(error) {
+                     showToast(error.message, 'error');
+                 }
+            };
+
+            const addNote = async () => {
+                const note = addNoteTextarea.value.trim();
+                if(!note || !currentEditingRingId) return;
+                addNoteBtn.disabled = true;
+                addNoteBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Adding...`;
+                try {
+                    const data = await apiRequest(`/rings/${currentEditingRingId}/notes`, {
+                        method: 'POST',
+                        body: JSON.stringify({ note })
+                    });
+                    
+                    renderNotes(data.updatedRing.notes);
+                    showToast('Note added successfully', 'success');
+                    addNoteTextarea.value = '';
+                } catch(error) {
+                    showToast(error.message, 'error');
+                } finally {
+                    addNoteBtn.disabled = false;
+                    addNoteBtn.textContent = 'Add Note';
+                }
+            };
+
+            const handleDeleteNoteClick = (noteId) => {
+                showConfirmationModal('Are you sure you want to permanently delete this note?', async () => {
+                    if (!noteId || !currentEditingRingId) return;
+                    try {
+                        const data = await apiRequest(`/rings/${currentEditingRingId}/notes/${noteId}`, {
+                            method: 'DELETE'
+                        });
+                        renderNotes(data.updatedRing.notes);
+                        showToast('Note deleted successfully', 'success');
+                    } catch (error) {
+                        showToast(error.message, 'error');
+                    }
+                });
+            };
+            
+            const handleEditRoleClick = (target) => {
+                const userId = target.dataset.userId;
+                const username = target.dataset.username;
+                const currentRole = target.dataset.role;
+                const avatar = target.dataset.avatar;
+
+                editRoleMemberInfo.innerHTML = `
+                    <img src="${avatar}" alt="${username}'s avatar" class="w-10 h-10 rounded-full bg-gray-800">
+                    <div>
+                        <p class="font-medium text-white">${username}</p>
+                        <p class="text-xs text-gray-400">ID: ${userId}</p>
+                    </div>
+                `;
+
+                roleOptionsContainer.innerHTML = VALID_MEMBER_ROLES.map(role => `
+                    <label class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-700/50">
+                        <input type="radio" name="member-role" value="${role}" class="form-radio h-5 w-5 text-accent bg-gray-900 border-gray-600 focus:ring-accent" ${role === currentRole ? 'checked' : ''}>
+                        <span class="font-medium">${role}</span>
+                    </label>
+                `).join('');
+                
+                editRoleSaveBtn.onclick = () => saveMemberRole(userId);
+
+                editRoleModal.classList.add('flex', 'show');
+            };
+
+            const saveMemberRole = async (userId) => {
+                const selectedRole = roleOptionsContainer.querySelector('input[name="member-role"]:checked')?.value;
+                if (!selectedRole) {
+                    showToast('Please select a role.', 'warning');
+                    return;
+                }
+
+                editRoleSaveBtn.disabled = true;
+                editRoleSaveBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Saving...`;
+
+                try {
+                     const data = await apiRequest(`/rings/${currentEditingRingId}/members/${userId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ role: selectedRole })
+                    });
+                    
+                    showToast('Member role updated successfully', 'success');
+                    await renderMembers(data.updatedRing.members);
+                    editRoleModal.classList.remove('show');
+                    setTimeout(() => editRoleModal.classList.remove('flex'), 300);
+
+                } catch (error) {
+                    showToast(error.message, 'error');
+                } finally {
+                    editRoleSaveBtn.disabled = false;
+                    editRoleSaveBtn.textContent = 'Save Role';
+                }
+            };
+            
+            editRoleCancelBtn.addEventListener('click', () => {
+                editRoleModal.classList.remove('show');
+                setTimeout(() => editRoleModal.classList.remove('flex'), 300);
+            });
+
+
+            // --- EVENT LISTENERS ---
+
+            // Modal Tabs
+            document.getElementById('modal-tabs').addEventListener('click', e => {
+                if (e.target.classList.contains('tab-btn')) {
+                    const tabName = e.target.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    e.target.classList.add('active');
+                    document.getElementById(`tab-${tabName}`).classList.add('active');
+                }
+            });
+
+            // Note deletion
+            notesList.addEventListener('click', e => {
+                const deleteBtn = e.target.closest('.delete-note-btn');
+                if (deleteBtn) {
+                    handleDeleteNoteClick(deleteBtn.dataset.noteId);
+                }
+            });
+
+            // Member actions (role change and removal) using event delegation
+            membersList.addEventListener('click', e => {
+                const removeBtn = e.target.closest('.remove-member-btn');
+                if (removeBtn) {
+                     const userId = removeBtn.dataset.userId;
+                     showConfirmationModal('Are you sure you want to remove this member?', () => {
+                        removeMember(userId);
+                     });
+                     return;
+                }
+                
+                const roleTag = e.target.closest('.role-tag');
+                if (roleTag) {
+                    handleEditRoleClick(roleTag);
+                }
+            });
+            
+            detailsModalCloseBtn.addEventListener('click', closeDetailsModal);
+            saveRingChangesBtn.addEventListener('click', handleSaveChanges);
+            deleteRingBtn.addEventListener('click', handleDeleteRing);
+            addMemberBtn.addEventListener('click', addMember);
+            addNoteBtn.addEventListener('click', addNote);
+            
+            addMemberInput.addEventListener('keydown', e => e.key === 'Enter' && addMember());
+            
+            createRingBtn.addEventListener('click', () => {
+                currentEditingRingId = null;
+                modalRingName.textContent = 'Create New Ring';
+                modalRingId.textContent = 'A new ID will be generated upon creation.';
+                modalEditName.value = '';
+                modalEditDescription.value = '';
+                modalEditStatus.value = 'Active';
+                
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.tab-btn[data-tab="settings"]').classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-settings`).classList.add('active');
+                document.getElementById('modal-tabs').style.display = 'none';
+
+                document.querySelector('#tab-settings .grid').style.display = 'block';
+                document.querySelector('#tab-settings > div:nth-of-type(2)').style.display = 'block';
+                deleteRingBtn.parentElement.parentElement.style.display = 'none';
+                saveRingChangesBtn.textContent = 'Create Ring';
+
+                detailsModal.classList.add('flex', 'show');
+                
+                const createHandler = async () => {
+                    const name = modalEditName.value;
+                    const description = modalEditDescription.value;
+                    if(!name) {
+                        showToast('Ring name is required.', 'error');
+                        return;
+                    }
+                    try {
+                        await apiRequest('/rings', {
+                            method: 'POST',
+                            body: JSON.stringify({ name, description, initialMembers: [] })
+                        });
+                        showToast('Ring created successfully!', 'success');
+                        closeDetailsModal();
+                        loadRings();
+                    } catch(error) {
+                        showToast(error.message, 'error');
+                    }
+                };
+                
+                saveRingChangesBtn.onclick = createHandler;
+                
+                const observer = new MutationObserver(() => {
+                    if (!detailsModal.classList.contains('show')) {
+                        document.getElementById('modal-tabs').style.display = '';
+                         document.querySelector('#tab-settings .grid').style.display = '';
+                        document.querySelector('#tab-settings > div:nth-of-type(2)').style.display = '';
+                        deleteRingBtn.parentElement.parentElement.style.display = '';
+                        saveRingChangesBtn.textContent = 'Save Changes';
+                        saveRingChangesBtn.onclick = handleSaveChanges;
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(detailsModal, { attributes: true, attributeFilter: ['class']});
+            });
+
+
+            // Initial Load
+            checkAuth();
+        });
+    </script>
+</body>
+
+</html>
+
