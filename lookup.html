@@ -35,6 +35,19 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
+        :root {
+            --bg-color: #121315;
+            --surface-color: #15171c;
+            --card-color: #1f222c;
+            --border-color: #353a4a;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --accent-color: #3b82f6;
+            --safe-color: #10b981;
+            --caution-color: #f59e0b;
+            --unsafe-color: #ef4444;
+        }
+
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: #121315;
@@ -271,6 +284,213 @@
 
         .char-counter.error {
             color: #fca5a5;
+        }
+
+        /* Enhanced Score Gauge */
+        .score-gauge-container {
+            position: relative;
+            width: 220px;
+            height: 120px;
+            overflow: hidden;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .score-gauge-bg, .score-gauge-fill {
+            position: absolute;
+            top: 20px; left: 20px;
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            border: 24px solid;
+            box-sizing: border-box;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 53%, 0% 53%);
+        }
+
+        .score-gauge-bg {
+            border-color: var(--border-color);
+            opacity: 0.3;
+        }
+        
+        .score-gauge-fill {
+            border-color: var(--safe-color);
+            transition: transform 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+            transform: rotate(0deg);
+        }
+        
+        .score-text {
+            position: absolute;
+            bottom: 12px;
+            top: 50%; /* Try 55-60% for lower placement */
+  left: 0;
+            right: 0;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .score-gauge-container.unsafe .score-gauge-fill {
+            border-color: var(--unsafe-color);
+        }
+
+        .score-gauge-container.caution .score-gauge-fill {
+            border-color: var(--caution-color);
+        }
+
+        /* Enhanced Risk factor item */
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            position: relative;
+        }
+        .risk-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        .risk-item-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+        .risk-item-icon.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+        .risk-item-icon.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+        }
+        .risk-item-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .risk-item-weight {
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            flex-shrink: 0;
+        }
+        .risk-item-weight.negative {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+        .risk-item-weight.positive {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #6ee7b7;
+        }
+        .risk-details {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background-color: var(--surface-color);
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            margin-left: 3.5rem;
+            margin-top: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        .tooltip:hover::after,
+        .tooltip:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Loading shimmer */
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+            background-color: #374151;
+        }
+        .shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Risk Assessment Section */
+        .risk-assessment-section {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .risk-assessment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .risk-assessment-toggle {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: color 0.2s;
+        }
+
+        .risk-assessment-toggle:hover {
+            color: #ffffff;
         }
     </style>
 </head>
@@ -613,6 +833,643 @@
                 DEFAULT_COLOR: '#ef4444'
             };
 
+            // --- CIPHER DETECTION FUNCTIONS ---
+            function normalizeString(str) {
+                return str.toLowerCase().replace(/[\s_-]/g, '');
+            }
+
+            function rot(text, shift) {
+                return text.replace(/[a-z]/gi, char => {
+                    const code = char.charCodeAt(0);
+                    if (code >= 65 && code <= 90) { // Uppercase
+                        return String.fromCharCode(((code - 65 + shift + 26) % 26) + 65);
+                    } else if (code >= 97 && code <= 122) { // Lowercase
+                        return String.fromCharCode(((code - 97 + shift + 26) % 26) + 97);
+                    }
+                    return char;
+                });
+            }
+            
+            function atbash(text) {
+                return text.replace(/[a-z]/gi, char => {
+                    const code = char.charCodeAt(0);
+                    if (code >= 65 && code <= 90) { // Uppercase
+                        return String.fromCharCode(90 - (code - 65));
+                    }
+                    if (code >= 97 && code <= 122) { // Lowercase
+                        return String.fromCharCode(122 - (code - 97));
+                    }
+                    return char;
+                });
+            }
+            
+            function solveCipher(text) {
+                const commonWords = [
+                    'the', 'be', 'to', 'of', 'and', 'in', 'that', 'have', 'it', 'for', 'not', 'on', 'with', 'he', 
+                    'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 
+                    'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 
+                    'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 
+                    'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 
+                    'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 
+                    'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 
+                    'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'are', 'was', 'were', 'has', 'had',
+                    'fun', 'play', 'game', 'adventure', 'story', 'fantasy', 'dream', 'night', 'sleep', 'bed', 'room',
+                    'house', 'home', 'place', 'space', 'area', 'zone', 'world', 'universe', 'realm', 'dimension',
+                    'reality', 'escape', 'hide', 'secret', 'private', 'special', 'unique', 'different', 'wild', 'crazy',
+                    'intense', 'deep', 'real', 'genuine', 'authentic', 'true', 'pure', 'raw', 'natural', 'organic', 'fresh', 'age', 'old', 'young'
+                    ,'teen', 'teenager', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', 'teenage', ' teen'
+                ];
+                
+                // Suspicious words that might indicate coded content
+                const suspiciousWords = [
+                    'daddy', 'mommy', 'mami', 'papi', 'bunny', 'kitten', 'puppy', 'baby', 'little', 'princess', 'prince',
+                    'master', 'slave', 'sub', 'dom', 'pet', 'brat', 'goth', 'emo', 'winx', 'spade', 'bull', 'horse',
+                    'pawg', 'snowbunny', 'jungle', 'rice', 'asian', 'latino', 'dark', 'chocolate', 'vanilla', 'milky',
+                    'caramel', 'honey', 'cinnamon', 'spice', 'exotic', 'foreign', 'ebony', 'feet', 'foot', 'toes',
+                    'bondage', 'restraint', 'rope', 'chains', 'cuffs', 'gag', 'blindfold', 'whip', 'spank', 'spanking',
+                    'leather', 'latex', 'rubber', 'vinyl', 'pvc', 'corset', 'bustier', 'lingerie', 'stockings',
+                    'watersports', 'golden', 'yellow', 'pee', 'urine', 'scat', 'brown', 'toilet', 'voyeur', 'exhibition',
+                    'public', 'outdoor', 'risky', 'dangerous', 'taboo', 'incest', 'family', 'step', 'brother', 'sister',
+                    'teacher', 'student', 'boss', 'employee', 'doctor', 'patient', 'nurse', 'cop', 'officer', 'rod'
+                ];
+                
+                let bestGuess = { type: 'Unknown', text: text, score: 0 };
+
+                const calculateScore = (decodedText, cipherType) => {
+                    const words = decodedText.split(/\s+/);
+                    const totalWords = words.length;
+                    if (totalWords < 2) return 0; // Need at least 2 words to be meaningful
+                    
+                    const commonWordCount = words.filter(word => {
+                        const cleanWord = word.toLowerCase().replace(/[.,!?;:"'()]/g, '');
+                        return commonWords.includes(cleanWord);
+                    }).length;
+                    // Extra helper to check for year-like endings or pure numbers
+                    const isLikelyYearOrJustNumber = word => {
+                    // Matches 1900-2099 or any 4+ digit number
+                    return /^(\d{4})$/.test(word) && +word >= 1900 && +word <= 2099 || /^\d+$/.test(word);
+                    };
+                    const isLikelyUsername = word => {
+                        // alpha then 4-digit year or alpha+digits 3+ or ends with 1900-2099
+                        return /^[a-z]+[0-9]{3,}$/.test(word) || /^[a-z]+(19|20)\d{2}$/i.test(word);
+                    };
+                    // Now in calculateScore:
+                    const suspiciousWordCount = words.filter(word => {
+                        const cleanWord = word.toLowerCase().replace(/[.,!?;:"'()]/g, '');
+                        // Skip likely years, numbers, AND usernames
+                        if (isLikelyYearOrJustNumber(cleanWord) || isLikelyUsername(cleanWord)) return false;
+                        return suspiciousWords.includes(cleanWord);
+                    }).length;
+                    
+                    // Calculate percentage of common words
+                    const commonWordPercentage = commonWordCount / totalWords;
+                    const suspiciousWordPercentage = suspiciousWordCount / totalWords;
+                    
+                    // Only consider it a valid cipher if:
+                    // 1. At least 20% of words are common words, OR
+                    // 2. At least 1 suspicious word is found, AND
+                    // 3. The original text doesn't already have a high percentage of common words
+                    const originalWords = text.split(/\s+/);
+                    const originalCommonWords = originalWords.filter(word => {
+                        const cleanWord = word.toLowerCase().replace(/[.,!?;:"'()]/g, '');
+                        return commonWords.includes(cleanWord);
+                    }).length;
+                    const originalCommonPercentage = originalCommonWords / originalWords.length;
+                    
+                    // If original text already has high common word percentage, it's likely not a cipher
+                    if (originalCommonPercentage > 0.5) return 0;
+                    
+                    if (cipherType === 'Leetspeak') {
+                        // Must have leet chars that aren't just years/numbers/usernames
+                        const hasRealLeetWord = words.some(w =>
+                            /[0134578@!$+|€£¥]/.test(w) && !isLikelyYearOrJustNumber(w) && !isLikelyUsername(w)
+                        );
+                        if (!hasRealLeetWord) return 0;
+                    }
+                    
+                    // Score based on common words and suspicious words
+                    let score = 0;
+                    if (commonWordPercentage >= 0.2 && commonWordCount >= 2) {
+                        score += commonWordCount * 2;
+                    }
+                    if (suspiciousWordCount > 0) {
+                        score += suspiciousWordCount * 5; // Higher weight for suspicious words
+                    }
+                    
+                    return score;
+                };
+
+                // Check for character substitution patterns (like leetspeak)
+                const leetPatterns = {
+                    '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '8': 'b', '@': 'a',
+                    '!': 'i', '\\$': 's', '\\+': 't', '\\|': 'i', '€': 'e', '£': 'l', '¥': 'y'
+                };
+                const isLikelyYearOrJustNumber = word => {
+                    // Matches 1900-2099 or any 4+ digit number
+                    return /^(\d{4})$/.test(word) && +word >= 1900 && +word <= 2099 || /^\d+$/.test(word);
+                };
+                const isLikelyUsername = word => {
+                    // alpha then 4-digit year or alpha+digits 3+ or ends with 1900-2099
+                    return /^[a-z]+[0-9]{3,}$/.test(word) || /^[a-z]+(19|20)\d{2}$/i.test(word);
+                };
+                const decodeLeet = (text) => {
+                    return text.split(/\s+/).map(word => {
+                        // Only decode leet if NOT a year, number, or username
+                        if (isLikelyYearOrJustNumber(word) || isLikelyUsername(word)) return word;
+                        let decoded = word.toLowerCase();
+                        for (const [leet, normal] of Object.entries(leetPatterns)) {
+                            decoded = decoded.replace(new RegExp(leet, 'g'), normal);
+                        }
+                        return decoded;
+                    }).join(' ');
+                };
+                
+                
+                const leetText = decodeLeet(text);
+                const leetScore = calculateScore(leetText, 'Leetspeak');
+                // Only treat as leetspeak if leetScore is high enough
+                if (leetScore > bestGuess.score && leetScore >= 8) {
+                    bestGuess = { type: 'Leetspeak', text: leetText, score: leetScore };
+                }
+
+                // Check for reversed text
+                const reversedText = text.split('').reverse().join('');
+                const reversedScore = calculateScore(reversedText, 'Reversed');
+                if (reversedScore > bestGuess.score) {
+                    bestGuess = { type: 'Reversed', text: reversedText, score: reversedScore };
+                }
+
+                
+
+                const atbashText = atbash(text);
+                const atbashScore = calculateScore(atbashText, 'Atbash');
+                if (atbashScore > bestGuess.score) {
+                    bestGuess = { type: 'Atbash', text: atbashText, score: atbashScore };
+                }
+
+                for (let i = 1; i < 26; i++) {
+                    const shiftedText = rot(text, i);
+                    const score = calculateScore(shiftedText, 'Caesar');
+                    if (score > bestGuess.score) {
+                        const decryptShift = (26 - i) % 26;
+                        bestGuess = { type: `Caesar (ROT-${decryptShift})`, text: shiftedText, score: score };
+                    }
+                }
+
+                if (bestGuess.score === 0) {
+                     bestGuess.type = 'Unknown';
+                }
+                return bestGuess;
+            }
+
+            // --- SAFETY SCORE CALCULATION ---
+            function calculateSafetyScore(profile, friends = [], rings = [], bannedFriends = []) {
+                let score = 50;
+                const reasons = {
+                    positive: [],
+                    negative: [],
+                    decoded: null // For storing decoded cipher text
+                };
+
+                const highConfidenceKeywords = [
+                    'lewd', 'nsfw', 'sexual', 'solicit', 'ddlg', 'mdlb', 'femdom', 'bdsm', 'kink', 'fetish',
+                    'roleplay', 'cyber', 'sexting', 'cam', 'webcam', 'nude', 'naked', 'horny', 'aroused', 'qos', 'femboy', 'femboi','horse','bull','rod','frisk','puppy','puppi','pup','kitten','baby','little','littlespace','ageplay','abdl','diaper','pacifier','sippy','onesie','cgl','cg/l','caregiver','little girl','little boy','princess','prince'
+                ];
+                const ambiguousKeywords = [
+                    'degrade', 'daddy', 'mommy', 'mami', 'papi', 'bunny', 'bunni', 'kitten', 'kitty', 'kitti',
+                    'maid', 'adult', '18+', 'sub', 'dom', 'slave', 'master', 'pet', 'spade', '♠', '💦', 
+                    'brat', 'collar', 'leash', 'femboi', 'femboy', 'goth', 'emo', 'winx', 'checkbio',
+                    'br3ak', 'b4ck', 'bigbull', 'detonador', 'llenador', 'bathroom', 'pawg', 'readbio', 
+                    'bull', 'horse', 'rod', 'frisk', 'puppy', 'puppi', 'pup', 'kitten', 'kitty', 'baby',
+                    'little', 'littlespace', 'ageplay', 'abdl', 'diaper', 'pacifier', 'sippy', 'onesie',
+                    'cgl', 'cg/l', 'caregiver', 'little girl', 'little boy', 'princess', 'prince', 'erp', 'rp'
+                ];
+                const solicitationKeywords = [ 
+                    'studio', 'private', 'alone', 'vc', 'voice chat', 'dms', 'direct message', 'hangout', 
+                    'condo', 'server', 'place', 'cant talk', "can't talk", 'add me on', 'disc', 'discord', 
+                    'name says it all', 'dm me', 'message me', 'hit me up', 'slide into', 'snap', 'snapchat',
+                    'telegram', 'kik', 'wickr', 'session', 'signal', 'whatsapp', 'contact me', 'reach out'
+                ];
+                const codedRpKeywords = [ 
+                    'top bunk', 'bottom bunk', 'bunk rp', 'dom rp', 'sub rp', 'bed rp', 'sleep rp', 
+                    'night rp', 'dream rp', 'fantasy rp', 'adventure rp', 'story rp', 'plot rp',
+                    'scenario rp', 'situation rp', 'scene rp', 'act rp', 'play rp', 'game rp'
+                ];
+                const racialFetishKeywords = [ 
+                    'snowbunny', 'snowbun', 'jungle fever', 'rice queen', 'asian persuasion', 'latino', 
+                    'asian', 'dark', 'pawg', 'paxwg', 'pxwg', 'ebony', 'chocolate', 'vanilla', 'milky',
+                    'caramel', 'honey', 'cinnamon', 'spice', 'exotic', 'foreign', 'import', 'export'
+                ];
+                const fetishSpecificKeywords = [
+                    'feet', 'foot', 'toes', 'soles', 'arches', 'footjob', 'foot worship', 'tickling',
+                    'bondage', 'restraint', 'rope', 'chains', 'cuffs', 'gag', 'blindfold', 'whip',
+                    'spank', 'spanking', 'paddle', 'crop', 'flogger', 'discipline', 'punishment',
+                    'leather', 'latex', 'rubber', 'vinyl', 'pvc', 'corset', 'bustier', 'lingerie',
+                    'stockings', 'pantyhose', 'thigh highs', 'garters', 'heels', 'stilettos',
+                    'latex', 'leather', 'rubber', 'vinyl', 'pvc', 'corset', 'bustier', 'lingerie',
+                    'stockings', 'pantyhose', 'thigh highs', 'garters', 'heels', 'stilettos',
+                    'watersports', 'golden', 'yellow', 'pee', 'urine', 'scat', 'brown', 'toilet',
+                    'voyeur', 'exhibition', 'public', 'outdoor', 'risky', 'dangerous', 'taboo',
+                    'incest', 'family', 'step', 'brother', 'sister', 'father', 'mother', 'uncle', 'aunt',
+                    'teacher', 'student', 'boss', 'employee', 'doctor', 'patient', 'nurse', 'cop', 'officer'
+                ];
+                const codedLanguageKeywords = [
+                    'fun', 'play', 'game', 'adventure', 'story', 'fantasy', 'dream', 'night', 'sleep',
+                    'bed', 'room', 'house', 'home', 'place', 'space', 'area', 'zone', 'world',
+                    'universe', 'realm', 'dimension', 'reality', 'escape', 'hide', 'secret', 'private',
+                    'special', 'unique', 'different', 'wild', 'crazy', 'intense', 'deep', 'real',
+                    'genuine', 'authentic', 'true', 'pure', 'raw', 'natural', 'organic', 'fresh'
+                ];
+                const ambiguousBioKeywords = [ 
+                    'here for the fun of it', 'just for fun', 'bored', 'he wont know', 'looking for fun',
+                    'want to have fun', 'need some fun', 'bored and lonely', 'lonely and bored',
+                    'single and ready', 'ready to mingle', 'open minded', 'adventurous', 'spontaneous',
+                    'wild side', 'dark side', 'naughty side', 'bad side', 'rebellious', 'mischievous'
+                ];
+                
+                const checkName = (name) => {
+                    const normalized = normalizeString(name);
+                    const foundHigh = highConfidenceKeywords.filter(kw => normalized.includes(kw));
+                    const foundAmbiguous = ambiguousKeywords.filter(kw => normalized === kw);
+                    return [...foundHigh, ...foundAmbiguous];
+                };
+
+                const nameString = profile.name + " " + profile.displayName;
+                const matchedNameKeywords = checkName(nameString);
+                
+                if (matchedNameKeywords.length > 0) {
+                    score -= 40;
+                    reasons.negative.push({ text: `Username/display name contains suspicious words`, weight: -40, icon: 'fa-id-card', data: matchedNameKeywords });
+                }
+
+                if (profile.description) {
+                    let descriptionString = profile.description || "";
+                    let textForAnalysis = descriptionString.toLowerCase();
+                    let flagObfuscation = false;
+                    let reasonsDecoded = null;
+
+                    // Step 1: Check plain English first
+                    if (!isPlainEnglish(descriptionString)) {
+                        // Step 2: Only run cipher if not plain English
+                        const cipherResult = solveCipher(descriptionString);
+
+                        // Step 3: Penalize ONLY if score is high, type is valid, and not whitelisted
+                        if (cipherResult.type !== "Unknown" && cipherResult.score >= 3) {
+                            score -= 35;
+                            flagObfuscation = true;
+                            
+                            reasonsDecoded = `[${cipherResult.type}] ${cipherResult.text}`;
+                            textForAnalysis = cipherResult.text.toLowerCase();
+                        }
+                        // If cipher is Unknown or <8, leave textForAnalysis as original and don't penalize!
+                    }
+                    // else { // Is plain English: continue unflagged, do not run cipher }
+
+                    // KEYWORD MATCH/FLAGGING LOGIC
+                    const allKeywords = [
+                        ...highConfidenceKeywords,
+                        ...ambiguousKeywords,
+                        ...solicitationKeywords,
+                        ...codedRpKeywords,
+                        ...racialFetishKeywords,
+                        ...fetishSpecificKeywords,
+                        ...codedLanguageKeywords,
+                        ...ambiguousBioKeywords
+                    ];
+                    const matchedDescKeywords = allKeywords.filter(kw => {
+    // Escape special regex characters in the keyword
+    const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Create regex with word boundaries
+    const wordBoundaryRegex = new RegExp(`\\b${escapedKw}\\b`, 'i');
+    return wordBoundaryRegex.test(textForAnalysis);
+})
+                    if (matchedDescKeywords.length > 0) {
+                        const penalty = flagObfuscation ? 45 : 20;
+                        const reasonText = flagObfuscation
+                            ? `Decoded message contains suspicious words`
+                            : `Profile description contains suspicious words`;
+                        score -= penalty;
+                        reasons.negative.push({ text: reasonText, weight: -penalty, icon: 'fa-file-alt', data: matchedDescKeywords });
+                    }
+
+                    if (/\w+'s\s(game|studio|place|hangout|condo)/.test(textForAnalysis)) {
+                        score -= 45;
+                        reasons.negative.push({ text: `Soliciting private interactions (euphemism)`, weight: -45, icon: 'fa-user-plus', data: ["studio game"] });
+                    }
+
+                    if (/(looking for|want|need|seeking|searching for)\s+(fun|play|game|adventure|story|fantasy|dream|night|sleep|bed|room|house|home|place|space|area|zone|world|universe|realm|dimension|reality|escape|hide|secret|private|special|unique|different|wild|crazy|intense|deep|real|genuine|authentic|true|pure|raw|natural|organic|fresh)/.test(textForAnalysis)) {
+                        score -= 30;
+                        reasons.negative.push({ text: `Uses coded language for solicitation`, weight: -30, icon: 'fa-user-secret', data: ["coded solicitation"] });
+                    }
+
+                    if (/(young|youth|teen|minor|underage|fresh|new|innocent|pure|virgin|first time|beginner|novice|rookie|green|naive|sweet|cute|adorable|precious|little|small|tiny|mini|petite|delicate|fragile|tender|soft|gentle|kind|nice|good|clean|fresh|new|innocent|pure|virgin|first time|beginner|novice|rookie|green|naive|sweet|cute|adorable|precious|little|small|tiny|mini|petite|delicate|fragile|tender|soft|gentle|kind|nice|good|clean)/.test(textForAnalysis)) {
+                        score -= 40;
+                        reasons.negative.push({ text: `Uses potentially age-related coded language`, weight: -40, icon: 'fa-exclamation-triangle', data: ["age-related coding"] });
+                    }
+
+                    
+
+                    const agePattern = /\b(1[3-9]|2\d|30)\b/g;
+                    if (agePattern.test(textForAnalysis)) {
+                        score -= 35;
+                        reasons.negative.push({ text: "Profile description contains a suspicious age declaration.", weight: -35, icon: 'fa-user-tag' });
+                    }
+
+                    // Obfuscation reason out here for clarity
+                    if (flagObfuscation) {
+                        reasons.negative.push({
+                            text: `Description uses text obfuscation`,
+                            weight: -35,
+                            icon: 'fa-user-secret'
+                        });
+                        reasons.decoded = reasonsDecoded;
+                    }
+                }
+                
+                const matchedRacialNameKeywords = racialFetishKeywords.filter(kw => normalizeString(nameString).includes(normalizeString(kw)));
+                if (matchedRacialNameKeywords.length > 0) {
+                    score -= 50;
+                    reasons.negative.push({ text: `Username/display name uses coded racial fetish terminology`, weight: -50, icon: 'fa-globe-americas', data: matchedRacialNameKeywords });
+                }
+
+                if (profile.groups && profile.groups.length > 0) {
+                    // More targeted group detection - only flag groups with clearly suspicious content
+                    const suspiciousGroups = profile.groups.filter(g => {
+                        const groupName = g.name.toLowerCase();
+                        
+                        // Only check for high-confidence and clearly fetish-related keywords
+                        const highRiskKeywords = [...highConfidenceKeywords, ...fetishSpecificKeywords, ...racialFetishKeywords];
+                        
+                        // Remove some ambiguous terms that are too common in normal group names
+                        const filteredKeywords = highRiskKeywords.filter(kw => 
+                            !['studio', 'game', 'games', 'fun', 'play', 'adventure', 'story', 'fantasy', 'dream', 'night', 'sleep', 'bed', 'room', 'house', 'home', 'place', 'space', 'area', 'zone', 'world', 'universe', 'realm', 'dimension', 'reality', 'escape', 'hide', 'secret', 'private', 'special', 'unique', 'different', 'wild', 'crazy', 'intense', 'deep', 'real', 'genuine', 'authentic', 'true', 'pure', 'raw', 'natural', 'organic', 'fresh'].includes(kw.toLowerCase())
+                        );
+                        
+                        return filteredKeywords.some(kw => {
+    // Escape regex special chars in kw, e.g. ( ) . * +
+    const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Use word boundary regex to match only whole words
+    const regex = new RegExp(`\\b${escapedKw}\\b`, 'i');
+    return regex.test(groupName);
+});
+                    });
+                    
+                    // Additional group pattern detection - be more specific
+                    const patternSuspiciousGroups = profile.groups.filter(g => {
+                        const groupName = g.name.toLowerCase();
+                        // Only flag if it contains both a location word AND a clearly fetish term
+                        const hasLocation = /(farm|barn|house)/.test(groupName);
+                        const hasFetishTerm = /(bunny|kitten|puppy|baby|little|princess|prince|daddy|mommy|master|slave|sub|dom|pet|brat|goth|emo|winx|spade|♠|💦|bull|horse|rod|frisk|pawg|snowbunny|jungle|rice|asian|latino|dark|chocolate|vanilla|milky|caramel|honey|cinnamon|spice|exotic|foreign|import|export|ebony|feet|foot|toes|soles|arches|footjob|foot worship|tickling|bondage|restraint|rope|chains|cuffs|gag|blindfold|whip|spank|spanking|paddle|crop|flogger|discipline|punishment|leather|latex|rubber|vinyl|pvc|corset|bustier|lingerie|stockings|pantyhose|thigh highs|garters|heels|stilettos|watersports|golden|yellow|pee|urine|scat|brown|toilet|voyeur|exhibition|public|outdoor|risky|dangerous|taboo|incest|family|step|brother|sister|father|mother|uncle|aunt|teacher|student|boss|employee|doctor|patient|nurse|cop|officer)/.test(groupName);
+                        
+                        return hasLocation && hasFetishTerm;
+                    });
+                    
+                    const allSuspiciousGroups = [...new Set([...suspiciousGroups, ...patternSuspiciousGroups])];
+                    
+                    if (allSuspiciousGroups.length > 0) {
+                        const penalty = Math.min(45, allSuspiciousGroups.length * 15);
+                        score -= penalty;
+                        reasons.negative.push({ text: `Joined ${allSuspiciousGroups.length} group(s) with suspicious names.`, weight: -penalty, icon: 'fa-users-slash', data: allSuspiciousGroups.map(g => g.name) });
+                    }
+                }
+                
+                if (profile.outfit && profile.outfit.length > 0) {
+                    const suspiciousItems = profile.outfit.filter(item => checkName(item.name).length > 0);
+                    if (suspiciousItems.length > 0) {
+                        const penalty = Math.min(35, suspiciousItems.length * 10);
+                        score -= penalty;
+                        const itemNames = suspiciousItems.map(i => i.name);
+                        reasons.negative.push({ text: `Wearing ${suspiciousItems.length} suspicious avatar item(s).`, weight: -penalty, icon: 'fa-tshirt', data: itemNames });
+                    }
+                }
+                
+                if (profile.favorites && profile.favorites.length > 0) {
+                    const suspiciousFavorites = profile.favorites.filter(game =>
+                        checkName(game.name).length > 0 ||
+                        solicitationKeywords.some(kw => normalizeString(game.name).includes(normalizeString(kw)))
+                    );
+                    if (suspiciousFavorites.length > 0) {
+                        const penalty = Math.min(50, suspiciousFavorites.length * 25);
+                        score -= penalty;
+                        reasons.negative.push({ text: `Favorited ${suspiciousFavorites.length} suspicious games.`, weight: -penalty, icon: 'fa-gamepad', data: suspiciousFavorites.map(g => g.name) });
+                    }
+                }
+
+                if (friends && friends.length > 0) {
+                    const suspiciousFriends = friends.filter(friend => checkName(friend.name).length > 0);
+                    if (suspiciousFriends.length > 0) {
+                        const suspiciousPercent = (suspiciousFriends.length / friends.length) * 100;
+                        let penalty = Math.min(25, suspiciousFriends.length * 10);
+                        if (suspiciousPercent > 30) {
+                             penalty = Math.max(penalty, 50);
+                        } else if (suspiciousFriends.length > 1) {
+                             penalty = Math.max(penalty, 35);
+                        }
+                        score -= penalty;
+                        reasons.negative.push({ text: `Associates with accounts using suspicious names.`, weight: -penalty, icon: 'fa-users-cog', data: suspiciousFriends.map(f => f.name) });
+                    }
+                }
+
+                if (profile.isBanned) { score -= 80; reasons.negative.push({ text: "Account is currently banned by Saikou.", weight: -80, icon: 'fa-ban' }); }
+                if (profile.isPOI) { score -= 50; reasons.negative.push({ text: "Flagged as a Person of Interest by SDIS.", weight: -50, icon: 'fa-exclamation-triangle' }); }
+                if (rings && rings.length > 0) { score -= 60; reasons.negative.push({ text: `Member of ${rings.length} known exploiter ring(s).`, weight: -60, icon: 'fa-link' }); }
+                
+                if (bannedFriends && bannedFriends.length > 0) {
+                    let penalty = Math.min(30, bannedFriends.length * 5);
+                    let reasonText = `Has ${bannedFriends.length} friend(s) who are banned.`;
+                    if (profile.friendCount > 0 && profile.friendCount > bannedFriends.length) {
+                        const bannedPercent = (bannedFriends.length / profile.friendCount) * 100;
+                        if (bannedPercent > 20) {
+                            penalty = Math.max(penalty, 40);
+                            reasonText += ` This indicates a clear pattern of association.`
+                        }
+                    }
+                    score -= penalty;
+                    reasons.negative.push({ text: reasonText, weight: -penalty, icon: 'fa-user-slash' });
+                }
+
+                // Account age calculation
+                let accountAge = 0;
+                if (profile.created) {
+                    const ageMs = Date.now() - new Date(profile.created).getTime();
+                    accountAge = Math.floor(ageMs / (1000 * 60 * 60 * 24)); // days
+                }
+
+                if (accountAge < 30) { score -= 30; reasons.negative.push({ text: "Account is very new (less than 30 days old).", weight: -30, icon: 'fa-baby' }); } 
+                else if (accountAge < 90) { score -= 15; reasons.negative.push({ text: "Account is new (less than 90 days old).", weight: -15, icon: 'fa-child' }); }
+                if (profile.inventoryHidden) { score -= 5; reasons.negative.push({ text: "Inventory is private.", weight: -5, icon: 'fa-eye-slash' }); }
+                
+                if (profile.friendCount < 10 && profile.followersCount < 10 && profile.followingCount < 10) { score -= 10; reasons.negative.push({ text: "Extremely low social engagement (friends, followers, following).", weight: -10, icon: 'fa-user-friends' }); } 
+                else if (profile.friendCount < 10) { score -= 5; reasons.negative.push({ text: "Very low friend count.", weight: -5, icon: 'fa-user-friends' }); }
+
+                // Positive factors
+                if (accountAge > 365 * 2) { const bonus = Math.min(20, Math.floor(accountAge / 365) * 2.5); score += bonus; reasons.positive.push({ text: `Veteran user (${Math.floor(accountAge / 365)}+ years old).`, weight: bonus, icon: 'fa-award' }); }
+                if (profile.hasVerifiedBadge) { score += 15; reasons.positive.push({ text: "Has a verified badge on Roblox.", weight: 15, icon: 'fa-check-circle' }); }
+                if (profile.isPremium) { score += 10; reasons.positive.push({ text: "Has an active Roblox Premium subscription.", weight: 10, icon: 'fa-star' }); }
+                if (profile.groupRole) { score += 20; reasons.positive.push({ text: "Holds a staff role in Saikou.", weight: 20, icon: 'fa-shield-alt' }); }
+                if (profile.notableBadges && profile.notableBadges.length > 0) { score += 10; reasons.positive.push({ text: `Has ${profile.notableBadges.length} notable Roblox badge(s).`, weight: 10, icon: 'fa-medal' }); }
+                if (profile.followersCount > 1000) { const bonus = Math.min(15, Math.floor(profile.followersCount / 1000) * 1); score += bonus; reasons.positive.push({ text: "Has a significant number of followers.", weight: bonus, icon: 'fa-users' }); }
+
+                // Remove duplicate negative reasons
+                const uniqueNegative = [];
+                const seenNegative = new Set();
+                reasons.negative.forEach(r => {
+                    const key = r.text;
+                    if (!seenNegative.has(key)) {
+                        uniqueNegative.push(r);
+                        seenNegative.add(key);
+                    }
+                });
+                reasons.negative = uniqueNegative;
+
+                score = Math.max(0, Math.min(100, score));
+                
+                let rating, color;
+                if (score < 30) { rating = "Unsafe"; color = 'unsafe'; } 
+                else if (score < 60) { rating = "Caution"; color = 'caution'; } 
+                else { rating = "Safe"; color = 'safe'; }
+
+                return { score: Math.round(score), rating, color, reasons };
+            }
+            function isPlainEnglish(text) {
+                return false;
+                // Split text into words, check if most are in common English word list
+                const commonWords = [
+"the","be","to","of","and","a","in","that","have","it","for","not","on","with","he","as","you","do","at",
+"this","but","his","by","from","they","we","say","her","she","or","an","will","my","one","all","would","there","their",
+"what","so","up","out","if","about","who","get","which","go","me","when","make","can","like","time","no","just","him","know",
+"take","people","into","year","your","good","some","could","them","see","other","than","then","now","look","only","come","its","over","think",
+"also","back","after","use","two","how","our","work","first","well","way","even","new","want","because","any","these","give","day","most","us",
+"is","are","was","were","has","had","fun","play","game","adventure","story","fantasy","dream","night","sleep","bed","room","house","home","place","space",
+"area","zone","world","universe","realm","dimension","reality","escape","hide","secret","private","special","unique","different","wild","crazy","intense","deep",
+"real","genuine","authentic","true","pure","raw","natural","organic","fresh","see","end","never","always","every","many","few","some","better","worse","best",
+"next","last","long","short","high","low","big","small","tall","young","old","early","late","begin","start","stop","finish","again","once","twice","three","four",
+"five","six","seven","eight","nine","ten","hundred","thousand","million","billion","today","tomorrow","yesterday","soon","later","before","after","above","below",
+"inside","outside","between","among","around","far","near","close","away","toward","against","upon","over","under","beside","beyond","during","while","until","though",
+"unless","because","since","if","though","although","yet","however","still","instead","rather","just","right","left","down","across","along","through","without",
+"within","where","when","why","who","whom","whose","how","which","what","whether","shall","should","may","might","must","can","could","will","would","do","does",
+"did","done","having","being","want","needs","calls","comes","goes","runs","walks","drives","rides","flies","moves","stays","sits","stands","lies","waits",
+"hopes","feels","thinks","knows","believes","remembers","forgets","understands","learns","teaches","reads","writes","speaks","listens","sees","hears",
+"smells","tastes","touches","holds","grabs","drops","puts","takes","gives","gets","keeps","loses","ends","begins","opens","closes","shows","finds",
+"looks","watches","turns","calls","names","asks","answers","tells","tells","talks","speaks","explains","describes","roblox","builder","friends","fun","hangout","chill","gaming","gamer","group","crew","team","family","friend","play","games","game","adventure",
+"obby","parkour","roleplay","rp","tycoon","simulator","fan","fans","club","meet","join","visit","welcome","social","party","explore",
+"leader","owner","dev","developer","scripter","builder","designer","creator","active","online","offline","newbie","pro","noob","cool","cute","awesome",
+"epic","legendary","rich","famous","popular","win","winner","lose","loser","tryhard","casual","skill","skills","funny","meme","memes","joke",
+"laugh","vibe","awesome","crazy","wild","random","good","great","amazing","best","love","loving","kind","helpful","carer","safe","trust",
+"trusted","respect","support","supporter","member","community","friendship","peace","unity","dream","hope","dreamer","enjoy","happy","smile","party",
+"celebrate","event","challenge","quest","mission","buddy","buddies","pal","pals"
+];
+                const words = text.split(/\s+/);
+                const nCommon = words.filter(w => commonWords.includes(w.toLowerCase().replace(/[\.,!?]/g, ""))).length;
+                // If >90% words are common English, call it "plain"
+                return (nCommon / words.length) > 0.9;
+                }
+            // --- RISK ASSESSMENT UI RENDERING ---
+            function renderRiskAssessment(report) {
+                const scoreRotation = (report.score / 100) * 180;
+                
+                const factorHTML = (factors, color) => {
+                    if (factors.length === 0) return `<p class="text-sm text-gray-500 italic">No factors detected</p>`;
+                    return factors.sort((a,b) => a.weight - b.weight).map(r => {
+                        const isPositive = r.weight > 0;
+                        const typeClass = isPositive ? 'positive' : 'negative';
+                        const tooltipText = r.data ? `Details: ${r.data.join(', ')}` : `Impact: ${r.weight > 0 ? '+' : ''}${r.weight} points`;
+                        
+                        return `
+                            <div class="risk-item">
+                                <div class="risk-item-icon ${typeClass}">
+                                    <i class="fas ${r.icon}"></i>
+                                </div>
+                                <div class="risk-item-content">
+                                    <span class="tooltip" data-tooltip="${tooltipText}">${r.text}</span>
+                                </div>
+                                <div class="risk-item-weight ${typeClass}">
+                                    ${r.weight > 0 ? '+' : ''}${r.weight}
+                                </div>
+                            </div>
+                            ${r.data ? `<div class="risk-details">${r.data.slice(0, 3).join(', ')}${r.data.length > 3 ? `... and ${r.data.length - 3} more` : ''}</div>` : ''}
+                        `;
+                    }).join('');
+                };
+                
+                // Enhanced decoded cipher HTML
+                const decodedCipherHTML = report.reasons.decoded ? `
+                    <div class="mt-4 bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-key text-yellow-400"></i>
+                            <p class="text-sm font-semibold text-yellow-300 tooltip" data-tooltip="Text obfuscation detected and decoded">Decoded Obfuscated Message:</p>
+                        </div>
+                        <div class="bg-black/20 border border-yellow-500/20 rounded p-3">
+                            <p class="font-mono text-sm text-yellow-200 break-words leading-relaxed">${report.reasons.decoded}</p>
+                        </div>
+                    </div>` : '';
+
+                return `
+                    <div class="mt-6 border-t border-gray-700 pt-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-shield-alt text-blue-400"></i>
+                                <span class="tooltip" data-tooltip="Automated analysis of user safety based on multiple factors">Risk Assessment</span>
+                            </h3>
+                            <button class="risk-assessment-toggle group" onclick="toggleRiskAssessment()" title="Toggle risk assessment details">
+                                <i class="fas fa-chevron-down transition-transform duration-200 group-hover:scale-110"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="risk-assessment-content" class="space-y-6">
+                            <div class="flex flex-col lg:flex-row items-center gap-8">
+                                <div class="flex flex-col items-center justify-center text-center">
+                                    <div class="score-gauge-container ${report.color} mb-4">
+                                        <div class="score-gauge-bg"></div>
+                                        <div class="score-gauge-fill" style="transform: rotate(${scoreRotation}deg);"></div>
+                                        <div class="score-text">
+                                            <span class="text-6xl font-bold">${report.score}</span>
+                                            <span class="text-xl text-gray-400 font-semibold">/100</span>
+                                        </div>
+                                    </div>
+                                    <h4 class="text-3xl font-bold" style="color: var(--${report.color}-color);">${report.rating}</h4>
+                                    <p class="text-gray-400 text-sm tooltip" data-tooltip="Score based on account analysis, associations, and behavior patterns">Overall Safety Score</p>
+                                </div>
+                                
+                                <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div class="space-y-4">
+                                        <h5 class="font-bold text-lg text-red-400 flex items-center gap-2">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            <span class="tooltip" data-tooltip="Factors that decrease the safety score">Risk Factors</span>
+                                        </h5>
+                                        <div class="space-y-3">
+                                            ${factorHTML(report.reasons.negative, 'red')}
+                                        </div>
+                                        ${decodedCipherHTML}
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <h5 class="font-bold text-lg text-green-400 flex items-center gap-2">
+                                            <i class="fas fa-shield-check"></i>
+                                            <span class="tooltip" data-tooltip="Factors that increase the safety score">Safety Factors</span>
+                                        </h5>
+                                        <div class="space-y-3">
+                                            ${factorHTML(report.reasons.positive, 'green')}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function toggleRiskAssessment() {
+                const content = document.getElementById('risk-assessment-content');
+                const toggle = document.querySelector('.risk-assessment-toggle i');
+                if (content && toggle) {
+                    content.classList.toggle('hidden');
+                    toggle.classList.toggle('fa-chevron-down');
+                    toggle.classList.toggle('fa-chevron-up');
+                }
+            }
+
+
             const handleSearch = async (queryOverride) => {
                 const query = queryOverride || searchInput.value.trim();
                 if (!query) return;
@@ -884,6 +1741,9 @@
 
                 document.body.classList.toggle('poi-background', profile.isPOI);
 
+                // Calculate risk assessment
+                const safetyReport = calculateSafetyScore(profile, friends, data.rings || [], bannedFriends);
+
                 const now = new Date().getTime();
                 const activeBan = hasBanHistory ? banHistory.find(ban => ban.type === 'permban' || (ban.type === 'timeban' && (new Date(ban.Date).getTime() + ban.Duration) > now)) : null;
 
@@ -947,29 +1807,40 @@
                             </div>
                         </div>`;
 
-                resultContainer.innerHTML = `
-                        <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
-                            <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
-                            ${profile.groupRole ? `<div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg" style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};"><i class="fas fa-shield-alt mr-2"></i><span>${profile.groupRole}</span></div>` : ''}
-                            <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
-                                <div class="relative">
-                                    <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
-                                    ${data.rings && data.rings.length > 0 ? `<div class="absolute -top-2 -right-2 flex flex-wrap gap-1">${data.rings.slice(0, 3).map((ring, index) => `<div class="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg" title="Ring: ${ring.name}" style="z-index: ${10 - index}; margin-left: ${index * -8}px;"><i class="fas fa-link"></i></div>`).join('')}${data.rings.length > 3 ? `<div class="bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg font-bold" title="${data.rings.length - 3} more rings" style="margin-left: -8px;">+${data.rings.length - 3}</div>` : ''}</div>` : ''}
-                                </div>
-                                <div class="sm:ml-6 mt-4 sm:mt-0"><h2 class="text-3xl font-bold">${profile.displayName}</h2><p class="text-gray-400">@${profile.name}</p><a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">View on Roblox <i class="fas fa-external-link-alt ml-1"></i></a></div>
+                // Generate risk assessment HTML
+                const riskAssessmentHtml = renderRiskAssessment(safetyReport);
+                
+                // Main profile content
+                const profileContent = `
+                    <div class="bg-[#15171c] p-6 sm:p-8 rounded-lg shadow-lg relative ${profile.isPOI ? 'poi-profile-container' : ''}">
+                        <div class="absolute top-4 right-4">${actionsMenuHtml}</div>
+                        ${profile.groupRole ? `<div class="absolute top-6 right-20 bg-[#0c0d0e] px-4 py-2 rounded-full text-sm font-bold border shadow-lg" style="color: ${profile.groupRoleColor || '#9ca3af'}; border-color: ${profile.groupRoleColor || '#374151'};"><i class="fas fa-shield-alt mr-2"></i><span>${profile.groupRole}</span></div>` : ''}
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left">
+                            <div class="relative">
+                                <img src="${profile.avatarUrl}" alt="User Avatar" class="w-32 h-32 rounded-full border-4 border-gray-700">
+                                ${data.rings && data.rings.length > 0 ? `<div class="absolute -top-2 -right-2 flex flex-wrap gap-1">${data.rings.slice(0, 3).map((ring, index) => `<div class="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg" title="Ring: ${ring.name}" style="z-index: ${10 - index}; margin-left: ${index * -8}px;"><i class="fas fa-link"></i></div>`).join('')}${data.rings.length > 3 ? `<div class="bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center border-2 border-gray-800 shadow-lg font-bold" title="${data.rings.length - 3} more rings" style="margin-left: -8px;">+${data.rings.length - 3}</div>` : ''}</div>` : ''}
                             </div>
-                            ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm"><div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span id="poi-card-marked-by" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span id="poi-card-date" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Reason:</strong><p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p></div></div></div></div></div>` : ''}
-                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">About</h3><p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p></div>
-                            ${data.rings && data.rings.length > 0 ? `<div class="mt-6 border-t border-red-700/30 pt-6 bg-red-900/10 p-4 rounded-lg"><h3 class="font-bold text-lg mb-4 text-red-300"><i class="fas fa-link mr-2"></i>Exploiter Rings (${data.rings.length})</h3><div class="space-y-3">${data.rings.map(ring => `<div class="bg-red-900/20 border border-red-700/40 rounded-lg p-4"><div class="flex items-center justify-between mb-2"><h4 class="font-semibold text-red-200">${ring.name}</h4><span class="text-xs text-red-400 bg-red-800/30 px-2 py-1 rounded">${ring.members ? ring.members.length : 0} members</span></div>${ring.description ? `<p class="text-sm text-gray-300 mb-3">${ring.description}</p>` : ''}${ring.members && ring.members.length > 0 ? `<div class="mb-3"><p class="text-xs text-gray-400 mb-2">Other Members:</p><div class="flex flex-wrap gap-2">${ring.members.filter(m => m.userId !== profile.id).slice(0, 5).map(member => `<a href="#" class="ring-member-link text-red-300 hover:text-red-200 text-xs bg-red-800/30 px-2 py-1 rounded transition-colors" data-username="${member.username || member.name}" title="View ${member.username || member.name}'s profile">${member.username || member.name}</a>`).join('')}${ring.members.filter(m => m.userId !== profile.id).length > 5 ? `<span class="text-xs text-gray-400 bg-red-800/20 px-2 py-1 rounded">+${ring.members.filter(m => m.userId !== profile.id).length - 5} more</span>` : ''}</div></div>` : ''}<div class="flex items-center gap-4 text-xs text-gray-400"><span><i class="fas fa-user mr-1"></i>Created by: ${ring.createdBy || ring.addedBy || 'Unknown'}</span><span><i class="fas fa-calendar mr-1"></i>${ring.createdAt ? new Date(ring.createdAt).toLocaleDateString() : ring.addedAt ? new Date(ring.addedAt).toLocaleDateString() : 'Unknown date'}</span></div><div class="mt-3 pt-3 border-t border-red-700/30"><button class="ring-details-btn text-red-300 hover:text-red-200 text-sm font-medium transition-colors" data-ring-id="${ring.id}"><i class="fas fa-eye mr-1"></i>View Ring Details</button></div></div>`).join('')}</div></div>` : ''}
-                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Stats</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div><div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"><div class="stat-card"><p class="text-sm text-gray-400">Account Age</p><p class="font-bold text-lg">${accountAge}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Badges</p><p class="font-bold text-lg">${profile.badgeCount ?? 0}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Activity Level</p><p class="font-bold text-lg">${profile.activityLevel || 'Unknown'}</p></div></div></div>
-                            ${profile.notableBadges && profile.notableBadges.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Notable Badges</h3><div class="flex flex-wrap gap-2">${profile.notableBadges.map(badge => `<span class="inline-block bg-yellow-600/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-medium border border-yellow-600/30" title="${badge.description || ''}">${badge.name}</span>`).join('')}</div></div>` : ''}
-                            ${profile.groups && profile.groups.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Groups (${profile.groups.length})</h3><div id="groups-container"><div id="groups-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">${profile.groups.slice(0, 6).map(g => `<div class="stat-card flex items-center gap-3"><div class="flex-shrink-0"><i class="fas fa-users text-blue-400 text-xl"></i></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm truncate">${g.name}</p><p class="text-xs text-gray-400">${g.role || 'Member'}</p></div></div>`).join('')}</div>${profile.groups.length > 6 ? `<div class="text-center mt-4"><button id="show-more-groups-btn" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">Show ${profile.groups.length - 6} More Groups</button></div>` : ''}</div></div>` : ''}
-                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Account Status</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card flex items-center gap-3"><i class="fas ${profile.isPremium === true ? 'fa-star text-yellow-400' : profile.isPremium === false ? 'fa-user text-gray-400' : 'fa-question-circle text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Subscription</p><p class="font-semibold text-sm">${profile.isPremium === true ? 'Premium' : profile.isPremium === false ? 'Standard' : 'Unknown'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.inventoryHidden === false ? 'fa-eye text-green-400' : profile.inventoryHidden === true ? 'fa-eye-slash text-red-400' : 'fa-question-circle text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Inventory</p><p class="font-semibold text-sm">${profile.inventoryHidden === false ? 'Visible' : profile.inventoryHidden === true ? 'Hidden' : 'Unknown'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.hasVerifiedBadge ? 'fa-check-circle text-green-400' : 'fa-user text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Verification</p><p class="font-semibold text-sm">${profile.hasVerifiedBadge ? 'Verified' : 'Not Verified'}</p></div></div></div>${(profile.followersCount !== undefined || profile.followingCount !== undefined || profile.placeCount !== undefined) ? `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">${profile.followersCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-users text-blue-400 text-xl"></i><div><p class="text-xs text-gray-400">Followers</p><p class="font-semibold text-sm">${profile.followersCount.toLocaleString()}</p></div></div>` : ''}${profile.followingCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-user-plus text-green-400 text-xl"></i><div><p class="text-xs text-gray-400">Following</p><p class="font-semibold text-sm">${profile.followingCount.toLocaleString()}</p></div></div>` : ''}${profile.placeCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-gamepad text-purple-400 text-xl"></i><div><p class="text-xs text-gray-400">Places</p><p class="font-semibold text-sm">${profile.placeCount}</p></div></div>` : ''}</div>` : ''}</div>
-                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Current Ban Status</h3>${banInfoHtml}</div>
-                            <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Ban History</h3>${banHistoryHtml}</div>
-                            ${bannedFriends?.length > 0 ? `<div class="mt-6 border-t border-red-900 bg-red-900/10 p-6"><h3 class="text-lg font-semibold text-red-400 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Banned Friends (${bannedFriends.length})</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${bannedFriends.map(f => `<div class="bg-red-900/30 border border-red-800 rounded-lg p-4 flex items-center gap-3"><img src="${f.avatarUrl}" class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"><div class="text-sm"><a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${f.name}">${f.displayName} (@${f.name})</a><div class="text-xs text-red-400">Banned: ${f.banInfo?.Date ? new Date(f.banInfo.Date).toLocaleDateString() : 'N/A'}</div>${f.banInfo?.Reason ? `<div class="text-xs text-red-300 mt-1"><span class="font-semibold">Reason:</span> ${f.banInfo.Reason}</div>` : ''}</div></div>`).join('')}</div></div>` : ''}
-                            <div class="mt-6 border-t border-gray-700 pt-6">${friendsHtml}</div>
-                        </div>`;
+                            <div class="sm:ml-6 mt-4 sm:mt-0"><h2 class="text-3xl font-bold">${profile.displayName}</h2><p class="text-gray-400">@${profile.name}</p><a href="https://www.roblox.com/users/${profile.id}/profile" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline text-sm mt-1 inline-block">View on Roblox <i class="fas fa-external-link-alt ml-1"></i></a></div>
+                        </div>
+                        ${profile.isPOI ? `<div class="poi-alert-card mt-6"><div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-400 text-4xl mr-4 mt-1"></i><div><h3 class="text-2xl font-bold text-red-300">Person of Interest</h3><p class="text-sm text-gray-300 mt-1">This user has been flagged by SDIS. Exercise caution.</p><div class="mt-4 pt-4 border-t border-red-700/50 space-y-2 text-sm"><div><strong class="text-gray-400 font-semibold block">Marked By:</strong><span id="poi-card-marked-by" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Date Marked:</strong><span id="poi-card-date" class="text-white">Loading...</span></div><div><strong class="text-gray-400 font-semibold block">Reason:</strong><p id="poi-card-reason" class="text-white whitespace-pre-wrap bg-red-900/20 p-2 rounded mt-1">Loading...</p></div></div></div></div></div>` : ''}
+                        <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">About</h3><p class="text-gray-300 whitespace-pre-wrap">${profile.description || 'No bio available.'}</p></div>
+                        ${data.rings && data.rings.length > 0 ? `<div class="mt-6 border-t border-red-700/30 pt-6 bg-red-900/10 p-4 rounded-lg"><h3 class="font-bold text-lg mb-4 text-red-300"><i class="fas fa-link mr-2"></i>Exploiter Rings (${data.rings.length})</h3><div class="space-y-3">${data.rings.map(ring => `<div class="bg-red-900/20 border border-red-700/40 rounded-lg p-4"><div class="flex items-center justify-between mb-2"><h4 class="font-semibold text-red-200">${ring.name}</h4><span class="text-xs text-red-400 bg-red-800/30 px-2 py-1 rounded">${ring.members ? ring.members.length : 0} members</span></div>${ring.description ? `<p class="text-sm text-gray-300 mb-3">${ring.description}</p>` : ''}${ring.members && ring.members.length > 0 ? `<div class="mb-3"><p class="text-xs text-gray-400 mb-2">Other Members:</p><div class="flex flex-wrap gap-2">${ring.members.filter(m => m.userId !== profile.id).slice(0, 5).map(member => `<a href="#" class="ring-member-link text-red-300 hover:text-red-200 text-xs bg-red-800/30 px-2 py-1 rounded transition-colors" data-username="${member.username || member.name}" title="View ${member.username || member.name}'s profile">${member.username || member.name}</a>`).join('')}${ring.members.filter(m => m.userId !== profile.id).length > 5 ? `<span class="text-xs text-gray-400 bg-red-800/20 px-2 py-1 rounded">+${ring.members.filter(m => m.userId !== profile.id).length - 5} more</span>` : ''}</div></div>` : ''}<div class="flex items-center gap-4 text-xs text-gray-400"><span><i class="fas fa-user mr-1"></i>Created by: ${ring.createdBy || ring.addedBy || 'Unknown'}</span><span><i class="fas fa-calendar mr-1"></i>${ring.createdAt ? new Date(ring.createdAt).toLocaleDateString() : ring.addedAt ? new Date(ring.addedAt).toLocaleDateString() : 'Unknown date'}</span></div><div class="mt-3 pt-3 border-t border-red-700/30"><button class="ring-details-btn text-red-300 hover:text-red-200 text-sm font-medium transition-colors" data-ring-id="${ring.id}"><i class="fas fa-eye mr-1"></i>View Ring Details</button></div></div>`).join('')}</div></div>` : ''}
+                        ${riskAssessmentHtml}
+                        <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Stats</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card"><p class="text-sm text-gray-400">Join Date</p><p class="font-bold text-lg">${createdDate}</p></div><div class="stat-card"><p class="text-sm text-gray-400">User ID</p><p class="font-bold text-lg">${profile.id}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Friends</p><p class="font-bold text-lg">${profile.friendCount ?? 'N/A'}</p></div></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4"><div class="stat-card"><p class="text-sm text-gray-400">Account Age</p><p class="font-bold text-lg">${accountAge}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Badges</p><p class="font-bold text-lg">${profile.badgeCount ?? 0}</p></div><div class="stat-card"><p class="text-sm text-gray-400">Activity Level</p><p class="font-bold text-lg">${profile.activityLevel || 'Unknown'}</p></div></div></div>
+                        ${profile.notableBadges && profile.notableBadges.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Notable Badges</h3><div class="flex flex-wrap gap-2">${profile.notableBadges.map(badge => `<span class="inline-block bg-yellow-600/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-medium border border-yellow-600/30" title="${badge.description || ''}">${badge.name}</span>`).join('')}</div></div>` : ''}
+                        ${profile.groups && profile.groups.length > 0 ? `<div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Groups (${profile.groups.length})</h3><div id="groups-container"><div id="groups-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">${profile.groups.slice(0, 6).map(g => `<div class="stat-card flex items-center gap-3"><div class="flex-shrink-0"><i class="fas fa-users text-blue-400 text-xl"></i></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm truncate">${g.name}</p><p class="text-xs text-gray-400">${g.role || 'Member'}</p></div></div>`).join('')}</div>${profile.groups.length > 6 ? `<div class="text-center mt-4"><button id="show-more-groups-btn" class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">Show ${profile.groups.length - 6} More Groups</button></div>` : ''}</div></div>` : ''}
+                        <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-4">Account Status</h3><div class="grid grid-cols-1 sm:grid-cols-3 gap-4"><div class="stat-card flex items-center gap-3"><i class="fas ${profile.isPremium === true ? 'fa-star text-yellow-400' : profile.isPremium === false ? 'fa-user text-gray-400' : 'fa-question-circle text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Subscription</p><p class="font-semibold text-sm">${profile.isPremium === true ? 'Premium' : profile.isPremium === false ? 'Standard' : 'Unknown'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.inventoryHidden === false ? 'fa-eye text-green-400' : profile.inventoryHidden === true ? 'fa-eye-slash text-red-400' : 'fa-question-circle text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Inventory</p><p class="font-semibold text-sm">${profile.inventoryHidden === false ? 'Visible' : profile.inventoryHidden === true ? 'Hidden' : 'Unknown'}</p></div></div><div class="stat-card flex items-center gap-3"><i class="fas ${profile.hasVerifiedBadge ? 'fa-check-circle text-green-400' : 'fa-user text-gray-400'} text-xl"></i><div><p class="text-xs text-gray-400">Verification</p><p class="font-semibold text-sm">${profile.hasVerifiedBadge ? 'Verified' : 'Not Verified'}</p></div></div></div>${(profile.followersCount !== undefined || profile.followingCount !== undefined || profile.placeCount !== undefined) ? `<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">${profile.followersCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-users text-blue-400 text-xl"></i><div><p class="text-xs text-gray-400">Followers</p><p class="font-semibold text-sm">${profile.followersCount.toLocaleString()}</p></div></div>` : ''}${profile.followingCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-user-plus text-green-400 text-xl"></i><div><p class="text-xs text-gray-400">Following</p><p class="font-semibold text-sm">${profile.followingCount.toLocaleString()}</p></div></div>` : ''}${profile.placeCount !== undefined ? `<div class="stat-card flex items-center gap-3"><i class="fas fa-gamepad text-purple-400 text-xl"></i><div><p class="text-xs text-gray-400">Places</p><p class="font-semibold text-sm">${profile.placeCount}</p></div></div>` : ''}</div>` : ''}</div>
+                        <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Current Ban Status</h3>${banInfoHtml}</div>
+                        <div class="mt-6 border-t border-gray-700 pt-6"><h3 class="font-bold text-lg mb-2">Ban History</h3>${banHistoryHtml}</div>
+                        ${bannedFriends?.length > 0 ? `<div class="mt-6 border-t border-red-900 bg-red-900/10 p-6"><h3 class="text-lg font-semibold text-red-400 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Banned Friends (${bannedFriends.length})</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4">${bannedFriends.map(f => `<div class="bg-red-900/30 border border-red-800 rounded-lg p-4 flex items-center gap-3"><img src="${f.avatarUrl}" class="w-10 h-10 rounded-full border-2 border-red-500 mr-3"><div class="text-sm"><a href="#" class="friend-link text-red-300 hover:text-white font-medium" data-username="${f.name}">${f.displayName} (@${f.name})</a><div class="text-xs text-red-400">Banned: ${f.banInfo?.Date ? new Date(f.banInfo.Date).toLocaleDateString() : 'N/A'}</div>${f.banInfo?.Reason ? `<div class="text-xs text-red-300 mt-1"><span class="font-semibold">Reason:</span> ${f.banInfo.Reason}</div>` : ''}</div></div>`).join('')}</div></div>` : ''}
+                        <div class="mt-6 border-t border-gray-700 pt-6">${friendsHtml}</div>
+                    </div>
+                `;
+
+                // Render in inline mode with risk assessment positioned correctly
+                resultContainer.innerHTML = `
+                    ${profileContent}
+                `;
 
                 if (profile.isPOI) fetchAndRenderPOIDetails(profile.id);
                 if (friends?.length > 0) renderFriendsPreview();
@@ -1775,6 +2646,9 @@
                 handleSearch(lookupParam);
             }
             checkAuth();
+
+            // Make toggleRiskAssessment globally available
+            window.toggleRiskAssessment = toggleRiskAssessment;
         });
     
             // ===== ROBLOX AVATAR CACHING SYSTEM (CORS-SAFE) =====
