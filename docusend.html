@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 viewport-fit=cover" />
+    <title>Saikou | Discord File Sender</title>
+    <meta name="description" content="A tool to send files directly to a Discord channel using a webhook." />
+    <link rel="icon" type="image/png" href="https://saikou.dev/assets/images/favicon.png"
+        onerror="this.onerror=null;this.href='https://placehold.co/32x32/121315/FFFFFF?text=S'" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #121315;
+            color: white;
+        }
+
+        .tool-card {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            background-color: #1f222c;
+            border: 1px solid #353a4a;
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #7f89ff;
+        }
+
+        .custom-button {
+            font-weight: bold;
+            border-radius: 0.5rem;
+            color: #121315;
+            background-color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            opacity: 1;
+            transition: opacity 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .custom-button:hover:not(:disabled) {
+            opacity: 0.8;
+        }
+
+        .custom-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #drop-zone {
+            border: 2px dashed #353a4a;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+        #drop-zone.dragover {
+            border-color: #7f89ff;
+            background-color: rgba(127, 137, 255, 0.1);
+        }
+
+    </style>
+</head>
+
+<body class="bg-[#121315]">
+    <!-- Header -->
+    <header class="container mx-auto px-4 md:px-0">
+        <nav class="max-w-4xl mx-auto my-4 md:my-8 p-4 bg-[#0c0d0e] rounded-lg flex items-center justify-between">
+            <a class="flex items-center" href="index.html">
+                <span class="text-white font-bold text-xl">Saikou Tools</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold">Discord File Sender</h1>
+            <p class="mt-4 text-lg text-gray-300">Drop a file and send it directly to a Discord channel.</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto mt-10 bg-[#15171c] p-8 rounded-lg shadow-lg space-y-6">
+            <div>
+                <label for="webhook-url" class="block text-sm font-medium text-gray-300">Discord Webhook URL</label>
+                <input type="text" id="webhook-url" class="w-full mt-1"
+                    placeholder="https://discord.com/api/webhooks/...">
+            </div>
+
+            <!-- File Drop Zone -->
+            <div id="drop-zone" class="rounded-lg p-8 text-center cursor-pointer">
+                <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-file-upload text-4xl text-gray-500 mb-4"></i>
+                    <p class="text-gray-400">Drag & drop your file here</p>
+                    <p class="text-sm text-gray-500 mt-2">or click to select a file</p>
+                    <input type="file" id="file-input" class="hidden">
+                </div>
+            </div>
+
+            <!-- File Info Display -->
+            <div id="file-info" class="hidden flex items-center justify-between bg-[#1f222c] p-4 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-file-alt text-2xl text-gray-400"></i>
+                    <div>
+                        <p id="file-name" class="font-semibold text-white truncate"></p>
+                        <p id="file-size" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+                <button id="remove-file-btn" class="text-red-400 hover:text-red-600">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </button>
+            </div>
+             <div>
+                <label for="message-content" class="block text-sm font-medium text-gray-300">Optional Message</label>
+                <input type="text" id="message-content" class="w-full mt-1"
+                    placeholder="Add a message to go with your file...">
+            </div>
+
+            <button id="send-btn" class="custom-button w-full" disabled>Send to Discord</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center bg-[#0c0d0e] mt-20 py-12">
+        <div class="container mx-auto px-4">
+            <p class="text-sm text-gray-500">© 2025, Saikou. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const webhookUrlInput = document.getElementById('webhook-url');
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const fileInfo = document.getElementById('file-info');
+            const fileNameEl = document.getElementById('file-name');
+            const fileSizeEl = document.getElementById('file-size');
+            const removeFileBtn = document.getElementById('remove-file-btn');
+            const messageContentInput = document.getElementById('message-content');
+            const sendBtn = document.getElementById('send-btn');
+
+            let selectedFile = null;
+
+            function updateSendButtonState() {
+                sendBtn.disabled = !selectedFile || !webhookUrlInput.value.trim().startsWith('https://discord.com/api/webhooks/');
+            }
+
+            function handleFile(file) {
+                if(file.size > 8 * 1024 * 1024) {
+                    showNotification('File is too large. Max size is 8MB.', 'error');
+                    return;
+                }
+                selectedFile = file;
+                fileNameEl.textContent = file.name;
+                fileSizeEl.textContent = `${(file.size / 1024).toFixed(2)} KB`;
+                fileInfo.classList.remove('hidden');
+                dropZone.classList.add('hidden');
+                updateSendButtonState();
+            }
+
+            function removeFile() {
+                selectedFile = null;
+                fileInput.value = ''; // Reset the file input
+                fileInfo.classList.add('hidden');
+                dropZone.classList.remove('hidden');
+                updateSendButtonState();
+            }
+
+            // --- Drop Zone Events ---
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // --- Other Input Events ---
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+            removeFileBtn.addEventListener('click', removeFile);
+            webhookUrlInput.addEventListener('input', updateSendButtonState);
+
+            // --- Send Logic ---
+            sendBtn.addEventListener('click', async () => {
+                if (!selectedFile || !webhookUrlInput.value) return;
+                
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending...';
+                
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                const payload = {
+                    username: "Saikou File Sender",
+                    avatar_url: "https://saikou.dev/assets/images/favicon.png",
+                };
+
+                const messageContent = messageContentInput.value.trim();
+                if(messageContent) {
+                    payload.content = messageContent;
+                }
+                
+                formData.append('payload_json', JSON.stringify(payload));
+                
+                // We use a CORS proxy to bypass browser restrictions on sending files to Discord webhooks.
+                // This is a free and public proxy. For production, a self-hosted one would be more reliable.
+                const proxyUrl = 'https://corsproxy.io/?';
+                const webhookUrl = webhookUrlInput.value.trim();
+
+                try {
+                    const response = await fetch(proxyUrl + encodeURIComponent(webhookUrl), {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        showNotification('File sent successfully!', 'success');
+                        removeFile();
+                        messageContentInput.value = '';
+                    } else {
+                        const errorData = await response.json();
+                        console.error('Discord API Error:', errorData);
+                        showNotification(`Error: ${errorData.message || 'Failed to send file.'}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    showNotification('A network error occurred. Could not send file.', 'error');
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send to Discord';
+                    updateSendButtonState();
+                }
+            });
+            
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                const colors = { success: 'bg-green-600', warning: 'bg-yellow-600', error: 'bg-red-600', info: 'bg-blue-600' };
+                const icons = { success: 'fa-check-circle', warning: 'fa-exclamation-triangle', error: 'fa-times-circle', info: 'fa-info-circle' };
+                notification.className = `fixed top-5 right-5 z-50 px-4 py-2 rounded-lg shadow-lg text-white text-sm ${colors[type]} transition-transform duration-300 translate-x-full`;
+                notification.innerHTML = `<i class="fas ${icons[type]} mr-2"></i><span>${message}</span>`;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(calc(100% + 1.25rem))';
+                    notification.addEventListener('transitionend', () => notification.remove());
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+
+</html>
