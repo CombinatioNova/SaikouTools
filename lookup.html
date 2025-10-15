@@ -303,7 +303,7 @@
             border-radius: 50%;
             border: 24px solid;
             box-sizing: border-box;
-            clip-path: polygon(0% 0%, 100% 0%, 100% 53%, 0% 53%);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 52.5%, 0% 52.5%);
         }
 
         .score-gauge-bg {
@@ -1243,7 +1243,7 @@
                     }
                 }
                 // Bonus for SDIS membership
-                const SDIS_GROUP_ID = 3149674;
+                const SDIS_GROUP_ID = 549702194;
                 const isSDISMember = profile.groups && profile.groups.some(g => 
                     (g.id && +g.id === SDIS_GROUP_ID) || (g.groupId && +g.groupId === SDIS_GROUP_ID)
                 );
