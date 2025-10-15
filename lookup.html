@@ -1242,7 +1242,22 @@
                         reasons.negative.push({ text: `Wearing ${suspiciousItems.length} suspicious avatar item(s).`, weight: -penalty, icon: 'fa-tshirt', data: itemNames });
                     }
                 }
-                
+                // Bonus for SDIS membership
+                const SDIS_GROUP_ID = 3149674;
+                const isSDISMember = profile.groups && profile.groups.some(g => 
+                    (g.id && +g.id === SDIS_GROUP_ID) || (g.groupId && +g.groupId === SDIS_GROUP_ID)
+                );
+
+                if (isSDISMember) {
+                    score += 40;
+                    reasons.positive = reasons.positive || [];
+                    reasons.positive.push({
+                        text: "Member of SDIS (Roblox community bonus)",
+                        weight: 40,
+                        icon: "fa-star", // or your preferred icon
+                        data: SDIS_GROUP_ID
+                    });
+                }
                 if (profile.favorites && profile.favorites.length > 0) {
                     const suspiciousFavorites = profile.favorites.filter(game =>
                         checkName(game.name).length > 0 ||
