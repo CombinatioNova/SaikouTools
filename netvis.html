@@ -121,16 +121,18 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
+        /* --- MODIFIED: Seed user tags are now blue --- */
         .user-tag.seed-user {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); /* Blue gradient */
+            border-color: #3b82f6; /* Blue border */
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3); /* Blue shadow */
         }
 
         .user-tag.seed-user:hover {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); /* Darker blue hover */
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); /* Blue hover shadow */
         }
+        /* --- END MODIFICATION --- */
 
         .user-tag .remove-btn {
             background: rgba(239, 68, 68, 0.2);
@@ -714,6 +716,7 @@
             stroke: #6b7280;
         }
 
+        /* This is the node on the graph, kept purple as requested */
         .node.seed-user .node-outline {
             stroke: #8b5cf6 !important;
             stroke-width: 3px !important;
@@ -816,6 +819,29 @@
             box-shadow: 0 4px 25px rgba(239, 68, 68, 0.1);
         }
 
+        /* --- ADDED: Style for scrollable ring list --- */
+        #ring-list {
+            max-height: 150px; /* Adjust as needed */
+            overflow-y: auto;
+            padding-right: 4px; /* Space for scrollbar */
+        }
+        /* Custom scrollbar for webkit browsers */
+        #ring-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        #ring-list::-webkit-scrollbar-track {
+            background: rgba(107, 114, 128, 0.1);
+            border-radius: 2px;
+        }
+        #ring-list::-webkit-scrollbar-thumb {
+            background: rgba(107, 114, 128, 0.4);
+            border-radius: 2px;
+        }
+        #ring-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.6);
+        }
+        /* --- END ADDITION --- */
+
         .ring-item {
             display: flex;
             align-items: center;
@@ -842,6 +868,10 @@
             font-size: 0.75rem;
             font-weight: 500;
             color: #e5e7eb;
+            /* Added for long names */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .ring-member-count {
@@ -1111,6 +1141,7 @@
                 </div>
 
                 <!-- Quick Actions Bar -->
+                <!-- --- MODIFIED: Removed the "Ready" status indicator --- -->
                 <div class="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
                         <div class="flex items-center gap-2">
@@ -1118,13 +1149,8 @@
                             <span class="text-xs text-gray-400">Tip: Try usernames like "Roblox" or "builderman"</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span class="text-xs text-gray-400">Ready</span>
-                        </div>
-                    </div>
                 </div>
+                <!-- --- END MODIFICATION --- -->
             </div>
 
             <!-- Graph Display -->
@@ -2448,8 +2474,7 @@ document.querySelectorAll('.remove-ring-btn').forEach(btn => {
                     if (currentUser && authToken) {
                         updateProgress(15, 'Fetching ring data...');
                         await fetchRingData();
-                        // --- FIX 1: Add this line to update the ring legend UI ---
-                        renderRingList(); 
+                        // --- MODIFIED: Moved renderRingList() to after graph render ---
                     }
                     
                     const data = await generateGraphWithFallback(Array.from(seedUsers), isDeepSearch);
@@ -2458,7 +2483,6 @@ document.querySelectorAll('.remove-ring-btn').forEach(btn => {
                     if (data.nodes && data.links) {
                         updateProgress(90, 'Processing ring connections...');
                         
-                        // --- FIX 2: Add this line to reassign the enhanced node data ---
                         data.nodes = enhanceNodesWithRingData(data.nodes);
                         data.ringConnections = createRingConnections(data.nodes, ringData);
 
@@ -2495,6 +2519,12 @@ document.querySelectorAll('.remove-ring-btn').forEach(btn => {
                     if (data.nodes && data.links) {
                         currentGraphData = data; 
                         renderGraph(data);
+                        
+                        // --- MODIFIED: Moved renderRingList() to here ---
+                        if (currentUser && authToken) {
+                            renderRingList(); 
+                        }
+                        
                         showNotification('Graph generated successfully!', 'success');
                     } else {
                         throw new Error(data.error || 'No graph data returned.');
@@ -3102,13 +3132,33 @@ document.querySelectorAll('.remove-ring-btn').forEach(btn => {
                 }
             }
 
+            // --- MODIFIED: This function now filters rings based on the current graph ---
             function renderRingList() {
-                if (ringData.size === 0) {
-                    ringList.innerHTML = '<div class="text-center text-gray-500 text-xs py-2" id="no-rings-message">No rings available</div>';
+                // 1. Get all ring IDs from nodes currently on the graph
+                const ringsOnGraph = new Set();
+                if (currentGraphData.nodes && currentGraphData.nodes.length > 0) {
+                    currentGraphData.nodes.forEach(node => {
+                        if (node.rings && node.rings.length > 0) {
+                            node.rings.forEach(ringId => ringsOnGraph.add(ringId));
+                        }
+                    });
+                }
+
+                // 2. Filter the global ringData to get only the rings on the graph
+                const ringsToDisplay = Array.from(ringData.values()).filter(ring => ringsOnGraph.has(ring.id));
+
+                if (ringsToDisplay.length === 0) {
+                    // Change message to be more specific
+                    if (ringData.size === 0) {
+                        ringList.innerHTML = '<div class="text-center text-gray-500 text-xs py-2" id="no-rings-message">No rings available</div>';
+                    } else {
+                        ringList.innerHTML = '<div class="text-center text-gray-500 text-xs py-2" id="no-rings-message">No rings on graph</div>';
+                    }
                     return;
                 }
 
-                const ringItems = Array.from(ringData.values()).map(ring => `
+                // 3. Map only the filtered rings
+                const ringItems = ringsToDisplay.map(ring => `
                     <div class="ring-item" data-ring-id="${ring.id}">
                         <div class="ring-indicator"></div>
                         <span class="ring-name">${ring.name}</span>
@@ -3126,6 +3176,7 @@ document.querySelectorAll('.remove-ring-btn').forEach(btn => {
 
                 ringList.innerHTML = ringItems;
             }
+            // --- END MODIFICATION ---
 
             // ===== CLIENT-SIDE VALIDATION FUNCTIONS =====
 
